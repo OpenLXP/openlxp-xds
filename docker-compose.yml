@@ -32,6 +32,7 @@ services:
       AWS_DEFAULT_REGION: "${AWS_DEFAULT_REGION}"
       REQUESTS_CA_BUNDLE: '/etc/ssl/certs/ca-certificates.pem'
       AWS_CA_BUNDLE: '/etc/ssl/certs/ca-certificates.pem'
+      SECRET_KEY_VAL: "${SECRET_KEY_VAL}"
     volumes:
       - ./app:/opt/app/openlxp-xds
     depends_on:
