@@ -11,6 +11,8 @@ services:
       MYSQL_PASSWORD: "${DB_PASSWORD}"
       MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
       MYSQL_HOST: ''
+    networks:
+      - openlxp
 
   app:
     build:
@@ -33,7 +35,15 @@ services:
       REQUESTS_CA_BUNDLE: '/etc/ssl/certs/ca-certificates.pem'
       AWS_CA_BUNDLE: '/etc/ssl/certs/ca-certificates.pem'
       SECRET_KEY_VAL: "${SECRET_KEY_VAL}"
+      ES_HOST: "${ES_HOST}"
+      ES_INDEX: "${ES_INDEX}"
     volumes:
       - ./app:/opt/app/openlxp-xds
     depends_on:
       - db
+    networks:
+      - openlxp
+
+networks:
+  openlxp:
+    external: true
