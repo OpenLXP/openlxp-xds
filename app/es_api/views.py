@@ -1,9 +1,11 @@
-from django.http import HttpResponse, HttpResponseBadRequest
-from django.http import HttpResponseServerError
-from es_api.utils.queries import search_by_keyword, get_results
-from requests.exceptions import HTTPError
 import json
 import logging
+
+from django.http import (HttpResponse, HttpResponseBadRequest,
+                         HttpResponseServerError)
+from requests.exceptions import HTTPError
+
+from es_api.utils.queries import get_results, search_by_keyword
 
 logger = logging.getLogger('dict_config_logger')
 

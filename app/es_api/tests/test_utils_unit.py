@@ -1,8 +1,9 @@
-from unittest.mock import patch
-from django.test import SimpleTestCase
-from django.test import tag
-from es_api.utils.queries import get_results
 import json
+from unittest.mock import patch
+
+from django.test import SimpleTestCase, tag
+
+from es_api.utils.queries import get_results
 
 
 @tag('unit')

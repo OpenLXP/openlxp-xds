@@ -1,10 +1,12 @@
+import json
 from unittest.mock import patch
-from rest_framework.test import APITestCase
+
 from django.test import tag
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APITestCase
+
 from es_api import views
-import json
 
 
 @tag('unit')

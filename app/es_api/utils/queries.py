@@ -1,7 +1,8 @@
-from elasticsearch_dsl import connections, Search, Q
 import json
 import logging
 import os
+
+from elasticsearch_dsl import Q, Search, connections
 
 connections.create_connection(alias='default',
     hosts=[os.environ.get('ES_HOST'), ], timeout=60)
