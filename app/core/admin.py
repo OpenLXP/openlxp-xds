@@ -1,6 +1,7 @@
 from django.contrib import admin
 from core.models import XDSConfiguration
 
+
 # Register your models here.
 @admin.register(XDSConfiguration)
 class XDSConfigurationAdmin(admin.ModelAdmin):

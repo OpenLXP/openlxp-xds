@@ -26,4 +26,3 @@ class XDSConfiguration(models.Model):
         if not self.pk and XDSConfiguration.objects.exists():
             raise ValidationError('XDSConfiguration model already exists')
         return super(XDSConfiguration, self).save(*args, **kwargs)
-        
