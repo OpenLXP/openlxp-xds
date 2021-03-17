@@ -7,12 +7,10 @@ from django.forms import ValidationError
 class XDSConfiguration(models.Model):
     """Model for XDS Configuration """
 
-    target_xis_es_api = models.CharField(
-        max_length=200,
-        help_text='Enter the XIS api endpoint to query ElasticSearch')
     target_xis_metadata_api = models.CharField(
         max_length=200,
         help_text='Enter the XIS api endpoint to query metadata')
+    search_results_per_page = models.IntegerField(default=10)
 
     def get_absolute_url(self):
         """ URL for displaying individual model records."""

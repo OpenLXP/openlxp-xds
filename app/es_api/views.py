@@ -15,9 +15,13 @@ def search_index(request):
         without using a model"""
     results = []
     keyword = ''
+    page = ''
 
     if request.GET.get('keyword'):
         keyword = request.GET['keyword']
+    
+    if request.GET.get('p'):
+        page = request.GET['p']
 
     if keyword != '':
         errorMsg = {
@@ -27,7 +31,7 @@ def search_index(request):
         errorMsgJSON = json.dumps(errorMsg)
 
         try:
-            response = search_by_keyword(keyword=keyword)
+            response = search_by_keyword(keyword=keyword, page=page)
             results = get_results(response)
         except HTTPError as http_err:
             logger.error(http_err)
