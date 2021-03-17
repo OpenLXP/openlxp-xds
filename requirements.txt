@@ -12,10 +12,10 @@ gunicorn>=20.0.4,<20.1.0
 
 martor>=1.5.8,<1.6.0
 
+django-cors-headers>=3.7.0,<3.8.0
 
+django-elasticsearch-dsl>=7.1.4, <7.2.0
 
+django_elasticsearch_dsl_drf>=0.21, <1.0
 
-
-
-
-
+elasticsearch>=7.0.0,<8.0.0
