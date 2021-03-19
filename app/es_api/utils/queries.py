@@ -11,11 +11,10 @@ connections.create_connection(alias='default',
                               hosts=[os.environ.get('ES_HOST'), ], timeout=60)
 
 logger = logging.getLogger('dict_config_logger')
-configuration = XDSConfiguration.objects.first()
-page_size = configuration.search_results_per_page
 
-def get_page_start(page_number):
-    """ This helper method returns the starting index of a page given the page 
+
+def get_page_start(page_number, page_size):
+    """This helper method returns the starting index of a page given the page
          number, the size, and a start point of 0"""
     if (page_number <= 1):
         return 0
