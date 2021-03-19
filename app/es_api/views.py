@@ -20,7 +20,7 @@ def search_index(request):
     if request.GET.get('keyword'):
         keyword = request.GET['keyword']
 
-    if request.GET.get('p'):
+    if (request.GET.get('p')) and (request.GET.get('p') != ''):
         page = request.GET['p']
 
     if (request.GET.get('p')) and (request.GET.get('p') != ''):
