@@ -6,6 +6,6 @@ from es_api import views
 router = DefaultRouter()
 
 urlpatterns = [
-    path('more-like-this/<int:doc_id>/', views.get_more_like_this),
+    path('more-like-this/<str:doc_id>/', views.get_more_like_this),
     path('', views.search_index),
 ]
