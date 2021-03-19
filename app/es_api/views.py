@@ -5,7 +5,7 @@ from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseServerError)
 from requests.exceptions import HTTPError
 
-from es_api.utils.queries import get_results, search_by_keyword, more_like_this
+from es_api.utils.queries import get_results, more_like_this, search_by_keyword
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -19,7 +19,7 @@ def search_index(request):
 
     if request.GET.get('keyword'):
         keyword = request.GET['keyword']
-    
+
     if request.GET.get('p'):
         page = request.GET['p']
 

@@ -3,9 +3,9 @@ from unittest.mock import patch
 
 from django.test import tag
 from django.urls import reverse
+from requests.exceptions import HTTPError
 from rest_framework import status
 from rest_framework.test import APITestCase
-from requests.exceptions import HTTPError
 
 from es_api import views
 
