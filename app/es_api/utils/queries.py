@@ -2,10 +2,11 @@ import json
 import logging
 import os
 
-from elasticsearch_dsl import Q, Search, connections
+from elasticsearch_dsl import Q, Search, connections, A
 from elasticsearch_dsl.query import MoreLikeThis
 
 from core.models import XDSConfiguration
+from es_api.searches import MetadataSearch
 
 connections.create_connection(alias='default',
                               hosts=[os.environ.get('ES_HOST'), ], timeout=60)
@@ -40,12 +41,24 @@ def search_by_keyword(keyword="", page="1"):
     q = Q("bool", should=[Q("match", Course__CourseDescription=keyword),
                           Q("match", Course__CourseTitle=keyword)],
           minimum_should_match=1)
+
+    # create aggregation buckets for filtering
+    provider_agg = A('terms', field='Course.CourseProviderName.keyword')
+    subject_agg = A('terms', field='Course.CourseSubjectMatter.keyword')
+
+    # setting up the search object 
     s = Search(using='default', index=os.environ.get('ES_INDEX')).query(q)
+    s.aggs.bucket('Providers', provider_agg)
+    s.aggs.bucket('Subjects', subject_agg)
+
+    # getting the page size for result pagination
     configuration = XDSConfiguration.objects.first()
     page_size = configuration.search_results_per_page
     start_index = get_page_start(int(page), page_size)
     end_index = start_index + page_size
     s = s[start_index:end_index]
+
+    # call to elasticsearch to execute the query
     response = s.execute()
     logger.info(response)
 
@@ -80,6 +93,7 @@ def get_results(response):
         adds the hits to an array then returns a dictionary representing the
         results"""
     hit_arr = []
+    agg_dict = response.aggregations.to_dict()
 
     for hit in response:
         hit_dict = hit.to_dict()
@@ -89,7 +103,8 @@ def get_results(response):
 
     resultObj = {
         "hits": hit_arr,
-        "total": response.hits.total.value
+        "total": response.hits.total.value,
+        "aggregations": agg_dict
     }
 
     return json.dumps(resultObj)
