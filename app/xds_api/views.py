@@ -1,10 +1,10 @@
 import logging
 
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from xds_api.serializers import XDSConfigurationSerializer
-from core.models import XDSConfiguration
+from rest_framework.views import APIView
 
+from core.models import XDSConfiguration
+from xds_api.serializers import XDSConfigurationSerializer
 
 logger = logging.getLogger('dict_config_logger')
 

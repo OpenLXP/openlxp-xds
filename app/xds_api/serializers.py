@@ -1,5 +1,7 @@
 import logging
+
 from rest_framework import serializers
+
 from core.models import XDSConfiguration
 
 logger = logging.getLogger('dict_config_logger')
