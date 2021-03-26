@@ -26,9 +26,6 @@ def search_index(request):
     if (request.GET.get('p')) and (request.GET.get('p') != ''):
         filters['page'] = request.GET['p']
 
-    if (request.GET.get('p')) and (request.GET.get('p') != ''):
-        page = request.GET['p']
-
     if keyword != '':
         errorMsg = {
             "message": "error executing ElasticSearch query; " +

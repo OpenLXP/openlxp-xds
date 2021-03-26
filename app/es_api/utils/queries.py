@@ -23,16 +23,6 @@ def get_page_start(page_number, page_size):
 
         return start_index
 
-def get_page_start(page_number, page_size):
-    """This helper method returns the starting index of a page given the page
-         number, the size, and a start point of 0"""
-    if (page_number <= 1):
-        return 0
-    else:
-        start_index = (page_number - 1) * page_size
-
-        return start_index
-
 
 def add_search_aggregations(filter_set, search):
     """This helper method takes in a search object and a queryset of filters
