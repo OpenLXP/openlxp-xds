@@ -5,8 +5,8 @@ from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseServerError)
 from requests.exceptions import HTTPError
 
+from core.models import SearchFilter
 from es_api.utils.queries import get_results, more_like_this, search_by_keyword
-from core.models import XDSConfiguration, XDSUIConfiguration, SearchFilter
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -37,17 +37,16 @@ def search_index(request):
         errorMsgJSON = json.dumps(errorMsg)
 
         try:
-            configuration = XDSConfiguration.objects.first()
-            uiConfig = configuration.xdsuiconfiguration
-            search_filters = SearchFilter.objects\
-                .filter(xds_ui_configuration=uiConfig)
+            search_filters = SearchFilter.objects.filter(active=True)
 
+            # only add the filters that are defined in the configuration, the
+            # rest is ignored
             for curr_filter in search_filters:
                 if (request.GET.get(curr_filter.field_name)) \
-                    and (request.GET.get(curr_filter.field_name) != ''):
+                        and (request.GET.get(curr_filter.field_name) != ''):
                     filters[curr_filter.field_name] = \
                         request.GET.getlist(curr_filter.field_name)
-            
+
             response = search_by_keyword(keyword=keyword, filters=filters)
             results = get_results(response)
         except HTTPError as http_err:

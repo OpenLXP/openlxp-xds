@@ -24,6 +24,7 @@ class XDSConfiguration(models.Model):
             raise ValidationError('XDSConfiguration model already exists')
         return super(XDSConfiguration, self).save(*args, **kwargs)
 
+
 class XDSUIConfiguration(models.Model):
     """Model to contain XDS UI Configuration"""
     search_results_per_page = \
@@ -34,7 +35,7 @@ class XDSUIConfiguration(models.Model):
         XDSConfiguration,
         on_delete=models.CASCADE,
     )
-    
+
     def get_absolute_url(self):
         """ URL for displaying individual model records."""
         return reverse('Configuration-detail', args=[str(self.id)])
@@ -47,6 +48,7 @@ class XDSUIConfiguration(models.Model):
         if not self.pk and XDSUIConfiguration.objects.exists():
             raise ValidationError('XDSUIConfiguration model already exists')
         return super(XDSUIConfiguration, self).save(*args, **kwargs)
+
 
 class SearchFilter(models.Model):
     """Model to contain fields used for filtering search results"""
@@ -61,13 +63,15 @@ class SearchFilter(models.Model):
         help_text='Enter the metadata field name as displayed in Elasticsearch\
              e.g. course.title'
     )
-    xds_ui_configuration = models.ForeignKey(XDSUIConfiguration, 
-        on_delete=models.CASCADE)
+    xds_ui_configuration = models.ForeignKey(XDSUIConfiguration,
+                                             on_delete=models.CASCADE)
     filter_type = models.CharField(
         max_length=200,
         choices=FILTER_TYPE_CHOICES,
         default='terms',
     )
+
+    active = models.BooleanField(default=True)
 
     def get_absolute_url(self):
         """ URL for displaying individual model records."""

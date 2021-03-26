@@ -2,11 +2,10 @@ import json
 import logging
 import os
 
-from elasticsearch_dsl import Q, Search, connections, A
+from elasticsearch_dsl import A, Q, Search, connections
 from elasticsearch_dsl.query import MoreLikeThis
 
-from core.models import XDSConfiguration, XDSUIConfiguration, SearchFilter
-from es_api.searches import MetadataSearch
+from core.models import SearchFilter, XDSConfiguration
 
 connections.create_connection(alias='default',
                               hosts=[os.environ.get('ES_HOST'), ], timeout=60)
@@ -44,8 +43,9 @@ def add_search_aggregations(filter_set, search):
         full_field_name = curr_filter.field_name + '.keyword'
         curr_agg = A(curr_filter.filter_type, field=full_field_name)
         search.aggs.bucket(curr_filter.display_name, curr_agg)
-    
+
     return
+
 
 def add_search_filters(search, filters):
     """This helper method iterates through the filters and adds them
@@ -54,12 +54,13 @@ def add_search_filters(search, filters):
 
     for filter_name in filters:
         if filter_name != 'page':
-            logger.info(filter_name)
-            logger.info(filters[filter_name])
+            # logger.info(filter_name)
+            # logger.info(filters[filter_name])
+            # .keyword is necessary for elastic search filtering
             field_name = filter_name + '.keyword'
-            result_search = result_search.post_filter('terms', \
-                **{field_name: filters[filter_name]})
-    
+            result_search = result_search\
+                .filter('terms', **{field_name: filters[filter_name]})
+
     return result_search
 
 
@@ -70,21 +71,21 @@ def search_by_keyword(keyword="", filters={}):
                           Q("match", Course__CourseTitle=keyword)],
           minimum_should_match=1)
 
-
-    # setting up the search object 
+    # setting up the search object
     s = Search(using='default', index=os.environ.get('ES_INDEX')).query(q)
 
     # getting the page size for result pagination
     configuration = XDSConfiguration.objects.first()
     uiConfig = configuration.xdsuiconfiguration
-    search_filters = SearchFilter.objects.filter(xds_ui_configuration=uiConfig)
+    search_filters = SearchFilter.objects.filter(xds_ui_configuration=uiConfig,
+                                                 active=True)
 
     # create aggregations for each filter
     add_search_aggregations(filter_set=search_filters, search=s)
 
     # add filters to the search query
     s = add_search_filters(search=s, filters=filters)
-    
+
     page_size = uiConfig.search_results_per_page
     start_index = get_page_start(int(filters['page']), page_size)
     end_index = start_index + page_size
@@ -137,7 +138,8 @@ def get_results(response):
         hit_arr.append(hit_dict)
 
     for key in agg_dict:
-        search_filter = SearchFilter.objects.filter(display_name=key).first()
+        search_filter = SearchFilter.objects.filter(display_name=key,
+                                                    active=True).first()
         filter_obj = agg_dict[key]
         filter_obj['field_name'] = search_filter.field_name
 
