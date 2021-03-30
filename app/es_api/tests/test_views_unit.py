@@ -25,7 +25,10 @@ class ViewTests(APITestCase):
             keyword is provided"""
         url = "%s?keyword=hello" % (reverse(views.search_index))
         with patch('es_api.views.search_by_keyword') as searchByKW, \
-                patch('es_api.views.get_results') as getResults:
+                patch('es_api.views.get_results') as getResults, \
+                patch('es_api.views.SearchFilter.objects') as sfObj:
+            sfObj.return_value = []
+            sfObj.filter.return_value = []
             result_json = json.dumps({"test": "value"})
             searchByKW.return_value = {
                 "hits": {
