@@ -4,11 +4,11 @@ on:
   push:
     branches: 
       - main
-      - micson-codetest
+      - micson-test-WIP
   pull_request:
     branches: 
       - main
-      - micson-codetest
+      - micson-test-WIP
 jobs:
   run:
     name: Code Test
