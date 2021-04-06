@@ -5,7 +5,7 @@ import os
 from elasticsearch_dsl import A, Q, Search, connections
 from elasticsearch_dsl.query import MoreLikeThis
 
-from core.models import SearchFilter, XDSConfiguration
+from core.models import SearchFilter, XDSConfiguration, SearchSortOption
 
 connections.create_connection(alias='default',
                               hosts=[os.environ.get('ES_HOST'), ], timeout=60)
@@ -43,13 +43,35 @@ def add_search_filters(search, filters):
     result_search = search
 
     for filter_name in filters:
-        if filter_name != 'page':
+        if filter_name != 'page' and filter_name != 'sort':
             # logger.info(filter_name)
             # logger.info(filters[filter_name])
             # .keyword is necessary for elastic search filtering
             field_name = filter_name + '.keyword'
             result_search = result_search\
                 .filter('terms', **{field_name: filters[filter_name]})
+
+    return result_search
+
+
+def add_search_sort(search, filters):
+    """This helper method checks if one of the configured sort options was
+        sent with the request then adds it to the search query
+        search = Elasticsearch Search object
+        filters = object containing all the request parameters
+        returns -> modified Elasticsearch search object"""
+    # add sort if it was sent in the request
+    result_search = search
+
+    if 'sort' in filters:
+        key = filters['sort']
+        sort_option = SearchSortOption.objects.filter(field_name=key,
+                                                      active=True)
+
+        # checking that the passed field name is allowed
+        if sort_option:
+            # need to add .keyword for Elasticsearch
+            result_search = result_search.sort(key + '.keyword')
 
     return result_search
 
@@ -63,6 +85,9 @@ def search_by_keyword(keyword="", filters={}):
 
     # setting up the search object
     s = Search(using='default', index=os.environ.get('ES_INDEX')).query(q)
+
+    # add sort if it's part of the request
+    s = add_search_sort(search=s, filters=filters)
 
     # getting the page size for result pagination
     configuration = XDSConfiguration.objects.first()
@@ -83,7 +108,8 @@ def search_by_keyword(keyword="", filters={}):
 
     # call to elasticsearch to execute the query
     response = s.execute()
-    logger.info(response)
+    # logger.info(response)
+    logger.info(s.to_dict())
 
     return response
 

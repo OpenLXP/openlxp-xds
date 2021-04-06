@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from core.models import SearchFilter, XDSConfiguration, XDSUIConfiguration
+from core.models import SearchFilter, XDSConfiguration, XDSUIConfiguration,\
+                        SearchSortOption
 
 
 # Register your models here.
@@ -22,3 +23,11 @@ class SearchFilterAdmin(admin.ModelAdmin):
                     'filter_type', 'active',)
     fields = [('display_name', 'field_name', 'xds_ui_configuration',
                'filter_type', 'active',)]
+
+
+@admin.register(SearchSortOption)
+class SearchSortOptionAdmin(admin.ModelAdmin):
+    list_display = ('display_name', 'field_name', 'xds_ui_configuration',
+                    'active',)
+    fields = [('display_name', 'field_name', 'xds_ui_configuration',
+               'active',)]

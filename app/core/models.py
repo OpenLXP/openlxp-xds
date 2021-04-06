@@ -80,3 +80,28 @@ class SearchFilter(models.Model):
     def __str__(self):
         """String for representing the Model object."""
         return f'{self.id}'
+
+
+class SearchSortOption(models.Model):
+    """Model to contain options for sorting search results"""
+
+    display_name = models.CharField(
+        max_length=200,
+        help_text='Enter the display name of the sorting option')
+    field_name = models.CharField(
+        max_length=200,
+        help_text='Enter the metadata field name as displayed in Elasticsearch\
+             e.g. course.title'
+    )
+    xds_ui_configuration = models\
+        .ForeignKey(XDSUIConfiguration, on_delete=models.CASCADE,
+                    related_name='search_sort_options')
+    active = models.BooleanField(default=True)
+
+    def get_absolute_url(self):
+        """ URL for displaying individual model records."""
+        return reverse('Configuration-detail', args=[str(self.id)])
+
+    def __str__(self):
+        """String for representing the Model object."""
+        return f'{self.id}'
