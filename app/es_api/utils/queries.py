@@ -5,7 +5,7 @@ import os
 from elasticsearch_dsl import A, Q, Search, connections
 from elasticsearch_dsl.query import MoreLikeThis
 
-from core.models import SearchFilter, XDSConfiguration, SearchSortOption
+from core.models import SearchFilter, SearchSortOption, XDSConfiguration
 
 connections.create_connection(alias='default',
                               hosts=[os.environ.get('ES_HOST'), ], timeout=60)

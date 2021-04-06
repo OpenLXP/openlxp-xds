@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from core.models import SearchFilter, XDSConfiguration, XDSUIConfiguration,\
-                        SearchSortOption
+from core.models import (SearchFilter, SearchSortOption, XDSConfiguration,
+                         XDSUIConfiguration)
 
 
 # Register your models here.

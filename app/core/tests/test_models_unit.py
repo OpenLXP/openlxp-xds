@@ -1,7 +1,7 @@
 from django.test import SimpleTestCase, tag
 
-from core.models import SearchFilter, XDSConfiguration, XDSUIConfiguration,\
-                        SearchSortOption
+from core.models import (SearchFilter, SearchSortOption, XDSConfiguration,
+                         XDSUIConfiguration)
 
 
 @tag('unit')

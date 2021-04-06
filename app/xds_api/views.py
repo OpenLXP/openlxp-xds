@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import XDSConfiguration, XDSUIConfiguration
-from xds_api.serializers import XDSConfigurationSerializer, \
-                                XDSUIConfigurationSerializer
+from xds_api.serializers import (XDSConfigurationSerializer,
+                                 XDSUIConfigurationSerializer)
 
 logger = logging.getLogger('dict_config_logger')
 

@@ -2,7 +2,7 @@ import logging
 
 from rest_framework import serializers
 
-from core.models import XDSConfiguration, XDSUIConfiguration, SearchSortOption
+from core.models import SearchSortOption, XDSConfiguration, XDSUIConfiguration
 
 logger = logging.getLogger('dict_config_logger')
 
