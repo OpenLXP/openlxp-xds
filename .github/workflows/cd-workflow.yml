@@ -10,7 +10,7 @@ on:
       - main
       - micson-test-WIP
 jobs:
-  test code:
+  code-test:
     name: Code Test
     runs-on: ubuntu-latest
     env:
@@ -40,7 +40,7 @@ jobs:
         path_to_write_report: ./coverage/codecov_report.txt
         
   build:
-    needs: test code
+    needs: code-test
     name: Build Docker Image
     runs-on: ubuntu-latest
     steps:
