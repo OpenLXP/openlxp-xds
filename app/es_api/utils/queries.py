@@ -44,8 +44,6 @@ def add_search_filters(search, filters):
 
     for filter_name in filters:
         if filter_name != 'page' and filter_name != 'sort':
-            # logger.info(filter_name)
-            # logger.info(filters[filter_name])
             # .keyword is necessary for elastic search filtering
             field_name = filter_name + '.keyword'
             result_search = result_search\
@@ -108,7 +106,6 @@ def search_by_keyword(keyword="", filters={}):
 
     # call to elasticsearch to execute the query
     response = s.execute()
-    # logger.info(response)
     logger.info(s.to_dict())
 
     return response

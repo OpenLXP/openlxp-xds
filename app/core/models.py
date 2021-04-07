@@ -2,9 +2,10 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.forms import ValidationError
 from django.urls import reverse
+from model_utils.models import TimeStampedModel
 
 
-class XDSConfiguration(models.Model):
+class XDSConfiguration(TimeStampedModel):
     """Model for XDS Configuration """
 
     target_xis_metadata_api = models.CharField(
@@ -25,12 +26,14 @@ class XDSConfiguration(models.Model):
         return super(XDSConfiguration, self).save(*args, **kwargs)
 
 
-class XDSUIConfiguration(models.Model):
+class XDSUIConfiguration(TimeStampedModel):
     """Model to contain XDS UI Configuration"""
     search_results_per_page = \
         models.IntegerField(default=10,
-                            validators=[MinValueValidator(1, "results per page\
-                             should be at least 1")])
+                            validators=[MinValueValidator(1,
+                                                          "results per page "
+                                                          "should be at least "
+                                                          "1")])
     xds_configuration = models.OneToOneField(
         XDSConfiguration,
         on_delete=models.CASCADE,
@@ -50,7 +53,7 @@ class XDSUIConfiguration(models.Model):
         return super(XDSUIConfiguration, self).save(*args, **kwargs)
 
 
-class SearchFilter(models.Model):
+class SearchFilter(TimeStampedModel):
     """Model to contain fields used for filtering search results"""
     FILTER_TYPE_CHOICES = [
         ('terms', 'Checkbox'),
@@ -60,8 +63,8 @@ class SearchFilter(models.Model):
         help_text='Enter the display name of the field to filter on')
     field_name = models.CharField(
         max_length=200,
-        help_text='Enter the metadata field name as displayed in Elasticsearch\
-             e.g. course.title'
+        help_text='Enter the metadata field name as displayed in Elasticsearch'
+                  ' e.g. course.title'
     )
     xds_ui_configuration = models.ForeignKey(XDSUIConfiguration,
                                              on_delete=models.CASCADE)
@@ -82,7 +85,7 @@ class SearchFilter(models.Model):
         return f'{self.id}'
 
 
-class SearchSortOption(models.Model):
+class SearchSortOption(TimeStampedModel):
     """Model to contain options for sorting search results"""
 
     display_name = models.CharField(
@@ -90,8 +93,8 @@ class SearchSortOption(models.Model):
         help_text='Enter the display name of the sorting option')
     field_name = models.CharField(
         max_length=200,
-        help_text='Enter the metadata field name as displayed in Elasticsearch\
-             e.g. course.title'
+        help_text='Enter the metadata field name as displayed in Elasticsearch'
+                  ' e.g. course.title'
     )
     xds_ui_configuration = models\
         .ForeignKey(XDSUIConfiguration, on_delete=models.CASCADE,

@@ -31,8 +31,8 @@ def search_index(request):
 
     if keyword != '':
         errorMsg = {
-            "message": "error executing ElasticSearch query; " +
-                       "please check the logs"
+            "message": "error executing ElasticSearch query; Please contact " +
+                       "an administrator"
         }
         errorMsgJSON = json.dumps(errorMsg)
 
