@@ -54,7 +54,7 @@ jobs:
        docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
     - name: Docker build
       run: |
-       docker build . -t openlxp/openlxp-xia-dau
+       docker build . -t openlxp/openlxp-xds
     - name: Push Image
       run: |
-        docker push openlxp/openlxp-xia-dau
+        docker push openlxp/openlxp-xds
