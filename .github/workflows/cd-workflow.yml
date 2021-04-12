@@ -36,6 +36,7 @@ jobs:
         pip install pytest
         pip install pytest-cov
         pwd
+        git@github.com:openlxp/openlxp-private.git
         cp ./openlxp-private/openlxp-xds-env/.env .
         docker network create openlxp
         docker-compose --env-file ./.env run app sh -c "python manage.py waitdb && coverage run manage.py test --tag=unit && flake8 && coverage report && coverage report --fail-under=80"
