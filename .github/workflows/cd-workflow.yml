@@ -37,7 +37,7 @@ jobs:
         pip install pytest-cov
         pwd
         docker network create openlxp
-        docker-compose --env-file /openlxp-private/openlxp-xds-env/.env run app sh -c "python manage.py waitdb && coverage run manage.py test --tag=unit && flake8 && coverage report && coverage report --fail-under=80"
+        docker-compose --env-file ./openlxp-private/openlxp-xds-env/.env run app sh -c "python manage.py waitdb && coverage run manage.py test --tag=unit && flake8 && coverage report && coverage report --fail-under=80"
 # Commenting this step for now. 
 #    - name: Upload Coverage to Codecov
 #      uses: codecov/codecov-action@v1
