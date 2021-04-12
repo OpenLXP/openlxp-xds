@@ -38,8 +38,12 @@ jobs:
         pip install pytest
         pip install pytest-cov
         pwd
+        echo "Cloning private repo"
         git clone https://micson-us:${{ secrets.ACCESS_TOKEN }}@github.com/OpenLXP/openlxp-private.git
+        echo "private repo cloned"
+        echo "copying .env file to working directory from private repo"
         cp ./openlxp-private/openlxp-xds-env/.env .
+        echo "copied .env file successfully"
         docker network create openlxp
         docker-compose --env-file ./.env run app sh -c "python manage.py waitdb && coverage run manage.py test --tag=unit && flake8 && coverage report && coverage report --fail-under=80"
 # Commenting this step for now. 
