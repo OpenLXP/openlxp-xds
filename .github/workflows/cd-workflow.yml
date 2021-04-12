@@ -29,14 +29,13 @@ jobs:
     - name: Checkout private repository
       uses: actions/checkout@v1
       with:
-        repository: openlxp-private
+        repository: openlxp/openlxp-private
         token: ${{ secrets.ACCESS_TOKEN }}
     - name: Generate Coverage Report
       run: |
         pip install pytest
         pip install pytest-cov
         pwd
-        gh repo clone OpenLXP/openlxp-private
         docker network create openlxp
         docker-compose --env-file /openlxp-private/openlxp-xds-env/.env run app sh -c "python manage.py waitdb && coverage run manage.py test --tag=unit && flake8 && coverage report && coverage report --fail-under=80"
 # Commenting this step for now. 
