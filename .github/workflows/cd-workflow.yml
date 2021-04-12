@@ -27,6 +27,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r ./requirements.txt
     - name: Checkout private repository
+      uses: actions/checkout@v1
       with:
         repository: openlxp-private
         token: ${{ secrets.ACCESS_TOKEN }}
