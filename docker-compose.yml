@@ -15,6 +15,7 @@ services:
       - openlxp
 
   app:
+    container_name: openlxp-xds
     build:
       context: .
     ports:
