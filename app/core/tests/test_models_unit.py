@@ -1,6 +1,7 @@
 from django.test import SimpleTestCase, tag
 
-from core.models import SearchFilter, XDSConfiguration, XDSUIConfiguration
+from core.models import (SearchFilter, SearchSortOption, XDSConfiguration,
+                         XDSUIConfiguration)
 
 
 @tag('unit')
@@ -29,3 +30,13 @@ class ModelTests(SimpleTestCase):
                           field_name="test",
                           xds_ui_configuration=uiConfig)
         self.assertEqual(sf.xds_ui_configuration, uiConfig)
+
+    def test_create_search_sort_option(self):
+        """Test that creating a a search sort option works as expected"""
+        name = "test name"
+        field = "test.name"
+        sort_option = SearchSortOption(display_name=name,
+                                       field_name=field)
+        self.assertEqual(name, sort_option.display_name)
+        self.assertEqual(field, sort_option.field_name)
+        self.assertTrue(sort_option.active)

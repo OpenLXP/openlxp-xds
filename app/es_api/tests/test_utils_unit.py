@@ -4,10 +4,11 @@ from unittest.mock import patch
 from django.test import SimpleTestCase, tag
 from elasticsearch_dsl import Q, Search
 
-from core.models import SearchFilter, XDSConfiguration, XDSUIConfiguration
+from core.models import (SearchFilter, SearchSortOption, XDSConfiguration,
+                         XDSUIConfiguration)
 from es_api.utils.queries import (add_search_aggregations, add_search_filters,
-                                  get_page_start, get_results, more_like_this,
-                                  search_by_keyword)
+                                  add_search_sort, get_page_start, get_results,
+                                  more_like_this, search_by_keyword)
 
 
 @tag('unit')
@@ -192,3 +193,49 @@ class UtilTests(SimpleTestCase):
                 self.assertTrue(hasBucket)
 
         self.assertTrue(hasAggs)
+
+    def test_add_search_sort_none(self):
+        """Test that when add_search_sorts is called with no sort parameter\
+            then the search object does not have a sort attribute"""
+        q = Q("bool", should=[Q("match", Test="test")],
+              minimum_should_match=1)
+        s = Search(using='default', index='something').query(q)
+
+        with patch('es_api.utils.queries.SearchSortOption.objects') as \
+                sortOpts:
+            sortOpts.filter.return_value = []
+            filters = {"test": "Test"}
+            hasSort = False
+
+            result = add_search_sort(search=s, filters=filters)
+            result_dict = result.to_dict()
+
+            if 'sort' in result_dict:
+                hasSort = True
+
+            self.assertFalse(hasSort)
+
+    def test_add_search_sort_selected(self):
+        """Test that when add_search_sorts is called with a sort parameter\
+            then the search object does have a sort attribute"""
+        q = Q("bool", should=[Q("match", Test="test")],
+              minimum_should_match=1)
+        s = Search(using='default', index='something').query(q)
+
+        with patch('es_api.utils.queries.SearchSortOption.objects') as \
+                sortOpts:
+            sortOption = SearchSortOption(display_name="test",
+                                          field_name="test-field",
+                                          xds_ui_configuration=None,
+                                          active=True)
+            sortOpts.filter.return_value = [sortOption]
+            filters = {"sort": "test-field"}
+            hasSort = False
+
+            result = add_search_sort(search=s, filters=filters)
+            result_dict = result.to_dict()
+
+            if 'sort' in result_dict:
+                hasSort = True
+
+            self.assertTrue(hasSort)
