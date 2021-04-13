@@ -4,13 +4,12 @@ on:
   push:
     branches: 
       - main
-      - micson-test-WIP
   pull_request:
     branches: 
       - main
-      - micson-test-WIP
 jobs:
   code-test:
+# Kicks off the workflow and prepares Github to run coverage test using a ubuntu-latest container.
     name: Code Test
     runs-on: ubuntu-latest
     env:
@@ -22,29 +21,28 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.9
+# Install dependencies required for tests
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r ./requirements.txt
-#    - name: Checkout private repository
-#      uses: actions/checkout@main
-#      with:
-#        repository: openlxp/openlxp-private
-#        token: ${{ secrets.ACCESS_TOKEN }}
+# Start running test scripts and generate the coverage report
     - name: Generate Coverage Report
       env:
         GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
       run: |
         pip install pytest
         pip install pytest-cov
-        pwd
-        echo "Cloning private repo"
+        echo "Cloning private repository"
         git clone https://micson-us:${{ secrets.ACCESS_TOKEN }}@github.com/OpenLXP/openlxp-private.git
-        echo "private repo cloned"
-        echo "copying .env file to working directory from private repo"
+        echo "Private repository cloned successfully"
+        echo "Copying .env file from openlxp-private to current working directory"
         cp ./openlxp-private/openlxp-xds-env/.env .
-        echo "copied .env file successfully"
+        echo "Copied .env file successfully"
+        echo "Create openlxp docker network"
         docker network create openlxp
+        echo "Docker network successfully created"
+        echo "Running coverage unit test"
         docker-compose --env-file ./.env run app sh -c "python manage.py waitdb && coverage run manage.py test --tag=unit && flake8 && coverage report && coverage report --fail-under=80"
 # Commenting this step for now. 
 #    - name: Upload Coverage to Codecov
@@ -54,6 +52,7 @@ jobs:
 #        path_to_write_report: ./coverage/codecov_report.txt
         
   build:
+    # requires dependency from step above
     needs: code-test
     name: Build Docker Image
     runs-on: ubuntu-latest
@@ -65,10 +64,13 @@ jobs:
        DOCKER_USER: ${{ secrets.DOCKER_USER }}
        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
+       echo "Authenticate to Docker"
        docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
     - name: Docker build
       run: |
+       echo "Start docker build"
        docker build . -t openlxp/openlxp-xds
     - name: Push Image
       run: |
-        docker push openlxp/openlxp-xds
+       echo "Push new image to the Dockerhub repository"
+       docker push openlxp/openlxp-xds
