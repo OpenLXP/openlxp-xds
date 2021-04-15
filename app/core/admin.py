@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from core.models import (SearchFilter, SearchSortOption, XDSConfiguration,
-                         XDSUIConfiguration)
+                         XDSUIConfiguration, CourseDetailHighlight)
 
 
 # Register your models here.
@@ -15,7 +15,8 @@ class XDSConfigurationAdmin(admin.ModelAdmin):
 class XDSUIConfigurationAdmin(admin.ModelAdmin):
     list_display = ('search_results_per_page', 'xds_configuration',
                     'created', 'modified',)
-    fields = [('search_results_per_page', 'xds_configuration',)]
+    fields = [('search_results_per_page', 'xds_configuration',
+               'course_img_fallback')]
 
 
 @admin.register(SearchFilter)
@@ -32,3 +33,11 @@ class SearchSortOptionAdmin(admin.ModelAdmin):
                     'active', 'created', 'modified',)
     fields = [('display_name', 'field_name', 'xds_ui_configuration',
                'active',)]
+
+
+@admin.register(CourseDetailHighlight)
+class CourseDetailHighlightAdmin(admin.ModelAdmin):
+    list_display = ('display_name', 'field_name', 'xds_ui_configuration',
+                    'active', 'highlight_icon', 'rank', 'created', 'modified',)
+    fields = [('display_name', 'field_name', 'xds_ui_configuration',
+               'active', 'highlight_icon', 'rank',)]
