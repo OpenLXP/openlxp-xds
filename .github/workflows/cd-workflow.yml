@@ -4,11 +4,9 @@ on:
   push:
     branches: 
       - main
-      - update-secrets-user
   pull_request:
     branches: 
       - main
-      - update-secrets-user
 jobs:
   code-test:
 # Kicks off the workflow and prepares Github to run coverage test using a ubuntu-latest container.
