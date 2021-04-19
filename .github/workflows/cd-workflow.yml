@@ -4,9 +4,11 @@ on:
   push:
     branches: 
       - main
+      - update-secrets-user
   pull_request:
     branches: 
       - main
+      - update-secrets-user
 jobs:
   code-test:
 # Kicks off the workflow and prepares Github to run coverage test using a ubuntu-latest container.
@@ -31,8 +33,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
       run: |
-        pip install pytest
-        pip install pytest-cov
         echo "Cloning private repository"
         git clone https://openlxp-host:${{ secrets.ACCESS_TOKEN }}@github.com/OpenLXP/openlxp-private.git
         echo "Private repository cloned successfully"
