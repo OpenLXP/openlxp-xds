@@ -34,7 +34,7 @@ jobs:
         pip install pytest
         pip install pytest-cov
         echo "Cloning private repository"
-        git clone https://micson-us:${{ secrets.ACCESS_TOKEN }}@github.com/OpenLXP/openlxp-private.git
+        git clone https://openlxp-host:${{ secrets.ACCESS_TOKEN }}@github.com/OpenLXP/openlxp-private.git
         echo "Private repository cloned successfully"
         echo "Copying .env file from openlxp-private to current working directory"
         cp ./openlxp-private/openlxp-xds-env/.env .
