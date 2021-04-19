@@ -2,8 +2,8 @@ import logging
 
 from rest_framework import serializers
 
-from core.models import SearchSortOption, XDSConfiguration, \
-                        XDSUIConfiguration, CourseDetailHighlight
+from core.models import (CourseDetailHighlight, SearchSortOption,
+                         XDSConfiguration, XDSUIConfiguration)
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -54,7 +54,7 @@ class CourseDetailHighlightSerializer(serializers.ModelSerializer):
         model = CourseDetailHighlight
 
         fields = ['display_name', 'field_name', 'active',
-                  'xds_ui_configuration', 'highlight_icon',]
+                  'xds_ui_configuration', 'highlight_icon', ]
 
 
 class XDSUIConfigurationSerializer(serializers.ModelSerializer):

@@ -30,4 +30,5 @@ class ViewTests(APITestCase):
             self.assertEqual(response_dict['search_results_per_page'],
                              xds_ui_cfg.search_results_per_page)
             self.assertEqual(response_dict['search_sort_options'], [])
+            self.assertEqual(response_dict['course_highlights'], [])
             self.assertEqual(response.status_code, status.HTTP_200_OK)

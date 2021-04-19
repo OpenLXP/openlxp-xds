@@ -154,7 +154,7 @@ class CourseDetailHighlight(TimeStampedModel):
     def __str__(self):
         """String for representing the Model object."""
         return f'{self.id}'
-    
+
     def save(self, *args, **kwargs):
         num_active_highlights = \
             CourseDetailHighlight.objects.filter(active=True).count()
@@ -162,13 +162,13 @@ class CourseDetailHighlight(TimeStampedModel):
         # only 8 highlights can be active at any given time
         if num_active_highlights >= 8:
             # if it's a new record and set to active
-            if not self.pk and self.active == True:
+            if not self.pk and self.active is True:
                 raise ValidationError('Max of 8 active highlight fields has '
                                       'been reached.')
             # updating old record to active
-            elif self.active == False:
+            elif self.active is False:
                 raise ValidationError('Max of 8 active highlight fields has '
                                       'been reached.')
-            else: 
+            else:
                 return super(CourseDetailHighlight, self).save(*args, **kwargs)
         return super(CourseDetailHighlight, self).save(*args, **kwargs)
