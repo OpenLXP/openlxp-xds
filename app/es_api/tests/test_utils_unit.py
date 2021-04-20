@@ -4,11 +4,12 @@ from unittest.mock import patch
 from django.test import SimpleTestCase, tag
 from elasticsearch_dsl import Q, Search
 
-from core.models import (SearchFilter, SearchSortOption, XDSConfiguration,
-                         XDSUIConfiguration)
+from core.models import (CourseSpotlight, SearchFilter, SearchSortOption,
+                         XDSConfiguration, XDSUIConfiguration)
 from es_api.utils.queries import (add_search_aggregations, add_search_filters,
                                   add_search_sort, get_page_start, get_results,
-                                  more_like_this, search_by_keyword)
+                                  more_like_this, search_by_keyword,
+                                  spotlight_courses)
 
 
 @tag('unit')
@@ -239,3 +240,48 @@ class UtilTests(SimpleTestCase):
                 hasSort = True
 
             self.assertTrue(hasSort)
+
+    def test_spotlight_courses_non_empty(self):
+        """Test that when spotlight_courses is called wwith documents
+            configured then it returns an array with the documents"""
+        with patch('es_api.utils.queries.CourseSpotlight.objects') as \
+                spotlightObjs, patch('elasticsearch_dsl.Document.mget') as \
+                mget:
+            doc_1 = {
+                "_source": {
+                    "test": "val",
+                    "test2": "val2"
+                },
+                "_id": "12312",
+                "_index": "test-index"
+            }
+            doc_2 = {
+                "_source": {
+                    "test3": "val3",
+                    "test4": "val4"
+                },
+                "_id": "43231",
+                "_index": "test-index-2"
+            }
+            spotlight = CourseSpotlight(course_id=1)
+            spotlightObjs.filter.return_value = [spotlight]
+            instance_1 = mget.return_value
+            mget.return_value = [instance_1, instance_1]
+            instance_1.to_dict.side_effect = [doc_1, doc_2]
+            result = spotlight_courses()
+
+            self.assertEqual(len(result), 2)
+            self.assertTrue('meta' in result[0])
+            self.assertEqual(doc_1["_id"], result[0]["meta"]["id"])
+
+    def test_spotlight_courses_empty(self):
+        """Test that when spotlight_courses is called wwith no documents
+            then it throws an error"""
+        with patch('es_api.utils.queries.CourseSpotlight.objects') as \
+                spotlightObjs, patch('elasticsearch_dsl.Document.mget') as \
+                mget:
+            spotlightObjs.filter.return_value = []
+            mget.return_value = []
+            result = spotlight_courses()
+
+            self.assertEqual(len(result), 0)

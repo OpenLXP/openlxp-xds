@@ -2,11 +2,11 @@ import json
 import logging
 import os
 
-from elasticsearch_dsl import A, Q, Search, connections, Document
+from elasticsearch_dsl import A, Document, Q, Search, connections
 from elasticsearch_dsl.query import MoreLikeThis
 
-from core.models import (SearchFilter, SearchSortOption, XDSConfiguration,
-                         CourseSpotlight)
+from core.models import (CourseSpotlight, SearchFilter, SearchSortOption,
+                         XDSConfiguration)
 
 connections.create_connection(alias='default',
                               hosts=[os.environ.get('ES_HOST'), ], timeout=60)
@@ -140,7 +140,6 @@ def more_like_this(doc_id):
 def spotlight_courses():
     """This method queries elasticsearch for courses with ids matching the
         ids of stored CourseSpotlight objects that are active"""
-    s = Search(using='default', index=os.environ.get('ES_INDEX'))
     course_spotlights = CourseSpotlight.objects.filter(active=True)
     id_list = []
     result = []
@@ -153,13 +152,12 @@ def spotlight_courses():
                          index=os.environ.get('ES_INDEX'),
                          raise_on_error=True,
                          missing='none',)
-    
+
     for doc in docs:
         curr_dict = doc.to_dict(include_meta=True, skip_empty=True)
         obj_data = curr_dict["_source"]
-        document_dict = {}
         meta = {}
-        
+
         meta["id"] = curr_dict["_id"]
         meta["index"] = curr_dict["_index"]
         obj_data["meta"] = meta

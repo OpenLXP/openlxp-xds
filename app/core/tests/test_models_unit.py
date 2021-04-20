@@ -1,7 +1,8 @@
 from django.test import SimpleTestCase, tag
 
-from core.models import (CourseDetailHighlight, SearchFilter, SearchSortOption,
-                         XDSConfiguration, XDSUIConfiguration)
+from core.models import (CourseDetailHighlight, CourseSpotlight, SearchFilter,
+                         SearchSortOption, XDSConfiguration,
+                         XDSUIConfiguration)
 
 
 @tag('unit')
@@ -60,3 +61,11 @@ class ModelTests(SimpleTestCase):
         self.assertEqual(courseHighlight.highlight_icon, highlight_icon)
         self.assertEqual(courseHighlight.rank, 1)
         self.assertEqual(courseHighlight.active, active)
+
+    def test_create_courseSpotlight(self):
+        """Test the creation of a course spotlight object"""
+        c_id = "12345"
+        spotlight = CourseSpotlight(course_id=c_id)
+
+        self.assertEqual(c_id, spotlight.course_id)
+        self.assertTrue(spotlight.active)

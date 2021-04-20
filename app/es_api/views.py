@@ -110,7 +110,7 @@ def get_spotlight_courses(request):
 
     try:
         results = spotlight_courses()
-        resultJSON = json.dumps(results) 
+        resultJSON = json.dumps(results)
     except HTTPError as http_err:
         logger.error(http_err)
         return HttpResponseServerError(errorMsgJSON,
