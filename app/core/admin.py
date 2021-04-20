@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from core.models import (CourseDetailHighlight, SearchFilter, SearchSortOption,
-                         XDSConfiguration, XDSUIConfiguration)
+                         XDSConfiguration, XDSUIConfiguration, CourseSpotlight)
 
 
 # Register your models here.
@@ -41,3 +41,8 @@ class CourseDetailHighlightAdmin(admin.ModelAdmin):
                     'active', 'highlight_icon', 'rank', 'created', 'modified',)
     fields = [('display_name', 'field_name', 'xds_ui_configuration',
                'active', 'highlight_icon', 'rank',)]
+
+
+@admin.register(CourseSpotlight)
+class CourseSpotlightAdmin(admin.ModelAdmin):
+    pass

@@ -6,7 +6,8 @@ from django.http import (HttpResponse, HttpResponseBadRequest,
 from requests.exceptions import HTTPError
 
 from core.models import SearchFilter
-from es_api.utils.queries import get_results, more_like_this, search_by_keyword
+from es_api.utils.queries import (get_results, more_like_this,
+                                  search_by_keyword, spotlight_courses)
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -94,3 +95,30 @@ def get_more_like_this(request, doc_id):
     else:
         logger.info(results)
         return HttpResponse(results, content_type="application/json")
+
+
+def get_spotlight_courses(request):
+    """This method defines an API for fetching configured course spotlights
+        from elasticsearch. """
+    results = []
+
+    errorMsg = {
+        "message": "error executing ElasticSearch query; " +
+                   "please check the logs"
+        }
+    errorMsgJSON = json.dumps(errorMsg)
+
+    try:
+        results = spotlight_courses()
+        resultJSON = json.dumps(results) 
+    except HTTPError as http_err:
+        logger.error(http_err)
+        return HttpResponseServerError(errorMsgJSON,
+                                       content_type="application/json")
+    except Exception as err:
+        logger.error(err)
+        return HttpResponseServerError(errorMsgJSON,
+                                       content_type="application/json")
+    else:
+        logger.info(results)
+        return HttpResponse(resultJSON, content_type="application/json")

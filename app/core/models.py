@@ -172,3 +172,19 @@ class CourseDetailHighlight(TimeStampedModel):
             else:
                 return super(CourseDetailHighlight, self).save(*args, **kwargs)
         return super(CourseDetailHighlight, self).save(*args, **kwargs)
+
+
+class CourseSpotlight(TimeStampedModel):
+    """Model to define course spotlight objects"""
+    course_id = models.CharField(
+        max_length=200,
+        help_text='Enter the unique Search Engine ID of the course')
+    active = models.BooleanField(default=True)
+
+    def get_absolute_url(self):
+        """ URL for displaying individual model records."""
+        return reverse('course-spotlight', args=[str(self.id)])
+
+    def __str__(self):
+        """String for representing the Model object."""
+        return f'{self.id}'
