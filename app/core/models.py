@@ -117,7 +117,7 @@ class CourseDetailHighlight(TimeStampedModel):
         ('clock', 'clock'),
         ('hourglass', 'hourglass'),
         ('user', 'user'),
-        ('multi-users', 'multi-users'),
+        ('multi_users', 'multi_users'),
         ('location', 'location'),
         ('calendar', 'calendar'),
     ]
