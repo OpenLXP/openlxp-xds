@@ -38,7 +38,9 @@ class XDSUIConfiguration(TimeStampedModel):
         XDSConfiguration,
         on_delete=models.CASCADE,
     )
-    course_img_fallback = models.ImageField(upload_to='images/', null=True)
+    course_img_fallback = models.ImageField(upload_to='images/',
+                                            null=True,
+                                            blank=True)
 
     def get_absolute_url(self):
         """ URL for displaying individual model records."""
