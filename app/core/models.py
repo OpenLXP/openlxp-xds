@@ -12,6 +12,12 @@ class XDSConfiguration(TimeStampedModel):
         max_length=200,
         help_text='Enter the XIS api endpoint to query metadata')
 
+    target_xis_composite_ledger_api = models.CharField(
+        max_length=200,
+        help_text='Enter the XIS api endpoint to query composite ledger '
+            'data',
+        default='http://localhost:8080/api/composite-ledger/')
+
     def get_absolute_url(self):
         """ URL for displaying individual model records."""
         return reverse('Configuration-detail', args=[str(self.id)])

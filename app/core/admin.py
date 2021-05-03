@@ -8,8 +8,9 @@ from core.models import (CourseDetailHighlight, CourseSpotlight, SearchFilter,
 # Register your models here.
 @admin.register(XDSConfiguration)
 class XDSConfigurationAdmin(admin.ModelAdmin):
-    list_display = ('target_xis_metadata_api', 'created', 'modified',)
-    fields = [('target_xis_metadata_api',)]
+    list_display = ('target_xis_metadata_api', 'created', 'modified',
+        'target_xis_composite_ledger_api')
+    fields = [('target_xis_metadata_api', 'target_xis_composite_ledger_api')]
 
 
 @admin.register(XDSUIConfiguration)
@@ -46,4 +47,4 @@ class CourseDetailHighlightAdmin(admin.ModelAdmin):
 
 @admin.register(CourseSpotlight)
 class CourseSpotlightAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('course_id', 'active',)

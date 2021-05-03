@@ -7,8 +7,10 @@ router = DefaultRouter()
 
 app_name = 'xds_api'
 urlpatterns = [
-    path('configuration/', views.XDSConfigurationView.as_view(),
-         name='xds-configuration'),
-    path('ui-configuration/', views.XDSUIConfigurationView.as_view(),
-         name='xds-ui-configuration'),
+     path('configuration/', views.XDSConfigurationView.as_view(),
+          name='xds-configuration'),
+     path('ui-configuration/', views.XDSUIConfigurationView.as_view(),
+          name='xds-ui-configuration'),
+     path('spotlight-courses', views.get_spotlight_courses,
+          name='spotlight-courses'),
 ]
