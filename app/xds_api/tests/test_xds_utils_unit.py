@@ -15,8 +15,7 @@ class UtilTests(SimpleTestCase):
         """Test that get_spotlight_courses_api_url returns a full url using
             configured XIS api and saved spotlight courses IDs"""
         spotlight = CourseSpotlight(course_id='123')
-        config = XDSConfiguration(target_xis_metadata_api="test.com/",
-                                  target_xis_composite_ledger_api="test.com/")
+        config = XDSConfiguration(target_xis_metadata_api="test.com/")
         expected_result = 'test.com/?id=123'
 
         with patch('xds_api.utils.xds_utils.CourseSpotlight.objects') as \

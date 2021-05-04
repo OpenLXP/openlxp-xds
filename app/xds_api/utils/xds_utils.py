@@ -20,7 +20,7 @@ def get_spotlight_courses_api_url():
     course_spotlights = CourseSpotlight.objects.filter(active=True)
     # get search string
     composite_api_url = XDSConfiguration.objects.first()\
-        .target_xis_composite_ledger_api
+        .target_xis_metadata_api
     queryString = '?id='
 
     for num, spotlight in enumerate(course_spotlights):
