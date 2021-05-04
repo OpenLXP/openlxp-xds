@@ -15,10 +15,11 @@ services:
       - openlxp
 
   app:
+    container_name: openlxp-xds
     build:
       context: .
     ports:
-      - "8080:8020"
+      - "8100:8020"
     command: >
       sh -c ". /opt/app/start-app.sh"
     environment:

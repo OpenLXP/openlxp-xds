@@ -10,7 +10,8 @@ class XDSConfiguration(TimeStampedModel):
 
     target_xis_metadata_api = models.CharField(
         max_length=200,
-        help_text='Enter the XIS api endpoint to query metadata')
+        help_text='Enter the XIS api endpoint to query metadata',
+        default='http://localhost:8080/api/metadata/')
 
     def get_absolute_url(self):
         """ URL for displaying individual model records."""
@@ -38,6 +39,9 @@ class XDSUIConfiguration(TimeStampedModel):
         XDSConfiguration,
         on_delete=models.CASCADE,
     )
+    course_img_fallback = models.ImageField(upload_to='images/',
+                                            null=True,
+                                            blank=True)
 
     def get_absolute_url(self):
         """ URL for displaying individual model records."""
@@ -103,7 +107,86 @@ class SearchSortOption(TimeStampedModel):
 
     def get_absolute_url(self):
         """ URL for displaying individual model records."""
-        return reverse('Configuration-detail', args=[str(self.id)])
+        return reverse('search-sort-option', args=[str(self.id)])
+
+    def __str__(self):
+        """String for representing the Model object."""
+        return f'{self.id}'
+
+
+class CourseDetailHighlight(TimeStampedModel):
+    """Model to contain course detail fields to display on results"""
+    HIGHLIGHT_ICON_CHOICES = [
+        ('clock', 'clock'),
+        ('hourglass', 'hourglass'),
+        ('user', 'user'),
+        ('multi_users', 'multi_users'),
+        ('location', 'location'),
+        ('calendar', 'calendar'),
+    ]
+
+    display_name = models.CharField(
+        max_length=200,
+        help_text='Enter the display name of the sorting option')
+    field_name = models.CharField(
+        max_length=200,
+        help_text='Enter the metadata field name as displayed in Elasticsearch'
+                  ' e.g. course.title'
+    )
+    xds_ui_configuration = models\
+        .ForeignKey(XDSUIConfiguration, on_delete=models.CASCADE,
+                    related_name='course_highlights')
+    active = models.BooleanField(default=True)
+    highlight_icon = models.CharField(
+        max_length=200,
+        choices=HIGHLIGHT_ICON_CHOICES,
+        default='user',
+    )
+    rank = \
+        models.IntegerField(default=1,
+                            help_text="Order in which highlight show on the "
+                                      "course detail page (2 items per row)",
+                            validators=[MinValueValidator(1,
+                                                          "rank shoud be at "
+                                                          "least 1")])
+
+    def get_absolute_url(self):
+        """ URL for displaying individual model records."""
+        return reverse('course-detail-highlight', args=[str(self.id)])
+
+    def __str__(self):
+        """String for representing the Model object."""
+        return f'{self.id}'
+
+    def save(self, *args, **kwargs):
+        num_active_highlights = \
+            CourseDetailHighlight.objects.filter(active=True).count()
+
+        # only 8 highlights can be active at any given time
+        if num_active_highlights >= 8:
+            # if it's a new record and set to active
+            if not self.pk and self.active is True:
+                raise ValidationError('Max of 8 active highlight fields has '
+                                      'been reached.')
+            # updating old record to active
+            elif self.active is False:
+                raise ValidationError('Max of 8 active highlight fields has '
+                                      'been reached.')
+            else:
+                return super(CourseDetailHighlight, self).save(*args, **kwargs)
+        return super(CourseDetailHighlight, self).save(*args, **kwargs)
+
+
+class CourseSpotlight(TimeStampedModel):
+    """Model to define course spotlight objects"""
+    course_id = models.CharField(
+        max_length=200,
+        help_text='Enter the unique Search Engine ID of the course')
+    active = models.BooleanField(default=True)
+
+    def get_absolute_url(self):
+        """ URL for displaying individual model records."""
+        return reverse('course-spotlight', args=[str(self.id)])
 
     def __str__(self):
         """String for representing the Model object."""
