@@ -1,17 +1,16 @@
 import json
 import logging
-import requests
 
-from django.http import (HttpResponse, HttpResponseBadRequest,
-                         HttpResponseServerError)
+import requests
+from django.http import HttpResponse, HttpResponseServerError
 from requests.exceptions import HTTPError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.models import XDSConfiguration, XDSUIConfiguration, CourseSpotlight
+from core.models import XDSConfiguration, XDSUIConfiguration
 from xds_api.serializers import (XDSConfigurationSerializer,
                                  XDSUIConfigurationSerializer)
-from xds_api.utils.xds_utils import (get_request, 
+from xds_api.utils.xds_utils import (get_request,
                                      get_spotlight_courses_api_url,
                                      metadata_to_target)
 
@@ -23,7 +22,7 @@ def get_spotlight_courses(request):
         from XIS"""
     errorMsg = {
             "message": "error fetching spotlight courses; " +
-                    "please check the XDS logs"
+                       "please check the XDS logs"
             }
     errorMsgJSON = json.dumps(errorMsg)
 
@@ -45,7 +44,7 @@ def get_spotlight_courses(request):
 
     except requests.exceptions.RequestException as e:
         errorMsg = {"message": "error reaching out to configured XIS API; " +
-            "please check the XIS logs"}
+                    "please check the XIS logs"}
         errorMsgJSON = json.dumps(errorMsg)
 
         logger.error(e)
@@ -60,7 +59,7 @@ def get_spotlight_courses(request):
         logger.error(err)
         return HttpResponseServerError(errorMsgJSON,
                                        content_type="application/json")
-        
+
 
 class XDSConfigurationView(APIView):
     """XDS Configuration View"""

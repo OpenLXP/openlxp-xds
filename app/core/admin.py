@@ -9,7 +9,7 @@ from core.models import (CourseDetailHighlight, CourseSpotlight, SearchFilter,
 @admin.register(XDSConfiguration)
 class XDSConfigurationAdmin(admin.ModelAdmin):
     list_display = ('target_xis_metadata_api', 'created', 'modified',
-        'target_xis_composite_ledger_api')
+                    'target_xis_composite_ledger_api')
     fields = [('target_xis_metadata_api', 'target_xis_composite_ledger_api')]
 
 

@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from django.test import tag
 from django.urls import reverse
+from requests.exceptions import HTTPError
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -32,3 +33,42 @@ class ViewTests(APITestCase):
             self.assertEqual(response_dict['search_sort_options'], [])
             self.assertEqual(response_dict['course_highlights'], [])
             self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_spotlight_courses(self):
+        """test that calling the endpoint /api/spotlight-courses returns a
+            list of documents for configured spotlight courses"""
+        url = reverse('xds_api:spotlight-courses')
+
+        with patch('xds_api.views.get_request') as get_request, \
+            patch('xds_api.views.get_spotlight_courses_api_url') as \
+                get_api_url:
+            get_api_url.return_value = "www.test.com"
+            http_resp = get_request.return_value
+            get_request.return_value = http_resp
+            http_resp.json.return_value = [{
+                "test": "value"
+            }]
+            http_resp.status_code = 200
+
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_spotlight_courses_error(self):
+        """test that calling the endpoint /es-api/spotlight-courses returns an
+            http error if an exception a thrown while reaching out to XIS"""
+        url = reverse('xds_api:spotlight-courses')
+        errorMsg = "error reaching out to configured XIS API; " + \
+                   "please check the XIS logs"
+
+        with patch('xds_api.views.get_request') as get_request, \
+            patch('xds_api.views.get_spotlight_courses_api_url') as \
+                get_api_url:
+            get_api_url.return_value = "www.test.com"
+            get_request.side_effect = [HTTPError]
+
+            response = self.client.get(url)
+            responseDict = json.loads(response.content)
+
+            self.assertEqual(response.status_code,
+                             status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(responseDict['message'], errorMsg)

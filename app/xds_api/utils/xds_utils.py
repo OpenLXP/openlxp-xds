@@ -1,20 +1,20 @@
 import json
+
 import requests
 
 from core.models import CourseSpotlight, XDSConfiguration
 
 
 def get_request(request_url):
-    """This method handles a simple HTTP get request to the passe in 
+    """This method handles a simple HTTP get request to the passe in
         request_url"""
-    headers = {'Content-Type': 'application/json'}
-
     response = requests.get(request_url)
 
     return response
 
+
 def get_spotlight_courses_api_url():
-    """This method gets the list of configured course spotlight IDs, the 
+    """This method gets the list of configured course spotlight IDs, the
         configured XIS api url and generates the query to request records"""
     # get XIS API url
     course_spotlights = CourseSpotlight.objects.filter(active=True)
@@ -32,6 +32,7 @@ def get_spotlight_courses_api_url():
     full_api_string = composite_api_url + queryString
 
     return full_api_string
+
 
 def metadata_to_target(metadata_JSON):
     """This method takes in a JSON representation of a record and transforms it

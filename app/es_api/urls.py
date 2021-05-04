@@ -7,6 +7,5 @@ router = DefaultRouter()
 
 urlpatterns = [
     path('more-like-this/<str:doc_id>/', views.get_more_like_this),
-    path('spotlight-courses', views.get_spotlight_courses),
     path('', views.search_index),
 ]

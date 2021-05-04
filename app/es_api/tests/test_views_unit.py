@@ -76,32 +76,3 @@ class ViewTests(APITestCase):
             self.assertEqual(response.status_code,
                              status.HTTP_500_INTERNAL_SERVER_ERROR)
             self.assertEqual(responseDict['message'], errorMsg)
-
-    def test_get_spotlight_courses(self):
-        """test that calling the endpoint /es-api/spotlight-courses returns a
-            list of documents for configured spotlight courses"""
-        url = reverse(views.get_spotlight_courses)
-
-        with patch('es_api.views.spotlight_courses') as spotlight_course:
-            spotlight_course.return_value = [{
-                "test": "value"
-            }]
-
-            response = self.client.get(url)
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_get_spotlight_courses_error(self):
-        """test that calling the endpoint /es-api/spotlight-courses returns an
-            http error if an exception a thrown while reaching out to ES"""
-        url = reverse(views.get_spotlight_courses)
-        errorMsg = "error executing ElasticSearch query; please check the logs"
-
-        with patch('es_api.views.spotlight_courses') as spotlight_course:
-            spotlight_course.side_effect = [HTTPError]
-
-            response = self.client.get(url)
-            responseDict = json.loads(response.content)
-
-            self.assertEqual(response.status_code,
-                             status.HTTP_500_INTERNAL_SERVER_ERROR)
-            self.assertEqual(responseDict['message'], errorMsg)
