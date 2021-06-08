@@ -78,9 +78,11 @@ def add_search_sort(search, filters):
 def search_by_keyword(keyword="", filters={}):
     """This method takes in a keyword string + a page number and queries
         ElasticSearch for the term then returns the Response Object"""
-    q = Q("bool", should=[Q("match", Course__CourseDescription=keyword),
-                          Q("match", Course__CourseTitle=keyword)],
-          minimum_should_match=1)
+
+    q = Q("multi_match",
+          query=keyword,
+          fields=['Course.CourseShortDescription',
+                  'Course.CourseFullDescription', 'Course.CourseTitle'])
 
     # setting up the search object
     s = Search(using='default', index=os.environ.get('ES_INDEX')).query(q)
@@ -124,8 +126,7 @@ def more_like_this(doc_id):
     s = Search(using='default', index=os.environ.get('ES_INDEX'))
 
     # We're going to match based only on two fields
-    s = s.query(MoreLikeThis(like=likeObj, fields=['Course.CourseTitle',
-                                                   'Course.CourseDescription'])
+    s = s.query(MoreLikeThis(like=likeObj)
                 )
 
     # only fetch the first 6 results

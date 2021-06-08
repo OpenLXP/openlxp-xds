@@ -1,8 +1,70 @@
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.forms import ValidationError
 from django.urls import reverse
 from model_utils.models import TimeStampedModel
+
+from core.management.utils.notification import email_verification
+
+
+class XDSUserProfileManager(BaseUserManager):
+    """User manager"""
+    def create_user(self, email, password=None, **other_fields):
+        """Create a new user"""
+        if not email:
+            raise ValueError('Email is required')
+
+        # if not first_name:
+        #     raise ValueError('First name is required')
+
+        # if not last_name:
+        #     raise ValueError('Last name is required')
+
+        email = email.lower()
+        user = self.model(email=email, **other_fields)
+        user.set_password(password)
+        user.save()
+
+        return user
+
+    def create_superuser(self, email, password, **other_fields):
+        """Create a super user"""
+
+        other_fields.setdefault('is_staff', True)
+        other_fields.setdefault('is_superuser', True)
+        other_fields.setdefault('is_active', True)
+
+        if other_fields.get('is_staff') is not True:
+            raise ValueError(
+                'Superuser must be assigned to is_staff=True.')
+        if other_fields.get('is_superuser') is not True:
+            raise ValueError(
+                'Superuser must be assigned to is_superuser=True.')
+
+        user = self.create_user(email, password, **other_fields)
+        return user
+
+
+class XDSUser(AbstractUser):
+    """Model for a user"""
+
+    # User attributes
+    username = None
+    email = models.EmailField(max_length=200, unique=True)
+    first_name = models.CharField(max_length=200)
+    last_name = models.CharField(max_length=200)
+
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
+
+    objects = XDSUserProfileManager()
+
+    def __str__(self):
+        return self.email
 
 
 class XDSConfiguration(TimeStampedModel):
@@ -191,3 +253,77 @@ class CourseSpotlight(TimeStampedModel):
     def __str__(self):
         """String for representing the Model object."""
         return f'{self.id}'
+
+
+class CourseInformationMapping(TimeStampedModel):
+    """ Model to map course information"""
+
+    course_title = models.CharField(max_length=200,
+                                    help_text="Enter the title of the course"
+                                    "found in the elasticsearch")
+    course_description = models.CharField(max_length=200,
+                                          help_text="Enter the description of"
+                                          " the course found in the"
+                                          " elasticsearch")
+    course_url = models.CharField(max_length=200,
+                                  help_text="Enter the url of the course found"
+                                  " in the elasticsearch")
+
+    xds_ui_configuration = models\
+        .OneToOneField(XDSUIConfiguration,
+                       on_delete=models.CASCADE,
+                       related_name='course_information')
+
+    def get_absolute_url(self):
+        """ URL for displaying individual model records."""
+        return reverse('course-information', args=[str(self.id)])
+
+    def __str__(self):
+        """String for representing the Model object."""
+        return f'{self.id}'
+
+    def save(self, *args, **kwargs):
+        num_active_mappings = CourseInformationMapping.objects.filter().count()
+
+        # if there is more than one
+        if num_active_mappings > 1:
+            raise ValidationError(
+                'Max of 1 active highlight fields has been reached.')
+
+        return super(CourseInformationMapping, self).save(*args, **kwargs)
+
+
+class ReceiverEmailConfiguration(models.Model):
+    """Model for Email Configuration """
+
+    email_address = models.EmailField(
+        max_length=254,
+        help_text='Enter email personas addresses to send log data',
+        unique=True)
+
+    def get_absolute_url(self):
+        """ URL for displaying individual model records."""
+        return reverse('Configuration-detail', args=[str(self.id)])
+
+    def __str__(self):
+        """String for representing the Model object."""
+        return f'{self.id}'
+
+    def save(self, *args, **kwargs):
+        email_verification(self.email_address)
+        return super(ReceiverEmailConfiguration, self).save(*args, **kwargs)
+
+
+class SenderEmailConfiguration(models.Model):
+    """Model for Email Configuration """
+
+    sender_email_address = models.EmailField(
+        max_length=254,
+        help_text='Enter sender email address to send log data from',
+        default='openlxphost@gmail.com')
+
+    def save(self, *args, **kwargs):
+        if not self.pk and SenderEmailConfiguration.objects.exists():
+            raise ValidationError('There is can be only one '
+                                  'SenderEmailConfiguration instance')
+        return super(SenderEmailConfiguration, self).save(*args, **kwargs)

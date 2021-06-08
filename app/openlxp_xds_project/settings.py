@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
+    'knox',
     'xds_api',
     'core',
     'es_api',
@@ -136,6 +137,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+LOG_PATH = os.environ.get('LOG_PATH')
 
 LOGGING = {
     'version': 1,
@@ -169,3 +171,13 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+AUTH_USER_MODEL = 'core.XDSUser'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'knox.auth.TokenAuthentication',  
+    ],
+}
+
+EMAIL_BACKEND = 'django_ses.SESBackend'

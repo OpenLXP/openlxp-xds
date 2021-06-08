@@ -38,6 +38,7 @@ services:
       SECRET_KEY_VAL: "${SECRET_KEY_VAL}"
       ES_HOST: "${ES_HOST}"
       ES_INDEX: "${ES_INDEX}"
+      LOG_PATH: "${LOG_PATH}"
     volumes:
       - ./app:/opt/app/openlxp-xds
     depends_on:
