@@ -3,13 +3,18 @@ import logging
 
 import requests
 from django.http import HttpResponse, HttpResponseServerError
+from knox.models import AuthToken
 from requests.exceptions import HTTPError
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import XDSConfiguration, XDSUIConfiguration
-from xds_api.serializers import (XDSConfigurationSerializer,
-                                 XDSUIConfigurationSerializer)
+from xds_api.serializers import (LoginSerializer, RegisterSerializer,
+                                 XDSConfigurationSerializer,
+                                 XDSUIConfigurationSerializer,
+                                 XDSUserSerializer)
 from xds_api.utils.xds_utils import (get_request,
                                      get_spotlight_courses_api_url,
                                      metadata_to_target)
@@ -21,9 +26,9 @@ def get_spotlight_courses(request):
     """This method defines an API for fetching configured course spotlights
         from XIS"""
     errorMsg = {
-            "message": "error fetching spotlight courses; " +
-                       "please check the XDS logs"
-            }
+        "message": "error fetching spotlight courses; " +
+        "please check the XDS logs"
+    }
     errorMsgJSON = json.dumps(errorMsg)
 
     try:
@@ -74,6 +79,7 @@ class XDSConfigurationView(APIView):
 
 class XDSUIConfigurationView(APIView):
     """XDSUI Condiguration View"""
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         """Returns the XDSUI configuration fields from the model"""
@@ -81,3 +87,44 @@ class XDSUIConfigurationView(APIView):
         serializer = XDSUIConfigurationSerializer(ui_config)
 
         return Response(serializer.data)
+
+
+class RegisterView(generics.GenericAPIView):
+    """User Registration API"""
+    serializer_class = RegisterSerializer
+
+    def post(self, request, *args, **kwargs):
+        """POST request that takes in: email, password, first_name, and
+            last_name"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        # creates a token for immediate login
+        _, token = AuthToken.objects.create(user)
+
+        # Returning the user context, and token
+        return Response({
+            "user": XDSUserSerializer(user,
+                                      context=self.get_serializer_context()
+                                      ).data,
+            "token": token
+        })
+
+
+class LoginView(generics.GenericAPIView):
+    """Logs user in and returns token"""
+    serializer_class = LoginSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data
+        # Getting the user token
+        _, token = AuthToken.objects.create(user)
+
+        return Response({
+            "user": XDSUserSerializer(user,
+                                      context=self.get_serializer_context()
+                                      ).data,
+            "token": token
+        })
