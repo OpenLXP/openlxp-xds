@@ -1,8 +1,9 @@
 from django.contrib import admin
 
-from core.models import (CourseDetailHighlight, CourseSpotlight, SearchFilter,
+from core.models import (CourseDetailHighlight, CourseInformationMapping,
+                         CourseSpotlight, SearchFilter,
                          SearchSortOption, XDSConfiguration,
-                         XDSUIConfiguration, CourseInformationMapping)
+                         XDSUIConfiguration)
 
 
 # Register your models here.
