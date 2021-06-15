@@ -1,8 +1,9 @@
 from django.test import SimpleTestCase, tag
 
-from core.models import (CourseDetailHighlight, CourseSpotlight, SearchFilter,
+from core.models import (CourseDetailHighlight, CourseInformationMapping,
+                         CourseSpotlight, SearchFilter,
                          SearchSortOption, XDSConfiguration,
-                         XDSUIConfiguration, CourseInformationMapping)
+                         XDSUIConfiguration)
 
 
 @tag('unit')
@@ -82,10 +83,10 @@ class ModelTests(SimpleTestCase):
         course_url = 'Course.TestUrl'
 
         courseInformation = CourseInformationMapping(
-                                xds_ui_configuration=uiConfig,
-                                course_title=course_title,
-                                course_description=course_description,
-                                course_url=course_url)
+            xds_ui_configuration=uiConfig,
+            course_title=course_title,
+            course_description=course_description,
+            course_url=course_url)
 
         self.assertEqual(courseInformation.course_title, course_title)
         self.assertEqual(courseInformation.course_description,
