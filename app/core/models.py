@@ -191,3 +191,41 @@ class CourseSpotlight(TimeStampedModel):
     def __str__(self):
         """String for representing the Model object."""
         return f'{self.id}'
+
+
+class CourseInformationMapping(TimeStampedModel):
+    """ Model to map course information"""
+
+    course_title = models.CharField(max_length=200,
+                                    help_text="Enter the title of the course"
+                                    "found in the elasticsearch")
+    course_description = models.CharField(max_length=200,
+                                          help_text="Enter the description of"
+                                          " the course found in the"
+                                          " elasticsearch")
+    course_url = models.CharField(max_length=200,
+                                  help_text="Enter the url of the course found"
+                                  " in the elasticsearch")
+
+    xds_ui_configuration = models\
+        .OneToOneField(XDSUIConfiguration,
+                       on_delete=models.CASCADE,
+                       related_name='course_information')
+
+    def get_absolute_url(self):
+        """ URL for displaying individual model records."""
+        return reverse('course-information', args=[str(self.id)])
+
+    def __str__(self):
+        """String for representing the Model object."""
+        return f'{self.id}'
+
+    def save(self, *args, **kwargs):
+        num_active_mappings = CourseInformationMapping.objects.filter().count()
+
+        # if there is more than one
+        if num_active_mappings > 1:
+            raise ValidationError(
+                'Max of 1 active highlight fields has been reached.')
+
+        return super(CourseInformationMapping, self).save(*args, **kwargs)

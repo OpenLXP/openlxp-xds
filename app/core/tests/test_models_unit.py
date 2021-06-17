@@ -1,6 +1,7 @@
 from django.test import SimpleTestCase, tag
 
-from core.models import (CourseDetailHighlight, CourseSpotlight, SearchFilter,
+from core.models import (CourseDetailHighlight, CourseInformationMapping,
+                         CourseSpotlight, SearchFilter,
                          SearchSortOption, XDSConfiguration,
                          XDSUIConfiguration)
 
@@ -69,3 +70,25 @@ class ModelTests(SimpleTestCase):
 
         self.assertEqual(c_id, spotlight.course_id)
         self.assertTrue(spotlight.active)
+
+    def test_create_courseInformationMapping(self):
+        """Tests the creation of a course information object"""
+
+        config = XDSConfiguration(target_xis_metadata_api="test")
+        uiConfig = XDSUIConfiguration(xds_configuration=config)
+
+        # course mappings
+        course_title = 'Course.TestTitle'
+        course_description = 'Course.TestDescription'
+        course_url = 'Course.TestUrl'
+
+        courseInformation = CourseInformationMapping(
+            xds_ui_configuration=uiConfig,
+            course_title=course_title,
+            course_description=course_description,
+            course_url=course_url)
+
+        self.assertEqual(courseInformation.course_title, course_title)
+        self.assertEqual(courseInformation.course_description,
+                         course_description)
+        self.assertEqual(courseInformation.course_url, course_url)

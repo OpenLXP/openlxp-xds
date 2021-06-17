@@ -78,6 +78,7 @@ def add_search_sort(search, filters):
 def search_by_keyword(keyword="", filters={}):
     """This method takes in a keyword string + a page number and queries
         ElasticSearch for the term then returns the Response Object"""
+
     q = Q("multi_match",
           query=keyword,
           fields=['Course.CourseShortDescription',
