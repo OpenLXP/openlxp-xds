@@ -79,7 +79,7 @@ class XDSConfigurationView(APIView):
 
 class XDSUIConfigurationView(APIView):
     """XDSUI Condiguration View"""
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get(self, request):
         """Returns the XDSUI configuration fields from the model"""
