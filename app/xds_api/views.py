@@ -6,7 +6,6 @@ from django.http import HttpResponse, HttpResponseServerError
 from knox.models import AuthToken
 from requests.exceptions import HTTPError
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 

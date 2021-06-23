@@ -59,7 +59,7 @@ class CourseInformationMappingAdmin(admin.ModelAdmin):
     fields = ['course_title', 'course_description',
               'course_url', 'xds_ui_configuration']
 
-       
+
 class XDSUserAdmin(UserAdmin):
     model = XDSUser
     search_fields = ('email',  'first_name',)
