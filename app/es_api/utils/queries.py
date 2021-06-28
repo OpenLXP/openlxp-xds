@@ -126,8 +126,7 @@ def more_like_this(doc_id):
     s = Search(using='default', index=os.environ.get('ES_INDEX'))
 
     # We're going to match based only on two fields
-    s = s.query(MoreLikeThis(like=likeObj, fields=['Course.CourseTitle',
-                                                   'Course.CourseDescription'])
+    s = s.query(MoreLikeThis(like=likeObj)
                 )
 
     # only fetch the first 6 results

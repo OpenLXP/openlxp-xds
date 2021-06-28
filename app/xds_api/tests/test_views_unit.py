@@ -3,15 +3,17 @@ from unittest.mock import patch
 
 from django.test import tag
 from django.urls import reverse
+from knox.models import AuthToken
 from requests.exceptions import HTTPError
 from rest_framework import status
-from rest_framework.test import APITestCase
 
-from core.models import XDSConfiguration, XDSUIConfiguration
+from core.models import XDSConfiguration, XDSUIConfiguration, XDSUser
+
+from .test_setup import TestSetUp
 
 
 @tag('unit')
-class ViewTests(APITestCase):
+class ViewTests(TestSetUp):
 
     def test_xds_ui_config_view(self):
         """Test that making a GET request to the api gives us a JSON of the
@@ -24,9 +26,16 @@ class ViewTests(APITestCase):
             xds_ui_Obj.return_value = xds_ui_Obj
             xds_ui_Obj.first.return_value = xds_ui_cfg
 
-            response = self.client.get(url)
+            # create user, save user, login using client
+            user = XDSUser.objects.create_user(self.email,
+                                               self.password,
+                                               first_name=self.first_name,
+                                               last_name=self.last_name)
+            _, token = AuthToken.objects.create(user)
+
+            response = self.client \
+                .get(url, HTTP_AUTHORIZATION='Token {}'.format(token))
             response_dict = json.loads(response.content)
-            print(response.content)
 
             self.assertEqual(response_dict['search_results_per_page'],
                              xds_ui_cfg.search_results_per_page)
@@ -72,3 +81,46 @@ class ViewTests(APITestCase):
             self.assertEqual(response.status_code,
                              status.HTTP_500_INTERNAL_SERVER_ERROR)
             self.assertEqual(responseDict['message'], errorMsg)
+
+    def test_register_view(self):
+        """Test that calling /api/auth/register creates a new user and
+            returns the user along with a token"""
+        url = reverse('xds_api:register')
+
+        response = self.client.post(url, self.userDict)
+        responseDict = json.loads(response.content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(responseDict['token'] is not None)
+        self.assertTrue(responseDict['user'] is not None)
+
+    def test_login_view(self):
+        """Test that calling /api/auth/login returns a token and user object
+            if the credentials are valid"""
+        url = reverse('xds_api:login')
+        # create user, save user, login using client
+        XDSUser.objects.create_user(self.email,
+                                    self.password,
+                                    first_name=self.first_name,
+                                    last_name=self.last_name)
+
+        response = self.client.post(url, self.userDict_login)
+        responseDict = json.loads(response.content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(responseDict['token'] is not None)
+        self.assertTrue(responseDict['user'] is not None)
+
+    def test_login_view_fail(self):
+        """Test that calling /api/auth/login returns an error if the
+            credentials are invalid"""
+        url = reverse('xds_api:login')
+        # create user, save user, login using client
+        XDSUser.objects.create_user(self.email,
+                                    self.password,
+                                    first_name=self.first_name,
+                                    last_name=self.last_name)
+
+        response = self.client.post(url, self.userDict_login_fail)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
