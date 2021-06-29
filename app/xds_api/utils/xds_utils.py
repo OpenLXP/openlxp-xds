@@ -38,15 +38,38 @@ def metadata_to_target(metadata_JSON):
     """This method takes in a JSON representation of a record and transforms it
         into the search engine format"""
     metadata_dict = json.loads(metadata_JSON)
-    result_list = []
+    result = None
 
-    for record in metadata_dict:
-        if 'metadata' in record:
-            currObj = record['metadata']
+    if isinstance(metadata_dict, list):
+        result_list = []
+
+        for record in metadata_dict:
+            if 'metadata' in record:
+                currObj = record['metadata']
+                meta = {}
+
+                meta["id"] = record["unique_record_identifier"]
+                currObj["meta"] = meta
+                result_list.append(currObj)
+
+        result = result_list
+
+    elif isinstance(metadata_dict, dict):
+        if 'metadata' in metadata_dict:
+            currObj = metadata_dict['metadata']
             meta = {}
 
-            meta["id"] = record["unique_record_identifier"]
+            meta["id"] = metadata_dict["unique_record_identifier"]
             currObj["meta"] = meta
-            result_list.append(currObj)
+            result = currObj
 
-    return json.dumps(result_list)
+    return json.dumps(result)
+
+
+def get_courses_api_url(course_id):
+    """This method gets the metadata api url to fetch single records"""
+    composite_api_url = XDSConfiguration.objects.first()\
+        .target_xis_metadata_api
+    full_api_url = composite_api_url + course_id
+
+    return full_api_url

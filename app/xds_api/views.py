@@ -14,7 +14,7 @@ from xds_api.serializers import (LoginSerializer, RegisterSerializer,
                                  XDSConfigurationSerializer,
                                  XDSUIConfigurationSerializer,
                                  XDSUserSerializer)
-from xds_api.utils.xds_utils import (get_request,
+from xds_api.utils.xds_utils import (get_courses_api_url, get_request,
                                      get_spotlight_courses_api_url,
                                      metadata_to_target)
 
@@ -36,6 +36,52 @@ def get_spotlight_courses(request):
         # make API call
         response = get_request(api_url)
         responseJSON = json.dumps(response.json())
+
+        if (response.status_code == 200):
+            formattedResponse = metadata_to_target(responseJSON)
+
+            return HttpResponse(formattedResponse,
+                                content_type="application/json")
+        else:
+            return HttpResponse(responseJSON,
+                                content_type="application/json")
+
+    except requests.exceptions.RequestException as e:
+        errorMsg = {"message": "error reaching out to configured XIS API; " +
+                    "please check the XIS logs"}
+        errorMsgJSON = json.dumps(errorMsg)
+
+        logger.error(e)
+        return HttpResponseServerError(errorMsgJSON,
+                                       content_type="application/json")
+
+    except HTTPError as http_err:
+        logger.error(http_err)
+        return HttpResponseServerError(errorMsgJSON,
+                                       content_type="application/json")
+    except Exception as err:
+        logger.error(err)
+        return HttpResponseServerError(errorMsgJSON,
+                                       content_type="application/json")
+
+
+def get_courses(request, course_id):
+    """This method defines an API for fetching a single course by ID
+        from the XIS"""
+    errorMsg = {
+        "message": "error fetching course with ID " + course_id + "; " +
+        "please check the XDS logs"
+    }
+    errorMsgJSON = json.dumps(errorMsg)
+
+    try:
+        api_url = get_courses_api_url(course_id)
+
+        # make API call
+        response = get_request(api_url)
+        logger.info(api_url)
+        responseJSON = json.dumps(response.json())
+        logger.info(responseJSON)
 
         if (response.status_code == 200):
             formattedResponse = metadata_to_target(responseJSON)

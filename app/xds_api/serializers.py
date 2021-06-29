@@ -3,9 +3,9 @@ import logging
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 
-from core.models import (CourseDetailHighlight, SearchSortOption,
-                         XDSConfiguration, XDSUIConfiguration,
-                         CourseInformationMapping, XDSUser)
+from core.models import (CourseDetailHighlight, CourseInformationMapping,
+                         SearchSortOption, XDSConfiguration,
+                         XDSUIConfiguration, XDSUser)
 
 logger = logging.getLogger('dict_config_logger')
 
