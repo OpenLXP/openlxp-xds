@@ -1,9 +1,8 @@
 from django.test import SimpleTestCase, tag
 
 from core.models import (CourseDetailHighlight, CourseInformationMapping,
-                         CourseSpotlight, SearchFilter,
-                         SearchSortOption, XDSConfiguration,
-                         XDSUIConfiguration)
+                         CourseSpotlight, SearchFilter, SearchSortOption,
+                         XDSConfiguration, XDSUIConfiguration)
 
 
 @tag('unit')
