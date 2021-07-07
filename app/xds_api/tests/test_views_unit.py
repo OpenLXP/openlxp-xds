@@ -63,7 +63,7 @@ class ViewTests(TestSetUp):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_spotlight_courses_error(self):
-        """test that calling the endpoint /es-api/spotlight-courses returns an
+        """test that calling the endpoint /api/spotlight-courses returns an
             http error if an exception a thrown while reaching out to XIS"""
         url = reverse('xds_api:spotlight-courses')
         errorMsg = "error reaching out to configured XIS API; " + \
@@ -124,3 +124,45 @@ class ViewTests(TestSetUp):
         response = self.client.post(url, self.userDict_login_fail)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+    def test_get_courses(self):
+        """test that calling the endpoint /api/courses returns a single course
+            for the given course ID"""
+        doc_id = '123456'
+        url = reverse('xds_api:get_courses', args=(doc_id,))
+
+        with patch('xds_api.views.get_request') as get_request, \
+            patch('xds_api.views.get_courses_api_url') as \
+                get_api_url:
+            get_api_url.return_value = "www.test.com"
+            http_resp = get_request.return_value
+            get_request.return_value = http_resp
+            http_resp.json.return_value = [{
+                "test": "value"
+            }]
+            http_resp.status_code = 200
+
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_courses_error(self):
+        """test that calling the endpoint /api/courses returns an
+            http error if an exception a thrown while reaching out to XIS"""
+        doc_id = '123456'
+        url = reverse('xds_api:get_courses', args=(doc_id,))
+        errorMsg = "error reaching out to configured XIS API; " + \
+                   "please check the XIS logs"
+
+        with patch('xds_api.views.get_request') as get_request, \
+            patch('xds_api.views.get_courses_api_url') as \
+                get_api_url:
+            get_api_url.return_value = "www.test.com"
+            get_request.side_effect = [HTTPError]
+
+            response = self.client.get(url)
+            responseDict = json.loads(response.content)
+
+            self.assertEqual(response.status_code,
+                             status.HTTP_500_INTERNAL_SERVER_ERROR)
+            self.assertEqual(responseDict['message'], errorMsg)

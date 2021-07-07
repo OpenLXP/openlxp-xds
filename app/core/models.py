@@ -67,6 +67,65 @@ class XDSUser(AbstractUser):
         return self.email
 
 
+class XDSUserProfileManager(BaseUserManager):
+    """User manager"""
+    def create_user(self, email, password=None, **other_fields):
+        """Create a new user"""
+        if not email:
+            raise ValueError('Email is required')
+
+        # if not first_name:
+        #     raise ValueError('First name is required')
+
+        # if not last_name:
+        #     raise ValueError('Last name is required')
+
+        email = email.lower()
+        user = self.model(email=email, **other_fields)
+        user.set_password(password)
+        user.save()
+
+        return user
+
+    def create_superuser(self, email, password, **other_fields):
+        """Create a super user"""
+
+        other_fields.setdefault('is_staff', True)
+        other_fields.setdefault('is_superuser', True)
+        other_fields.setdefault('is_active', True)
+
+        if other_fields.get('is_staff') is not True:
+            raise ValueError(
+                'Superuser must be assigned to is_staff=True.')
+        if other_fields.get('is_superuser') is not True:
+            raise ValueError(
+                'Superuser must be assigned to is_superuser=True.')
+
+        user = self.create_user(email, password, **other_fields)
+        return user
+
+
+class XDSUser(AbstractUser):
+    """Model for a user"""
+
+    # User attributes
+    username = None
+    email = models.EmailField(max_length=200, unique=True)
+    first_name = models.CharField(max_length=200)
+    last_name = models.CharField(max_length=200)
+
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
+
+    objects = XDSUserProfileManager()
+
+    def __str__(self):
+        return self.email
+
+
 class XDSConfiguration(TimeStampedModel):
     """Model for XDS Configuration """
 
@@ -327,3 +386,4 @@ class SenderEmailConfiguration(models.Model):
             raise ValidationError('There is can be only one '
                                   'SenderEmailConfiguration instance')
         return super(SenderEmailConfiguration, self).save(*args, **kwargs)
+

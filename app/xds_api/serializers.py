@@ -7,6 +7,7 @@ from core.models import (CourseDetailHighlight, SearchSortOption,
                          XDSConfiguration, XDSUIConfiguration,
                          CourseInformationMapping, XDSUser)
 
+
 logger = logging.getLogger('dict_config_logger')
 
 

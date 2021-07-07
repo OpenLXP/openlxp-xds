@@ -181,3 +181,4 @@ REST_FRAMEWORK = {
 }
 
 EMAIL_BACKEND = 'django_ses.SESBackend'
+

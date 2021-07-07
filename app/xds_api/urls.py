@@ -15,5 +15,7 @@ urlpatterns = [
          name='spotlight-courses'),
     path('auth', include('knox.urls')),
     path('auth/register', views.RegisterView.as_view(), name='register'),
-    path('auth/login', views.LoginView.as_view(), name='login')
+    path('auth/login', views.LoginView.as_view(), name='login'),
+    path('courses/<str:course_id>/', views.get_courses,
+         name='get_courses'),
 ]
