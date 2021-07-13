@@ -320,11 +320,10 @@ class SenderEmailConfiguration(models.Model):
 
     sender_email_address = models.EmailField(
         max_length=254,
-        help_text='Enter sender email address to send log data from',
-        default='openlxphost@gmail.com')
+        help_text='Enter sender email address to send log data from')
 
     def save(self, *args, **kwargs):
         if not self.pk and SenderEmailConfiguration.objects.exists():
-            raise ValidationError('There is can be only one '
+            raise ValidationError('There can only be one '
                                   'SenderEmailConfiguration instance')
         return super(SenderEmailConfiguration, self).save(*args, **kwargs)
