@@ -8,6 +8,9 @@ COPY nginx.default /etc/nginx/sites-available/default
 RUN ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log
 
+RUN if [ ! -f /etc/debug.txt ]; then touch /etc/debug.txt ; fi
+RUN chmod a=rwx /etc/debug.txt
+
 # copy source and install dependencies
 RUN mkdir -p /opt/app
 RUN mkdir -p /opt/app/pip_cache

@@ -2,8 +2,10 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 from core.models import (CourseDetailHighlight, CourseInformationMapping,
-                         CourseSpotlight, SearchFilter, SearchSortOption,
-                         XDSConfiguration, XDSUIConfiguration, XDSUser)
+                         CourseSpotlight, ReceiverEmailConfiguration,
+                         SearchFilter, SearchSortOption,
+                         SenderEmailConfiguration, XDSConfiguration,
+                         XDSUIConfiguration, XDSUser)
 
 
 # Register your models here.
@@ -80,3 +82,13 @@ class XDSUserAdmin(UserAdmin):
 
 
 admin.site.register(XDSUser, XDSUserAdmin)
+
+
+@admin.register(ReceiverEmailConfiguration)
+class ReceiverEmailConfigurationAdmin(admin.ModelAdmin):
+    list_display = ('email_address',)
+
+
+@admin.register(SenderEmailConfiguration)
+class SenderEmailConfigurationAdmin(admin.ModelAdmin):
+    list_display = ('sender_email_address',)

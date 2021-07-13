@@ -48,8 +48,9 @@ class ViewTests(TestSetUp):
             list of documents for configured spotlight courses"""
         url = reverse('xds_api:spotlight-courses')
 
-        with patch('xds_api.views.get_request') as get_request, \
-            patch('xds_api.views.get_spotlight_courses_api_url') as \
+        with patch('xds_api.views.send_log_email'), \
+                patch('xds_api.views.get_request') as get_request, \
+                patch('xds_api.views.get_spotlight_courses_api_url') as \
                 get_api_url:
             get_api_url.return_value = "www.test.com"
             http_resp = get_request.return_value
@@ -69,8 +70,9 @@ class ViewTests(TestSetUp):
         errorMsg = "error reaching out to configured XIS API; " + \
                    "please check the XIS logs"
 
-        with patch('xds_api.views.get_request') as get_request, \
-            patch('xds_api.views.get_spotlight_courses_api_url') as \
+        with patch('xds_api.views.send_log_email'), \
+                patch('xds_api.views.get_request') as get_request, \
+                patch('xds_api.views.get_spotlight_courses_api_url') as \
                 get_api_url:
             get_api_url.return_value = "www.test.com"
             get_request.side_effect = [HTTPError]
@@ -132,8 +134,7 @@ class ViewTests(TestSetUp):
         url = reverse('xds_api:get_courses', args=(doc_id,))
 
         with patch('xds_api.views.get_request') as get_request, \
-            patch('xds_api.views.get_courses_api_url') as \
-                get_api_url:
+                patch('xds_api.views.get_courses_api_url') as get_api_url:
             get_api_url.return_value = "www.test.com"
             http_resp = get_request.return_value
             get_request.return_value = http_resp
@@ -154,8 +155,7 @@ class ViewTests(TestSetUp):
                    "please check the XIS logs"
 
         with patch('xds_api.views.get_request') as get_request, \
-            patch('xds_api.views.get_courses_api_url') as \
-                get_api_url:
+                patch('xds_api.views.get_courses_api_url') as get_api_url:
             get_api_url.return_value = "www.test.com"
             get_request.side_effect = [HTTPError]
 

@@ -9,6 +9,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.management.utils.xds_internal import send_log_email
 from core.models import XDSConfiguration, XDSUIConfiguration
 from xds_api.serializers import (LoginSerializer, RegisterSerializer,
                                  XDSConfigurationSerializer,
@@ -37,7 +38,7 @@ def get_spotlight_courses(request):
         response = get_request(api_url)
         responseJSON = json.dumps(response.json())
 
-        if (response.status_code == 200):
+        if response.status_code == 200:
             formattedResponse = metadata_to_target(responseJSON)
 
             return HttpResponse(formattedResponse,
@@ -50,7 +51,7 @@ def get_spotlight_courses(request):
         errorMsg = {"message": "error reaching out to configured XIS API; " +
                     "please check the XIS logs"}
         errorMsgJSON = json.dumps(errorMsg)
-
+        send_log_email(errorMsgJSON)
         logger.error(e)
         return HttpResponseServerError(errorMsgJSON,
                                        content_type="application/json")
