@@ -2,11 +2,10 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 from core.models import (CourseDetailHighlight, CourseInformationMapping,
-                         CourseSpotlight, SearchFilter,
-                         SearchSortOption, XDSConfiguration,
-                         XDSUIConfiguration, XDSUser,
-                         ReceiverEmailConfiguration,
-                         SenderEmailConfiguration)
+                         CourseSpotlight, ReceiverEmailConfiguration,
+                         SearchFilter, SearchSortOption,
+                         SenderEmailConfiguration, XDSConfiguration,
+                         XDSUIConfiguration, XDSUser)
 
 
 # Register your models here.

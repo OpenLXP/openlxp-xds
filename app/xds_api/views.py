@@ -8,14 +8,13 @@ from requests.exceptions import HTTPError
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from core.management.utils.xds_internal import send_log_email
 
+from core.management.utils.xds_internal import send_log_email
 from core.models import XDSConfiguration, XDSUIConfiguration
 from xds_api.serializers import (LoginSerializer, RegisterSerializer,
                                  XDSConfigurationSerializer,
                                  XDSUIConfigurationSerializer,
                                  XDSUserSerializer)
-
 from xds_api.utils.xds_utils import (get_courses_api_url, get_request,
                                      get_spotlight_courses_api_url,
                                      metadata_to_target)

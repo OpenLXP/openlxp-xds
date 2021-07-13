@@ -1,13 +1,11 @@
 import logging
 from unittest.mock import patch
 
-from django.test import tag
+from django.test import TestCase, tag
 
-from django.test import TestCase
-
-from core.management.utils.xds_internal import send_log_email
 from core.management.utils.notification import send_notifications
-from core.models import (ReceiverEmailConfiguration, SenderEmailConfiguration)
+from core.management.utils.xds_internal import send_log_email
+from core.models import ReceiverEmailConfiguration, SenderEmailConfiguration
 
 logger = logging.getLogger('dict_config_logger')
 
