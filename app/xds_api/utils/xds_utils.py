@@ -2,7 +2,7 @@ import json
 
 import requests
 
-from core.models import CourseSpotlight, XDSConfiguration
+from core.models import Course, CourseSpotlight, XDSConfiguration
 
 
 def get_request(request_url):
@@ -63,7 +63,7 @@ def metadata_to_target(metadata_JSON):
             currObj["meta"] = meta
             result = currObj
 
-    return json.dumps(result)
+    return result
 
 
 def get_courses_api_url(course_id):
@@ -73,3 +73,10 @@ def get_courses_api_url(course_id):
     full_api_url = composite_api_url + course_id
 
     return full_api_url
+
+
+def save_courses(course_list):
+    """This method handles the saving of each course in the list"""
+    for course_hash in course_list:
+        newCourse, created = Course.objects.get_or_create(pk=course_hash)
+        newCourse.save()

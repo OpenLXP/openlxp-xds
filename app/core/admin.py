@@ -1,8 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from core.models import (CourseDetailHighlight, CourseInformationMapping,
-                         CourseSpotlight, ReceiverEmailConfiguration,
+from core.models import (Course, CourseDetailHighlight,
+                         CourseInformationMapping, CourseSpotlight,
+                         InterestList, ReceiverEmailConfiguration,
                          SearchFilter, SearchSortOption,
                          SenderEmailConfiguration, XDSConfiguration,
                          XDSUIConfiguration, XDSUser)
@@ -92,3 +93,14 @@ class ReceiverEmailConfigurationAdmin(admin.ModelAdmin):
 @admin.register(SenderEmailConfiguration)
 class SenderEmailConfigurationAdmin(admin.ModelAdmin):
     list_display = ('sender_email_address',)
+
+
+@admin.register(Course)
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ('metadata_key_hash',)
+
+
+@admin.register(InterestList)
+class InterestListAdmin(admin.ModelAdmin):
+    list_display = ('owner', 'name', 'created', 'modified',)
+    fields = ['owner', 'name', 'description', 'courses']

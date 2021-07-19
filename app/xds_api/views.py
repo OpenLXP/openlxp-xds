@@ -5,19 +5,21 @@ import requests
 from django.http import HttpResponse, HttpResponseServerError
 from knox.models import AuthToken
 from requests.exceptions import HTTPError
-from rest_framework import generics
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes
 
 from core.management.utils.xds_internal import send_log_email
-from core.models import XDSConfiguration, XDSUIConfiguration
-from xds_api.serializers import (LoginSerializer, RegisterSerializer,
+from core.models import InterestList, XDSConfiguration, XDSUIConfiguration
+from xds_api.serializers import (InterestListSerializer, LoginSerializer,
+                                 RegisterSerializer,
                                  XDSConfigurationSerializer,
                                  XDSUIConfigurationSerializer,
                                  XDSUserSerializer)
 from xds_api.utils.xds_utils import (get_courses_api_url, get_request,
                                      get_spotlight_courses_api_url,
-                                     metadata_to_target)
+                                     metadata_to_target, save_courses)
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -39,7 +41,7 @@ def get_spotlight_courses(request):
         responseJSON = json.dumps(response.json())
 
         if response.status_code == 200:
-            formattedResponse = metadata_to_target(responseJSON)
+            formattedResponse = json.dumps(metadata_to_target(responseJSON))
 
             return HttpResponse(formattedResponse,
                                 content_type="application/json")
@@ -85,7 +87,7 @@ def get_courses(request, course_id):
         logger.info(responseJSON)
 
         if (response.status_code == 200):
-            formattedResponse = metadata_to_target(responseJSON)
+            formattedResponse = json.dumps(metadata_to_target(responseJSON))
 
             return HttpResponse(formattedResponse,
                                 content_type="application/json")
@@ -174,3 +176,136 @@ class LoginView(generics.GenericAPIView):
                                       ).data,
             "token": token
         })
+
+
+@api_view(['GET', 'POST'])
+def interest_lists(request):
+    """Handles HTTP requests for interest lists"""
+    if request.method == 'GET':
+        errorMsg = {
+            "message": "Error fetching records please check the logs."
+        }
+        # initially fetch all active records
+        user = request.user
+        querySet = InterestList.objects.all()
+
+        if request.user.is_authenticated:
+            querySet = querySet.filter(owner=user)
+
+        try:
+            serializer_class = InterestListSerializer(querySet, many=True)
+        except HTTPError as http_err:
+            logger.error(http_err)
+            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as err:
+            logger.error(err)
+            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return Response(serializer_class.data, status.HTTP_200_OK)
+    
+    elif request.method == 'POST':
+        # Assign data from request to serializer
+        user = request.user
+        if not request.user.is_authenticated:
+            return Response({'Please login to create Interest List'}, 
+                            status.HTTP_401_UNAUTHORIZED)
+
+        serializer = InterestListSerializer(data=request.data)
+        logger.info("Assigned to serializer")
+
+        if not serializer.is_valid():
+            # If not received send error and bad request status
+            logger.info(json.dumps(request.data))
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # If received save record in ledger and send response of UUID &
+        # status created
+        serializer.save(owner=request.user)
+        return Response(serializer.data,
+                        status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET', 'PATCH'])
+def single_interest_list(request, list_id):
+    """This method defines an API to handle requests for a single interest
+        list"""
+    errorMsg = {
+        "message": "error: no record for corresponding interest list id; " +
+                   "please check the logs"
+    }
+
+    try:
+        queryset = InterestList.objects.get(pk=list_id)
+
+        if request.method == 'GET':
+            serializer_class = InterestListSerializer(queryset)
+            # fetch actual courses for each id in the courses array
+            interestList = serializer_class.data
+            courseQuery = "?metadata_key_hash="
+            coursesDict = interestList['courses']
+
+            for idx, metadata_key_hash in enumerate(coursesDict):
+                if idx == len(coursesDict) - 1:
+                    courseQuery += metadata_key_hash
+                else:
+                    courseQuery += (metadata_key_hash + ",")
+            
+            if (len(coursesDict) > 0):
+                # get search string
+                composite_api_url = XDSConfiguration.objects.first()\
+                    .target_xis_metadata_api
+                api_url =composite_api_url + courseQuery
+
+                # make API call
+                response = get_request(api_url)
+                logger.info(api_url)
+                responseJSON = json.dumps(response.json())
+                logger.info(responseJSON)
+
+                if (response.status_code == 200):
+                    formattedResponse = metadata_to_target(responseJSON)
+                    interestList['courses'] = formattedResponse
+
+                    return Response(interestList,
+                                    status=status.HTTP_200_OK)
+                else:
+                    return Response(response.json(),
+                                    status=status.HTTP_200_OK)
+        elif request.method == 'PATCH':
+            # Assign data from request to serializer
+            user = request.user
+
+            # check user is logged in
+            if not request.user.is_authenticated:
+                return Response({'Please login to update Interest List'}, 
+                                status.HTTP_401_UNAUTHORIZED)
+
+            # check user is owner of list
+            if not request.user == queryset.owner:
+                return Response({'Current user does not have access to modify '
+                                 'the list'}, 
+                                status.HTTP_401_UNAUTHORIZED)    
+            # save new courses
+            save_courses(request.data['courses'])
+            serializer = InterestListSerializer(queryset, data=request.data)
+            logger.info("Assigned to serializer")
+
+            if not serializer.is_valid():
+                # If not received send error and bad request status
+                logger.info(json.dumps(request.data))
+                return Response(serializer.errors,
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            serializer.save(owner=user)
+
+            return Response(serializer.data,
+                            status=status.HTTP_200_OK)
+    except HTTPError as http_err:
+        logger.error(http_err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as err:
+        logger.error(err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return Response(serializer_class.data, status.HTTP_200_OK)

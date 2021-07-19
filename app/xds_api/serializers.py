@@ -3,7 +3,8 @@ import logging
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 
-from core.models import (CourseDetailHighlight, CourseInformationMapping,
+from core.models import (Course, CourseDetailHighlight,
+                         CourseInformationMapping, InterestList,
                          SearchSortOption, XDSConfiguration,
                          XDSUIConfiguration, XDSUser)
 
@@ -124,3 +125,43 @@ class LoginSerializer(serializers.Serializer):
 
         # returns when user is inactive or not in the system
         raise serializers.ValidationError('Incorrect Credentials')
+
+
+class CourseSerializer(serializers.ModelSerializer):
+    """Serializes the Course model"""
+    class Meta:
+        model = Course
+        fields = ['metadata_key_hash']
+
+
+class InterestListSerializer(serializers.ModelSerializer):
+    """Serializes the interest list model"""
+    owner = XDSUserSerializer(read_only=True)
+    subscribers = XDSUserSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = InterestList
+        fields = '__all__'
+
+    def create(self, validated_data):
+        return InterestList.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.owner = validated_data.get('owner', instance.owner)
+        instance.description = validated_data.get('description',
+                                                  instance.description)
+        instance.name = validated_data.get('name', instance.name)
+        courses = validated_data.get('courses')
+
+        # add all new course
+        for course in courses:
+            instance.courses.add(course)
+
+        # remove any deleted course
+        for course in instance.courses.all():
+            if (course not in courses):
+                instance.courses.remove(course)
+
+        instance.save()
+
+        return instance
