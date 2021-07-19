@@ -49,6 +49,7 @@ def metadata_to_target(metadata_JSON):
                 meta = {}
 
                 meta["id"] = record["unique_record_identifier"]
+                meta["metadata_key_hash"] = record["metadata_key_hash"]
                 currObj["meta"] = meta
                 result_list.append(currObj)
 
@@ -60,6 +61,7 @@ def metadata_to_target(metadata_JSON):
             meta = {}
 
             meta["id"] = metadata_dict["unique_record_identifier"]
+            meta["metadata_key_hash"] = metadata_dict["metadata_key_hash"]
             currObj["meta"] = meta
             result = currObj
 
