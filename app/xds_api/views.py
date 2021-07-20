@@ -11,7 +11,8 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 
 from core.management.utils.xds_internal import send_log_email
-from core.models import InterestList, XDSConfiguration, XDSUIConfiguration
+from core.models import (Course, InterestList, XDSConfiguration,
+                         XDSUIConfiguration)
 from xds_api.serializers import (InterestListSerializer, LoginSerializer,
                                  RegisterSerializer,
                                  XDSConfigurationSerializer,
@@ -309,3 +310,41 @@ def single_interest_list(request, list_id):
         return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return Response(serializer_class.data, status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def add_course_to_lists(request):
+    """This method handles request for adding a single course to multiple
+        interest lists at once"""
+    errorMsg = {
+        "message": "error: unable to add course to provided interest lists."
+    }
+
+    try:
+        # check user is authenticated
+        user = request.user
+
+        if not request.user.is_authenticated:
+            return Response({'Please login to update Interest List'}, 
+                            status.HTTP_401_UNAUTHORIZED)
+        # get or add course
+        course, created = \
+            Course.objects.get_or_create(pk=request.data['course'])
+        course.save()
+        # check user is onwer of lists
+        for list_id in request.data['lists']:
+            currList = InterestList.objects.get(pk=list_id)
+            
+            if user == currList.owner:
+                currList.courses.add(course)
+                currList.save()
+        # add course to each list
+    except HTTPError as http_err:
+        logger.error(http_err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as err:
+        logger.error(err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else: 
+        return Response({"message": "course successfully added!"},
+                        status.HTTP_200_OK)

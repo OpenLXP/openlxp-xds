@@ -22,4 +22,6 @@ urlpatterns = [
           name='interest-lists'),
      path('interest-lists/<int:list_id>', views.single_interest_list,
           name='single-interest-list'),
+     path('add-course-to-lists/', views.add_course_to_lists,
+          name='add_course_to_lists'),
 ]
