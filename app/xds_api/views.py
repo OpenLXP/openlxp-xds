@@ -2,13 +2,14 @@ import json
 import logging
 
 import requests
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
 from knox.models import AuthToken
 from requests.exceptions import HTTPError
-from rest_framework import generics, permissions, status
+from rest_framework import generics, status
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view, permission_classes
 
 from core.management.utils.xds_internal import send_log_email
 from core.models import (Course, InterestList, XDSConfiguration,
@@ -203,16 +204,15 @@ def interest_lists(request):
             return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             return Response(serializer_class.data, status.HTTP_200_OK)
-    
+
     elif request.method == 'POST':
         # Assign data from request to serializer
         user = request.user
         if not request.user.is_authenticated:
-            return Response({'Please login to create Interest List'}, 
+            return Response({'Please login to create Interest List'},
                             status.HTTP_401_UNAUTHORIZED)
 
         serializer = InterestListSerializer(data=request.data)
-        logger.info("Assigned to serializer")
 
         if not serializer.is_valid():
             # If not received send error and bad request status
@@ -246,23 +246,22 @@ def single_interest_list(request, list_id):
             courseQuery = "?metadata_key_hash="
             coursesDict = interestList['courses']
 
+            # for each hash key in the courses list, append them to the query
             for idx, metadata_key_hash in enumerate(coursesDict):
                 if idx == len(coursesDict) - 1:
                     courseQuery += metadata_key_hash
                 else:
                     courseQuery += (metadata_key_hash + ",")
-            
+
             if (len(coursesDict) > 0):
                 # get search string
                 composite_api_url = XDSConfiguration.objects.first()\
                     .target_xis_metadata_api
-                api_url =composite_api_url + courseQuery
+                api_url = composite_api_url + courseQuery
 
                 # make API call
                 response = get_request(api_url)
-                logger.info(api_url)
                 responseJSON = json.dumps(response.json())
-                logger.info(responseJSON)
 
                 if (response.status_code == 200):
                     formattedResponse = metadata_to_target(responseJSON)
@@ -272,25 +271,25 @@ def single_interest_list(request, list_id):
                                     status=status.HTTP_200_OK)
                 else:
                     return Response(response.json(),
-                                    status=status.HTTP_200_OK)
+                                    status=status.HTTP_503_SERVICE_UNAVAILABLE)
         elif request.method == 'PATCH':
             # Assign data from request to serializer
             user = request.user
 
             # check user is logged in
             if not request.user.is_authenticated:
-                return Response({'Please login to update Interest List'}, 
+                return Response({'Please login to update Interest List'},
                                 status.HTTP_401_UNAUTHORIZED)
 
             # check user is owner of list
             if not request.user == queryset.owner:
                 return Response({'Current user does not have access to modify '
-                                 'the list'}, 
-                                status.HTTP_401_UNAUTHORIZED)    
-            # save new courses
+                                 'the list'},
+                                status.HTTP_401_UNAUTHORIZED)
+            # save new courses)
             save_courses(request.data['courses'])
+
             serializer = InterestListSerializer(queryset, data=request.data)
-            logger.info("Assigned to serializer")
 
             if not serializer.is_valid():
                 # If not received send error and bad request status
@@ -305,6 +304,9 @@ def single_interest_list(request, list_id):
     except HTTPError as http_err:
         logger.error(http_err)
         return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except ObjectDoesNotExist as not_found_err:
+        logger.error(not_found_err)
+        return Response(errorMsg, status.HTTP_404_NOT_FOUND)
     except Exception as err:
         logger.error(err)
         return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -325,7 +327,7 @@ def add_course_to_lists(request):
         user = request.user
 
         if not request.user.is_authenticated:
-            return Response({'Please login to update Interest List'}, 
+            return Response({'Please login to update Interest List'},
                             status.HTTP_401_UNAUTHORIZED)
         # get or add course
         course, created = \
@@ -334,7 +336,7 @@ def add_course_to_lists(request):
         # check user is onwer of lists
         for list_id in request.data['lists']:
             currList = InterestList.objects.get(pk=list_id)
-            
+
             if user == currList.owner:
                 currList.courses.add(course)
                 currList.save()
@@ -345,6 +347,6 @@ def add_course_to_lists(request):
     except Exception as err:
         logger.error(err)
         return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    else: 
+    else:
         return Response({"message": "course successfully added!"},
                         status.HTTP_200_OK)

@@ -117,18 +117,13 @@ class ViewTests(TestSetUp):
         """Test that calling /api/auth/login returns an error if the
             credentials are invalid"""
         url = reverse('xds_api:login')
-        # create user, save user, login using client
-        XDSUser.objects.create_user(self.email,
-                                    self.password,
-                                    first_name=self.first_name,
-                                    last_name=self.last_name)
 
         response = self.client.post(url, self.userDict_login_fail)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_get_courses(self):
-        """test that calling the endpoint /api/courses returns a single course
+        """Test that calling the endpoint /api/courses returns a single course
             for the given course ID"""
         doc_id = '123456'
         url = reverse('xds_api:get_courses', args=(doc_id,))
@@ -147,7 +142,7 @@ class ViewTests(TestSetUp):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_courses_error(self):
-        """test that calling the endpoint /api/courses returns an
+        """Test that calling the endpoint /api/courses returns an
             http error if an exception a thrown while reaching out to XIS"""
         doc_id = '123456'
         url = reverse('xds_api:get_courses', args=(doc_id,))
@@ -165,3 +160,193 @@ class ViewTests(TestSetUp):
             self.assertEqual(response.status_code,
                              status.HTTP_500_INTERNAL_SERVER_ERROR)
             self.assertEqual(responseDict['message'], errorMsg)
+
+    def test_get_all_interest_lists_no_auth(self):
+        """Test that an unauthenticated user can fetch all interest lists
+            through the /api/interest-lists endpoint"""
+        url = reverse('xds_api:interest-lists')
+        response = self.client.get(url)
+        responseDict = json.loads(response.content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # test that we get 2 interest lists (saved in the test setup)
+        self.assertEqual(len(responseDict), 3)
+
+    def test_get_all_interest_lists_auth(self):
+        """Test that an authenticated user only gets their created interest
+            lists when calling the /api/interest-lists api"""
+        url = reverse('xds_api:interest-lists')
+        _, token = AuthToken.objects.create(self.user_1)
+        response = self.client \
+            .get(url, HTTP_AUTHORIZATION='Token {}'.format(token))
+        responseDict = json.loads(response.content)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(responseDict[0]["owner"]["email"], self.user_1.email)
+
+    def test_create_interest_list_no_auth(self):
+        """Test that trying to create an interest list through the
+            /api/interest-lists api returns an error"""
+        url = reverse('xds_api:interest-lists')
+        interest_list = {
+            "name": "Devops",
+            "description": "Devops Desc"
+        }
+        response = self.client.post(url, interest_list)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_interest_list_auth(self):
+        """Test that trying to create an interest list through the
+            /api/interest-lists api returns an error"""
+        url = reverse('xds_api:interest-lists')
+        interest_list = {
+            "name": "Devops",
+            "description": "Devops Desc",
+            "courses": []
+        }
+        _, token = AuthToken.objects.create(self.user_1)
+        response = \
+            self.client.post(url,
+                             interest_list,
+                             HTTP_AUTHORIZATION='Token {}'.format(token))
+        responseDict = json.loads(response.content)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED),
+        self.assertEqual(responseDict["name"], "Devops")
+
+    def test_get_interest_by_id_not_found(self):
+        """Test that requesting an interest list by ID using the
+            /api/interest-lists/id api returns an error if none is found"""
+        id = '1234'
+        url = reverse('xds_api:single-interest-list', args=(id,))
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_interest_by_id_no_course(self):
+        """Test that requesting an interest list by ID using the
+            /api/interest-lists/id api returns an empty array if the list
+            contains 0 courses"""
+        id = self.list_3.pk
+        url = reverse('xds_api:single-interest-list', args=(id,))
+        response = self.client.get(url)
+        responseDict = json.loads(response.content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(responseDict["courses"]), 0)
+        self.assertEqual(responseDict["name"], self.list_3.name)
+
+    def test_get_interest_by_id_has_course(self):
+        """Test that requesting an interest list by ID using the
+            /api/interest-lists/id api returns a complete list if the list
+            contains courses"""
+        id = self.list_1.pk
+        url = reverse('xds_api:single-interest-list', args=(id,))
+
+        with patch('xds_api.views.get_request') as get_request, \
+                patch('xds_api.views.XDSConfiguration.objects') as conf_obj:
+            conf_obj.return_value = conf_obj
+            conf_obj.first.return_value = \
+                XDSConfiguration(target_xis_metadata_api="www.test.com")
+            http_resp = get_request.return_value
+            get_request.return_value = http_resp
+            http_resp.json.return_value = [{
+                "test": "value"
+            }]
+            http_resp.status_code = 200
+            response = self.client.get(url)
+            responseDict = json.loads(response.content)
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(responseDict["courses"], [])
+
+    def test_get_interest_by_id_no_xis(self):
+        """Test that requesting an interest list by ID using the
+            /api/interest-lists/id api returns an error if the configured xis
+            is unreachable"""
+        id = self.list_1.pk
+        url = reverse('xds_api:single-interest-list', args=(id,))
+
+        with patch('xds_api.views.get_request') as get_request, \
+                patch('xds_api.views.XDSConfiguration.objects') as conf_obj:
+            conf_obj.return_value = conf_obj
+            conf_obj.first.return_value = \
+                XDSConfiguration(target_xis_metadata_api="www.test.com")
+            http_resp = get_request.return_value
+            get_request.return_value = http_resp
+            http_resp.json.return_value = [{
+                "test": "value"
+            }]
+            http_resp.status_code = 500
+            response = self.client.get(url)
+
+            self.assertEqual(response.status_code,
+                             status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    def test_edit_interest_list_no_auth(self):
+        """Test that unauthenticated users cannot made edits to lists using the
+            /api/interest-list/id PATCH"""
+        id = self.list_1.pk
+        url = reverse('xds_api:single-interest-list', args=(id,))
+        response = self.client.patch(url, data={"test": "test"})
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_edit_interest_list_not_owner(self):
+        """Test that users cannot made edits to lists they do not own using the
+            /api/interest-list/id PATCH"""
+        id = self.list_2.pk
+        url = reverse('xds_api:single-interest-list', args=(id,))
+        _, token = AuthToken.objects.create(self.user_1)
+        response = \
+            self.client.patch(url,
+                              data={"test": "test"},
+                              HTTP_AUTHORIZATION='Token {}'.format(token))
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_edit_interest_list_success(self):
+        """Test that editing an interest list is successful using the \
+            /api/interest-list/id PATCH"""
+        id = self.list_1.id
+        url = reverse('xds_api:single-interest-list', args=(id,))
+        _, token = AuthToken.objects.create(self.user_1)
+        new_name = "edited name"
+        empty_list = []
+        new_list = {"name": new_name,
+                    "description": self.list_1.description,
+                    "courses": empty_list}
+        response = \
+            self.client.patch(url,
+                              data=json.dumps(new_list),
+                              HTTP_AUTHORIZATION='Token {}'.format(token),
+                              content_type="application/json")
+        responseDict = json.loads(response.content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(responseDict["name"], new_name)
+        self.assertEqual(responseDict["courses"], [])
+
+    def test_add_course_multiple_lists_no_auth(self):
+        """Test that adding a course to multple lists throws an error when\
+            user is unauthenticated via /api/add-course-to-lists POST api"""
+        url = reverse('xds_api:add_course_to_lists')
+        response = self.client.post(url, {"test": "test"})
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_add_course_multiple_lists_success(self):
+        """Test that adding a course to multple lists is successful when\
+            user is owner for the /api/add-course-to-lists POST api"""
+        url = reverse('xds_api:add_course_to_lists')
+        _, token = AuthToken.objects.create(self.user_2)
+        data = {
+            "course": self.course_1.pk,
+            "lists": [self.list_3.pk]
+        }
+        response = \
+            self.client.post(url,
+                             data,
+                             HTTP_AUTHORIZATION='Token {}'.format(token))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(self.list_3.courses.all()), 1)

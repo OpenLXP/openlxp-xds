@@ -138,13 +138,18 @@ class InterestListSerializer(serializers.ModelSerializer):
     """Serializes the interest list model"""
     owner = XDSUserSerializer(read_only=True)
     subscribers = XDSUserSerializer(many=True, read_only=True)
-    
+
     class Meta:
         model = InterestList
         fields = '__all__'
 
     def create(self, validated_data):
-        return InterestList.objects.create(**validated_data)
+        name = validated_data.get("name")
+        description = validated_data.get("description")
+        owner = validated_data.get("owner")
+        return InterestList.objects.create(name=name,
+                                           description=description,
+                                           owner=owner)
 
     def update(self, instance, validated_data):
         instance.owner = validated_data.get('owner', instance.owner)
