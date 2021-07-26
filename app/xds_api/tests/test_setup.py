@@ -1,6 +1,6 @@
 from rest_framework.test import APITestCase
 
-from core.models import Course, InterestList, XDSUser
+from core.models import Experience, InterestList, XDSUser
 
 
 class TestSetUp(APITestCase):
@@ -48,10 +48,10 @@ class TestSetUp(APITestCase):
         self.list_1.save()
         self.list_2.save()
         self.list_3.save()
-        self.course_1 = Course('1234')
+        self.course_1 = Experience('1234')
         self.course_1.save()
-        self.list_1.courses.add(self.course_1)
-        self.list_2.courses.add(self.course_1)
+        self.list_1.experiences.add(self.course_1)
+        self.list_2.experiences.add(self.course_1)
 
         return super().setUp()
 

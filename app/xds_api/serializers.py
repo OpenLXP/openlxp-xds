@@ -3,8 +3,8 @@ import logging
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 
-from core.models import (Course, CourseDetailHighlight,
-                         CourseInformationMapping, InterestList,
+from core.models import (CourseDetailHighlight, CourseInformationMapping,
+                         Experience, InterestList,
                          SearchSortOption, XDSConfiguration,
                          XDSUIConfiguration, XDSUser)
 
@@ -127,10 +127,10 @@ class LoginSerializer(serializers.Serializer):
         raise serializers.ValidationError('Incorrect Credentials')
 
 
-class CourseSerializer(serializers.ModelSerializer):
+class ExperienceSerializer(serializers.ModelSerializer):
     """Serializes the Course model"""
     class Meta:
-        model = Course
+        model = Experience
         fields = ['metadata_key_hash']
 
 
@@ -156,16 +156,18 @@ class InterestListSerializer(serializers.ModelSerializer):
         instance.description = validated_data.get('description',
                                                   instance.description)
         instance.name = validated_data.get('name', instance.name)
-        courses = validated_data.get('courses')
+        experiences = validated_data.get('experiences')
 
-        # add all new course
-        for course in courses:
-            instance.courses.add(course)
+        # for each experience in the experience list, we add the experience to
+        # the current interest list
+        for course in experiences:
+            instance.experiences.add(course)
 
-        # remove any deleted course
-        for course in instance.courses.all():
-            if (course not in courses):
-                instance.courses.remove(course)
+        # for each saved experience in the experience list, we remove the
+        # experience if we don't find it in the passed in the updated list
+        for exp in instance.experiences.all():
+            if (exp not in experiences):
+                instance.experiences.remove(exp)
 
         instance.save()
 

@@ -2,7 +2,7 @@ import json
 
 import requests
 
-from core.models import Course, CourseSpotlight, XDSConfiguration
+from core.models import CourseSpotlight, Experience, XDSConfiguration
 
 
 def get_request(request_url):
@@ -77,8 +77,9 @@ def get_courses_api_url(course_id):
     return full_api_url
 
 
-def save_courses(course_list):
+def save_experiences(course_list):
     """This method handles the saving of each course in the list"""
     for course_hash in course_list:
-        newCourse, created = Course.objects.get_or_create(pk=course_hash)
-        newCourse.save()
+        newExperience, created = \
+            Experience.objects.get_or_create(pk=course_hash)
+        newExperience.save()

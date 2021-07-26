@@ -330,8 +330,8 @@ class SenderEmailConfiguration(models.Model):
         return super(SenderEmailConfiguration, self).save(*args, **kwargs)
 
 
-class Course(models.Model):
-    """Model to store course instances for interest lists"""
+class Experience(models.Model):
+    """Model to store experience instances for interest lists"""
 
     metadata_key_hash = models.CharField(max_length=200,
                                          primary_key=True)
@@ -348,7 +348,7 @@ class InterestList(TimeStampedModel):
                          help_text='Enter a description for the list')
     subscribers = models.ManyToManyField(settings.AUTH_USER_MODEL,
                                          related_name="subscriptions")
-    courses = models.ManyToManyField(Course,
-                                     blank=True)
+    experiences = models.ManyToManyField(Experience,
+                                         blank=True)
     name = models.CharField(max_length=200,
                             help_text="Enter the name of the list")

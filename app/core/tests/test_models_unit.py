@@ -1,9 +1,10 @@
 from django.test import tag
 
-from core.models import (Course, CourseDetailHighlight,
+from core.models import (CourseDetailHighlight,
                          CourseInformationMapping, CourseSpotlight,
-                         InterestList, SearchFilter, SearchSortOption,
-                         XDSConfiguration, XDSUIConfiguration, XDSUser)
+                         Experience, InterestList, SearchFilter,
+                         SearchSortOption, XDSConfiguration,
+                         XDSUIConfiguration, XDSUser)
 
 from .test_setup import TestSetUp
 
@@ -95,19 +96,19 @@ class ModelTests(TestSetUp):
                          course_description)
         self.assertEqual(courseInformation.course_url, course_url)
 
-    def test_create_course(self):
+    def test_create_experience(self):
         """Tests that creating a course is successful"""
         id = '12345'
-        course = Course(metadata_key_hash=id)
+        course = Experience(metadata_key_hash=id)
         course.save()
-        savedCourse = Course.objects.get(pk=id)
+        savedCourse = Experience.objects.get(pk=id)
         self.assertEqual(course.metadata_key_hash,
                          savedCourse.metadata_key_hash)
 
     def test_create_interest_list_existing_course(self):
         """Tests that creating an interest list with existing courses works"""
         id = '12345'
-        course = Course(metadata_key_hash=id)
+        course = Experience(metadata_key_hash=id)
         course.save()
         user = XDSUser.objects.create_user(self.email,
                                            self.password,
@@ -117,8 +118,8 @@ class ModelTests(TestSetUp):
                             name="test list",
                             description="test desc")
         list.save()
-        list.courses.add(course)
+        list.experiences.add(course)
 
         # check that course is found in the interest list's list of courses
-        for currCourse in list.courses.all():
+        for currCourse in list.experiences.all():
             self.assertEqual(course, currCourse)

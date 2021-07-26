@@ -3,9 +3,9 @@ from unittest.mock import patch
 
 from django.test import TestCase, tag
 
-from core.models import Course, CourseSpotlight, XDSConfiguration
+from core.models import CourseSpotlight, Experience, XDSConfiguration
 from xds_api.utils.xds_utils import (get_spotlight_courses_api_url,
-                                     metadata_to_target, save_courses)
+                                     metadata_to_target, save_experiences)
 
 
 @tag('unit')
@@ -48,19 +48,19 @@ class UtilTests(TestCase):
         self.assertTrue(hasMeta)
         self.assertTrue("id" in result_dict[0]["meta"])
 
-    def test_save_courses_empty(self):
+    def test_save_experiences_empty(self):
         """Test that calling save courses on an empty list doesn't do\
             anything"""
-        save_courses([])
+        save_experiences([])
 
-        self.assertEqual(len(Course.objects.all()), 0)
+        self.assertEqual(len(Experience.objects.all()), 0)
 
-    def test_save_courses(self):
+    def test_save_experiences(self):
         """Test that calling save courses on a list of course hashes\
             ignores the courses that already exist and creates new ones"""
-        course_1 = Course(metadata_key_hash="123")
+        course_1 = Experience(metadata_key_hash="123")
         course_1.save()
 
-        save_courses([course_1.pk, '456'])
+        save_experiences([course_1.pk, '456'])
 
-        self.assertEqual(len(Course.objects.all()), 2)
+        self.assertEqual(len(Experience.objects.all()), 2)

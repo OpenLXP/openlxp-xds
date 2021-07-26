@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.management.utils.xds_internal import send_log_email
-from core.models import (Course, InterestList, XDSConfiguration,
+from core.models import (Experience, InterestList, XDSConfiguration,
                          XDSUIConfiguration)
 from xds_api.serializers import (InterestListSerializer, LoginSerializer,
                                  RegisterSerializer,
@@ -21,7 +21,7 @@ from xds_api.serializers import (InterestListSerializer, LoginSerializer,
                                  XDSUserSerializer)
 from xds_api.utils.xds_utils import (get_courses_api_url, get_request,
                                      get_spotlight_courses_api_url,
-                                     metadata_to_target, save_courses)
+                                     metadata_to_target, save_experiences)
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -228,7 +228,7 @@ def interest_lists(request):
 
 
 @api_view(['GET', 'PATCH'])
-def single_interest_list(request, list_id):
+def interest_list(request, list_id):
     """This method defines an API to handle requests for a single interest
         list"""
     errorMsg = {
@@ -244,7 +244,7 @@ def single_interest_list(request, list_id):
             # fetch actual courses for each id in the courses array
             interestList = serializer_class.data
             courseQuery = "?metadata_key_hash="
-            coursesDict = interestList['courses']
+            coursesDict = interestList['experiences']
 
             # for each hash key in the courses list, append them to the query
             for idx, metadata_key_hash in enumerate(coursesDict):
@@ -265,7 +265,7 @@ def single_interest_list(request, list_id):
 
                 if (response.status_code == 200):
                     formattedResponse = metadata_to_target(responseJSON)
-                    interestList['courses'] = formattedResponse
+                    interestList['experiences'] = formattedResponse
 
                     return Response(interestList,
                                     status=status.HTTP_200_OK)
@@ -286,8 +286,8 @@ def single_interest_list(request, list_id):
                 return Response({'Current user does not have access to modify '
                                  'the list'},
                                 status.HTTP_401_UNAUTHORIZED)
-            # save new courses)
-            save_courses(request.data['courses'])
+            # save new experiences
+            save_experiences(request.data['experiences'])
 
             serializer = InterestListSerializer(queryset, data=request.data)
 
@@ -315,7 +315,7 @@ def single_interest_list(request, list_id):
 
 
 @api_view(['POST'])
-def add_course_to_lists(request):
+def add_course_to_lists(request, exp_hash):
     """This method handles request for adding a single course to multiple
         interest lists at once"""
     errorMsg = {
@@ -331,14 +331,14 @@ def add_course_to_lists(request):
                             status.HTTP_401_UNAUTHORIZED)
         # get or add course
         course, created = \
-            Course.objects.get_or_create(pk=request.data['course'])
+            Experience.objects.get_or_create(pk=exp_hash)
         course.save()
         # check user is onwer of lists
         for list_id in request.data['lists']:
             currList = InterestList.objects.get(pk=list_id)
 
             if user == currList.owner:
-                currList.courses.add(course)
+                currList.experiences.add(course)
                 currList.save()
         # add course to each list
     except HTTPError as http_err:

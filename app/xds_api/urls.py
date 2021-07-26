@@ -20,8 +20,9 @@ urlpatterns = [
           name='get_courses'),
      path('interest-lists/', views.interest_lists,
           name='interest-lists'),
-     path('interest-lists/<int:list_id>', views.single_interest_list,
-          name='single-interest-list'),
-     path('add-course-to-lists/', views.add_course_to_lists,
+     path('interest-lists/<int:list_id>', views.interest_list,
+          name='interest-list'),
+     path('experiences/<str:exp_hash>/interest-lists',
+          views.add_course_to_lists,
           name='add_course_to_lists'),
 ]

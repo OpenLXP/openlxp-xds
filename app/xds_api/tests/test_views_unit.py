@@ -217,7 +217,7 @@ class ViewTests(TestSetUp):
         """Test that requesting an interest list by ID using the
             /api/interest-lists/id api returns an error if none is found"""
         id = '1234'
-        url = reverse('xds_api:single-interest-list', args=(id,))
+        url = reverse('xds_api:interest-list', args=(id,))
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -227,12 +227,12 @@ class ViewTests(TestSetUp):
             /api/interest-lists/id api returns an empty array if the list
             contains 0 courses"""
         id = self.list_3.pk
-        url = reverse('xds_api:single-interest-list', args=(id,))
+        url = reverse('xds_api:interest-list', args=(id,))
         response = self.client.get(url)
         responseDict = json.loads(response.content)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(responseDict["courses"]), 0)
+        self.assertEqual(len(responseDict["experiences"]), 0)
         self.assertEqual(responseDict["name"], self.list_3.name)
 
     def test_get_interest_by_id_has_course(self):
@@ -240,7 +240,7 @@ class ViewTests(TestSetUp):
             /api/interest-lists/id api returns a complete list if the list
             contains courses"""
         id = self.list_1.pk
-        url = reverse('xds_api:single-interest-list', args=(id,))
+        url = reverse('xds_api:interest-list', args=(id,))
 
         with patch('xds_api.views.get_request') as get_request, \
                 patch('xds_api.views.XDSConfiguration.objects') as conf_obj:
@@ -257,14 +257,14 @@ class ViewTests(TestSetUp):
             responseDict = json.loads(response.content)
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(responseDict["courses"], [])
+            self.assertEqual(responseDict["experiences"], [])
 
     def test_get_interest_by_id_no_xis(self):
         """Test that requesting an interest list by ID using the
             /api/interest-lists/id api returns an error if the configured xis
             is unreachable"""
         id = self.list_1.pk
-        url = reverse('xds_api:single-interest-list', args=(id,))
+        url = reverse('xds_api:interest-list', args=(id,))
 
         with patch('xds_api.views.get_request') as get_request, \
                 patch('xds_api.views.XDSConfiguration.objects') as conf_obj:
@@ -286,7 +286,7 @@ class ViewTests(TestSetUp):
         """Test that unauthenticated users cannot made edits to lists using the
             /api/interest-list/id PATCH"""
         id = self.list_1.pk
-        url = reverse('xds_api:single-interest-list', args=(id,))
+        url = reverse('xds_api:interest-list', args=(id,))
         response = self.client.patch(url, data={"test": "test"})
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -295,7 +295,7 @@ class ViewTests(TestSetUp):
         """Test that users cannot made edits to lists they do not own using the
             /api/interest-list/id PATCH"""
         id = self.list_2.pk
-        url = reverse('xds_api:single-interest-list', args=(id,))
+        url = reverse('xds_api:interest-list', args=(id,))
         _, token = AuthToken.objects.create(self.user_1)
         response = \
             self.client.patch(url,
@@ -308,13 +308,13 @@ class ViewTests(TestSetUp):
         """Test that editing an interest list is successful using the \
             /api/interest-list/id PATCH"""
         id = self.list_1.id
-        url = reverse('xds_api:single-interest-list', args=(id,))
+        url = reverse('xds_api:interest-list', args=(id,))
         _, token = AuthToken.objects.create(self.user_1)
         new_name = "edited name"
         empty_list = []
         new_list = {"name": new_name,
                     "description": self.list_1.description,
-                    "courses": empty_list}
+                    "experiences": empty_list}
         response = \
             self.client.patch(url,
                               data=json.dumps(new_list),
@@ -324,12 +324,13 @@ class ViewTests(TestSetUp):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(responseDict["name"], new_name)
-        self.assertEqual(responseDict["courses"], [])
+        self.assertEqual(responseDict["experiences"], [])
 
     def test_add_course_multiple_lists_no_auth(self):
         """Test that adding a course to multple lists throws an error when\
             user is unauthenticated via /api/add-course-to-lists POST api"""
-        url = reverse('xds_api:add_course_to_lists')
+        id = self.course_1.pk
+        url = reverse('xds_api:add_course_to_lists', args=(id,))
         response = self.client.post(url, {"test": "test"})
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -337,10 +338,10 @@ class ViewTests(TestSetUp):
     def test_add_course_multiple_lists_success(self):
         """Test that adding a course to multple lists is successful when\
             user is owner for the /api/add-course-to-lists POST api"""
-        url = reverse('xds_api:add_course_to_lists')
+        id = self.course_1.pk
+        url = reverse('xds_api:add_course_to_lists', args=(id,))
         _, token = AuthToken.objects.create(self.user_2)
         data = {
-            "course": self.course_1.pk,
             "lists": [self.list_3.pk]
         }
         response = \
@@ -349,4 +350,4 @@ class ViewTests(TestSetUp):
                              HTTP_AUTHORIZATION='Token {}'.format(token))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(self.list_3.courses.all()), 1)
+        self.assertEqual(len(self.list_3.experiences.all()), 1)
