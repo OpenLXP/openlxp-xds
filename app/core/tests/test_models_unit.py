@@ -1,12 +1,16 @@
-from django.test import SimpleTestCase, tag
+from django.test import tag
 
-from core.models import (CourseDetailHighlight, CourseInformationMapping,
-                         CourseSpotlight, SearchFilter, SearchSortOption,
-                         XDSConfiguration, XDSUIConfiguration)
+from core.models import (CourseDetailHighlight,
+                         CourseInformationMapping, CourseSpotlight,
+                         Experience, InterestList, SearchFilter,
+                         SearchSortOption, XDSConfiguration,
+                         XDSUIConfiguration, XDSUser)
+
+from .test_setup import TestSetUp
 
 
 @tag('unit')
-class ModelTests(SimpleTestCase):
+class ModelTests(TestSetUp):
 
     def test_create_xds_configuration(self):
         """Test that creating a new XDS Configuration entry is successful\
@@ -91,3 +95,31 @@ class ModelTests(SimpleTestCase):
         self.assertEqual(courseInformation.course_description,
                          course_description)
         self.assertEqual(courseInformation.course_url, course_url)
+
+    def test_create_experience(self):
+        """Tests that creating a course is successful"""
+        id = '12345'
+        course = Experience(metadata_key_hash=id)
+        course.save()
+        savedCourse = Experience.objects.get(pk=id)
+        self.assertEqual(course.metadata_key_hash,
+                         savedCourse.metadata_key_hash)
+
+    def test_create_interest_list_existing_course(self):
+        """Tests that creating an interest list with existing courses works"""
+        id = '12345'
+        course = Experience(metadata_key_hash=id)
+        course.save()
+        user = XDSUser.objects.create_user(self.email,
+                                           self.password,
+                                           first_name=self.first_name,
+                                           last_name=self.last_name)
+        list = InterestList(owner=user,
+                            name="test list",
+                            description="test desc")
+        list.save()
+        list.experiences.add(course)
+
+        # check that course is found in the interest list's list of courses
+        for currCourse in list.experiences.all():
+            self.assertEqual(course, currCourse)

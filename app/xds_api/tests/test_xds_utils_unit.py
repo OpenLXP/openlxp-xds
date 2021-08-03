@@ -1,15 +1,15 @@
 import json
 from unittest.mock import patch
 
-from django.test import SimpleTestCase, tag
+from django.test import TestCase, tag
 
-from core.models import CourseSpotlight, XDSConfiguration
+from core.models import CourseSpotlight, Experience, XDSConfiguration
 from xds_api.utils.xds_utils import (get_spotlight_courses_api_url,
-                                     metadata_to_target)
+                                     metadata_to_target, save_experiences)
 
 
 @tag('unit')
-class UtilTests(SimpleTestCase):
+class UtilTests(TestCase):
 
     def test_get_spotlight_courses_api_url(self):
         """Test that get_spotlight_courses_api_url returns a full url using
@@ -37,12 +37,30 @@ class UtilTests(SimpleTestCase):
             "metadata": {
                 "test": "test"
             },
-            "unique_record_identifier": "1234"
+            "unique_record_identifier": "1234",
+            "metadata_key_hash": "5678"
         }
 
         result_list = metadata_to_target(json.dumps([metadata_dict, ]))
-        result_dict = json.loads(result_list)
+        result_dict = result_list
         hasMeta = "meta" in result_dict[0]
 
         self.assertTrue(hasMeta)
         self.assertTrue("id" in result_dict[0]["meta"])
+
+    def test_save_experiences_empty(self):
+        """Test that calling save courses on an empty list doesn't do\
+            anything"""
+        save_experiences([])
+
+        self.assertEqual(len(Experience.objects.all()), 0)
+
+    def test_save_experiences(self):
+        """Test that calling save courses on a list of course hashes\
+            ignores the courses that already exist and creates new ones"""
+        course_1 = Experience(metadata_key_hash="123")
+        course_1.save()
+
+        save_experiences([course_1.pk, '456'])
+
+        self.assertEqual(len(Experience.objects.all()), 2)

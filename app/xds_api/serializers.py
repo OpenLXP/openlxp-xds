@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 
 from core.models import (CourseDetailHighlight, CourseInformationMapping,
+                         Experience, InterestList,
                          SearchSortOption, XDSConfiguration,
                          XDSUIConfiguration, XDSUser)
 
@@ -124,3 +125,50 @@ class LoginSerializer(serializers.Serializer):
 
         # returns when user is inactive or not in the system
         raise serializers.ValidationError('Incorrect Credentials')
+
+
+class ExperienceSerializer(serializers.ModelSerializer):
+    """Serializes the Course model"""
+    class Meta:
+        model = Experience
+        fields = ['metadata_key_hash']
+
+
+class InterestListSerializer(serializers.ModelSerializer):
+    """Serializes the interest list model"""
+    owner = XDSUserSerializer(read_only=True)
+    subscribers = XDSUserSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = InterestList
+        fields = '__all__'
+
+    def create(self, validated_data):
+        name = validated_data.get("name")
+        description = validated_data.get("description")
+        owner = validated_data.get("owner")
+        return InterestList.objects.create(name=name,
+                                           description=description,
+                                           owner=owner)
+
+    def update(self, instance, validated_data):
+        instance.owner = validated_data.get('owner', instance.owner)
+        instance.description = validated_data.get('description',
+                                                  instance.description)
+        instance.name = validated_data.get('name', instance.name)
+        experiences = validated_data.get('experiences')
+
+        # for each experience in the experience list, we add the experience to
+        # the current interest list
+        for course in experiences:
+            instance.experiences.add(course)
+
+        # for each saved experience in the experience list, we remove the
+        # experience if we don't find it in the passed in the updated list
+        for exp in instance.experiences.all():
+            if (exp not in experiences):
+                instance.experiences.remove(exp)
+
+        instance.save()
+
+        return instance

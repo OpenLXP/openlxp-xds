@@ -2,7 +2,7 @@ import json
 
 import requests
 
-from core.models import CourseSpotlight, XDSConfiguration
+from core.models import CourseSpotlight, Experience, XDSConfiguration
 
 
 def get_request(request_url):
@@ -49,6 +49,7 @@ def metadata_to_target(metadata_JSON):
                 meta = {}
 
                 meta["id"] = record["unique_record_identifier"]
+                meta["metadata_key_hash"] = record["metadata_key_hash"]
                 currObj["meta"] = meta
                 result_list.append(currObj)
 
@@ -60,10 +61,11 @@ def metadata_to_target(metadata_JSON):
             meta = {}
 
             meta["id"] = metadata_dict["unique_record_identifier"]
+            meta["metadata_key_hash"] = metadata_dict["metadata_key_hash"]
             currObj["meta"] = meta
             result = currObj
 
-    return json.dumps(result)
+    return result
 
 
 def get_courses_api_url(course_id):
@@ -73,3 +75,11 @@ def get_courses_api_url(course_id):
     full_api_url = composite_api_url + course_id
 
     return full_api_url
+
+
+def save_experiences(course_list):
+    """This method handles the saving of each course in the list"""
+    for course_hash in course_list:
+        newExperience, created = \
+            Experience.objects.get_or_create(pk=course_hash)
+        newExperience.save()

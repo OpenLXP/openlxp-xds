@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -327,3 +328,27 @@ class SenderEmailConfiguration(models.Model):
             raise ValidationError('There can only be one '
                                   'SenderEmailConfiguration instance')
         return super(SenderEmailConfiguration, self).save(*args, **kwargs)
+
+
+class Experience(models.Model):
+    """Model to store experience instances for interest lists"""
+
+    metadata_key_hash = models.CharField(max_length=200,
+                                         primary_key=True)
+
+
+class InterestList(TimeStampedModel):
+    """Model for Interest Lists"""
+
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL,
+                              on_delete=models.CASCADE,
+                              related_name="interest_lists")
+    description = \
+        models.CharField(max_length=200,
+                         help_text='Enter a description for the list')
+    subscribers = models.ManyToManyField(settings.AUTH_USER_MODEL,
+                                         related_name="subscriptions")
+    experiences = models.ManyToManyField(Experience,
+                                         blank=True)
+    name = models.CharField(max_length=200,
+                            help_text="Enter the name of the list")
