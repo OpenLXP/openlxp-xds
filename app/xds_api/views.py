@@ -70,22 +70,27 @@ def get_spotlight_courses(request):
                                        content_type="application/json")
 
 
-def get_courses(request, course_id):
+def get_experiences(request, exp_hash):
     """This method defines an API for fetching a single course by ID
         from the XIS"""
     errorMsg = {
-        "message": "error fetching course with ID " + course_id + "; " +
+        "message": "error fetching course with hash: " + exp_hash + "; " +
         "please check the XDS logs"
     }
     errorMsgJSON = json.dumps(errorMsg)
 
     try:
-        api_url = get_courses_api_url(course_id)
+        composite_api_url = XDSConfiguration.objects.first()\
+            .target_xis_metadata_api
+        courseQuery = "?metadata_key_hash=" + exp_hash
+        api_url = composite_api_url + courseQuery
 
         # make API call
         response = get_request(api_url)
         logger.info(api_url)
-        responseJSON = json.dumps(response.json())
+        # expected response is a list of 1 element
+        responseDict = response.json()
+        responseJSON = json.dumps(responseDict[0])
         logger.info(responseJSON)
 
         if (response.status_code == 200):
@@ -105,7 +110,10 @@ def get_courses(request, course_id):
         logger.error(e)
         return HttpResponseServerError(errorMsgJSON,
                                        content_type="application/json")
-
+    except ObjectDoesNotExist as not_found_err:
+        errorMsg = {"message": "No configured XIS URL found"}
+        logger.error(not_found_err)
+        return Response(errorMsg, status.HTTP_404_NOT_FOUND)
     except HTTPError as http_err:
         logger.error(http_err)
         return HttpResponseServerError(errorMsgJSON,

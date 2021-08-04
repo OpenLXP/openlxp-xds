@@ -45,25 +45,35 @@ def metadata_to_target(metadata_JSON):
 
         for record in metadata_dict:
             if 'metadata' in record:
-                currObj = record['metadata']
-                meta = {}
+                metadatObj = record['metadata']
 
-                meta["id"] = record["unique_record_identifier"]
-                meta["metadata_key_hash"] = record["metadata_key_hash"]
-                currObj["meta"] = meta
-                result_list.append(currObj)
+                if 'Metadata_Ledger' in metadatObj:
+                    currObj = metadatObj['Metadata_Ledger']
+                    currObj["Supplemental_Ledger"] = \
+                        metadatObj["Supplemental_Ledger"]
+                    meta = {}
+
+                    meta["id"] = record["unique_record_identifier"]
+                    meta["metadata_key_hash"] = record["metadata_key_hash"]
+                    currObj["meta"] = meta
+                    result_list.append(currObj)
 
         result = result_list
 
     elif isinstance(metadata_dict, dict):
         if 'metadata' in metadata_dict:
-            currObj = metadata_dict['metadata']
-            meta = {}
+            metadatObj = metadata_dict['metadata']
 
-            meta["id"] = metadata_dict["unique_record_identifier"]
-            meta["metadata_key_hash"] = metadata_dict["metadata_key_hash"]
-            currObj["meta"] = meta
-            result = currObj
+            if 'Metadata_Ledger' in metadatObj:
+                currObj = metadatObj['Metadata_Ledger']
+                currObj["Supplemental_Ledger"] = \
+                    metadatObj["Supplemental_Ledger"]
+                meta = {}
+
+                meta["id"] = metadata_dict["unique_record_identifier"]
+                meta["metadata_key_hash"] = metadata_dict["metadata_key_hash"]
+                currObj["meta"] = meta
+                result = currObj
 
     return result
 
