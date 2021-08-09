@@ -34,6 +34,27 @@ def get_spotlight_courses_api_url():
     return full_api_string
 
 
+def format_metadata(exp_record):
+    """This method takes in a record and converts it to an XSE format"""
+    result = None
+
+    if 'metadata' in exp_record:
+        metadataObj = exp_record['metadata']
+
+        if 'Metadata_Ledger' in metadataObj:
+            result = metadataObj['Metadata_Ledger']
+            result["Supplemental_Ledger"] = \
+                (metadataObj["Supplemental_Ledger"] if "Supplemental_Ledger" in
+                 metadataObj else None)
+            meta = {}
+
+            meta["id"] = exp_record["unique_record_identifier"]
+            meta["metadata_key_hash"] = exp_record["metadata_key_hash"]
+            result["meta"] = meta
+
+    return result
+
+
 def metadata_to_target(metadata_JSON):
     """This method takes in a JSON representation of a record and transforms it
         into the search engine format"""
@@ -44,36 +65,14 @@ def metadata_to_target(metadata_JSON):
         result_list = []
 
         for record in metadata_dict:
-            if 'metadata' in record:
-                metadatObj = record['metadata']
-
-                if 'Metadata_Ledger' in metadatObj:
-                    currObj = metadatObj['Metadata_Ledger']
-                    currObj["Supplemental_Ledger"] = \
-                        metadatObj["Supplemental_Ledger"]
-                    meta = {}
-
-                    meta["id"] = record["unique_record_identifier"]
-                    meta["metadata_key_hash"] = record["metadata_key_hash"]
-                    currObj["meta"] = meta
-                    result_list.append(currObj)
+            formatted_record = format_metadata(record)
+            result_list.append(formatted_record)
 
         result = result_list
 
     elif isinstance(metadata_dict, dict):
-        if 'metadata' in metadata_dict:
-            metadatObj = metadata_dict['metadata']
-
-            if 'Metadata_Ledger' in metadatObj:
-                currObj = metadatObj['Metadata_Ledger']
-                currObj["Supplemental_Ledger"] = \
-                    metadatObj["Supplemental_Ledger"]
-                meta = {}
-
-                meta["id"] = metadata_dict["unique_record_identifier"]
-                meta["metadata_key_hash"] = metadata_dict["metadata_key_hash"]
-                currObj["meta"] = meta
-                result = currObj
+        formatted_record = format_metadata(metadata_dict)
+        result = formatted_record
 
     return result
 

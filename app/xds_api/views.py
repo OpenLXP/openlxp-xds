@@ -19,7 +19,7 @@ from xds_api.serializers import (InterestListSerializer, LoginSerializer,
                                  XDSConfigurationSerializer,
                                  XDSUIConfigurationSerializer,
                                  XDSUserSerializer)
-from xds_api.utils.xds_utils import (get_courses_api_url, get_request,
+from xds_api.utils.xds_utils import (get_request,
                                      get_spotlight_courses_api_url,
                                      metadata_to_target, save_experiences)
 
@@ -82,7 +82,7 @@ def get_experiences(request, exp_hash):
     try:
         composite_api_url = XDSConfiguration.objects.first()\
             .target_xis_metadata_api
-        courseQuery = "?metadata_key_hash=" + exp_hash
+        courseQuery = "?metadata_key_hash_list=" + exp_hash
         api_url = composite_api_url + courseQuery
 
         # make API call

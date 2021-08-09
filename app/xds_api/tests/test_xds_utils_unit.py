@@ -35,7 +35,8 @@ class UtilTests(TestCase):
             returns a JSON object similar to { "meta": {"id": "1234"}, ...}"""
         metadata_dict = {
             "metadata": {
-                "test": "test"
+                "Metadata_Ledger": {},
+                "Supplemental_Ledger": {}
             },
             "unique_record_identifier": "1234",
             "metadata_key_hash": "5678"

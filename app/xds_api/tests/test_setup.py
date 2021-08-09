@@ -1,6 +1,6 @@
 from rest_framework.test import APITestCase
 
-from core.models import Experience, InterestList, XDSUser
+from core.models import Experience, InterestList, XDSConfiguration, XDSUser
 
 
 class TestSetUp(APITestCase):
@@ -52,6 +52,8 @@ class TestSetUp(APITestCase):
         self.course_1.save()
         self.list_1.experiences.add(self.course_1)
         self.list_2.experiences.add(self.course_1)
+
+        self.config = XDSConfiguration(target_xis_metadata_api="test").save()
 
         return super().setUp()
 
