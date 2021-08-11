@@ -4,7 +4,7 @@ from unittest.mock import patch
 from django.test import tag
 from django.urls import reverse
 from knox.models import AuthToken
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, RequestException
 from rest_framework import status
 
 from core.models import XDSConfiguration, XDSUIConfiguration, XDSUser
@@ -123,36 +123,38 @@ class ViewTests(TestSetUp):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_get_courses(self):
-        """Test that calling the endpoint /api/courses returns a single course
-            for the given course ID"""
+        """Test that calling the endpoint /api/experiences returns a single
+            course for the given course ID"""
         doc_id = '123456'
         url = reverse('xds_api:get_courses', args=(doc_id,))
 
-        with patch('xds_api.views.get_request') as get_request, \
-                patch('xds_api.views.get_courses_api_url') as get_api_url:
-            get_api_url.return_value = "www.test.com"
+        with patch('xds_api.views.get_request') as get_request:
             http_resp = get_request.return_value
             get_request.return_value = http_resp
             http_resp.json.return_value = [{
-                "test": "value"
+                "metadata": {
+                    "Metadata_Ledger": {},
+                    "Supplemental_Ledger": {}
+                },
+                "unique_record_identifier": "1234",
+                "metadata_key_hash": "5678"
             }]
             http_resp.status_code = 200
 
             response = self.client.get(url)
+
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_courses_error(self):
-        """Test that calling the endpoint /api/courses returns an
+        """Test that calling the endpoint /api/experiences returns an
             http error if an exception a thrown while reaching out to XIS"""
         doc_id = '123456'
         url = reverse('xds_api:get_courses', args=(doc_id,))
         errorMsg = "error reaching out to configured XIS API; " + \
                    "please check the XIS logs"
 
-        with patch('xds_api.views.get_request') as get_request, \
-                patch('xds_api.views.get_courses_api_url') as get_api_url:
-            get_api_url.return_value = "www.test.com"
-            get_request.side_effect = [HTTPError]
+        with patch('xds_api.views.get_request') as get_request:
+            get_request.side_effect = RequestException
 
             response = self.client.get(url)
             responseDict = json.loads(response.content)
@@ -250,14 +252,14 @@ class ViewTests(TestSetUp):
             http_resp = get_request.return_value
             get_request.return_value = http_resp
             http_resp.json.return_value = [{
-                "test": "value"
+                "test": "value",
             }]
             http_resp.status_code = 200
             response = self.client.get(url)
             responseDict = json.loads(response.content)
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(responseDict["experiences"], [])
+            self.assertEqual(responseDict["experiences"], [None])
 
     def test_get_interest_by_id_no_xis(self):
         """Test that requesting an interest list by ID using the

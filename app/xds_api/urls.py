@@ -16,7 +16,7 @@ urlpatterns = [
      path('auth', include('knox.urls')),
      path('auth/register', views.RegisterView.as_view(), name='register'),
      path('auth/login', views.LoginView.as_view(), name='login'),
-     path('courses/<str:course_id>/', views.get_courses,
+     path('experiences/<str:exp_hash>/', views.get_experiences,
           name='get_courses'),
      path('interest-lists/', views.interest_lists,
           name='interest-lists'),
