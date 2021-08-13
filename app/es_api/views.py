@@ -6,7 +6,8 @@ from django.http import (HttpResponse, HttpResponseBadRequest,
 from requests.exceptions import HTTPError
 
 from core.models import SearchFilter
-from es_api.utils.queries import get_results, more_like_this, search_by_keyword
+from es_api.utils.queries import (get_results, more_like_this,
+                                  search_by_filters, search_by_keyword)
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -91,6 +92,52 @@ def get_more_like_this(request, doc_id):
         logger.error(err)
         return HttpResponseServerError(errorMsgJSON,
                                        content_type="application/json")
+    else:
+        logger.info(results)
+        return HttpResponse(results, content_type="application/json")
+
+
+def filters(request):
+    """This method defines an API for performing a filter search"""
+    results = []
+    filters = {}
+    page_num = 1
+
+    if (request.GET.get('p')) and (request.GET.get('p') != ''):
+        page_num = int(request.GET['p'])
+
+    if (request.GET.get('Course.CourseTitle') and 
+        request.GET.get('Course.CourseTitle') != ''):
+            filters['Course.CourseTitle'] = request.GET['Course.CourseTitle']
+
+    if (request.GET.get('Course.CourseProviderName') and 
+        request.GET.get('Course.CourseProviderName') != ''):
+            filters['Course.CourseProviderName'] = \
+                request.GET['Course.CourseProviderName']
+
+    if (request.GET.get('CourseInstance.CourseLevel') and 
+        request.GET.get('CourseInstance.CourseLevel') != ''):
+            filters['CourseInstance.CourseLevel'] = \
+                request.GET['CourseInstance.CourseLevel']
+
+
+    errorMsg = {
+        "message": "error executing ElasticSearch query; Please contact " +
+                    "an administrator"
+    }
+    errorMsgJSON = json.dumps(errorMsg)
+
+    try:
+        response = search_by_filters(page_num, filters)
+        results = get_results(response)
+    except HTTPError as http_err:
+        logger.error(http_err)
+        return HttpResponseServerError(errorMsgJSON,
+                                        content_type="application/json")
+    except Exception as err:
+        logger.error(err)
+        return HttpResponseServerError(errorMsgJSON,
+                                        content_type="application/json")
     else:
         logger.info(results)
         return HttpResponse(results, content_type="application/json")
