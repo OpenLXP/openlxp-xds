@@ -34,4 +34,7 @@ urlpatterns = [
      path('interest-lists/<int:list_id>/subscribe',
           views.interest_list_subscribe,
           name='interest-list-subscribe'),
+     path('interest-lists/<int:list_id>/unsubscribe',
+          views.interest_list_unsubscribe,
+          name='interest-list-unsubscribe'),
 ]

@@ -434,3 +434,34 @@ def interest_list_subscribe(request, list_id):
     else:
         return Response({"message": "user successfully subscribed to list!"},
                         status.HTTP_200_OK)
+
+
+@api_view(['PATCH'])
+def interest_list_unsubscribe(request, list_id):
+    """This method handles a request for unsubscribing from an interest list"""
+    errorMsg = {
+        "message": "error: unable to unsubscribe user from list: " + \
+            str(list_id)
+    }
+
+    try:
+        # check user is authenticated
+        user = request.user
+
+        if not request.user.is_authenticated:
+            return Response({'Please login to unsubscribe from Interest List'},
+                            status.HTTP_401_UNAUTHORIZED)
+        # get interest list
+        interest_list = InterestList.objects.get(pk=list_id)
+        interest_list.subscribers.remove(user)
+        interest_list.save()
+    except HTTPError as http_err:
+        logger.error(http_err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as err:
+        logger.error(err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return Response({"message": 
+                        "user successfully unsubscribed from list!"},
+                        status.HTTP_200_OK)
