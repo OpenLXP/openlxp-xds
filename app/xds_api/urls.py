@@ -25,4 +25,13 @@ urlpatterns = [
      path('experiences/<str:exp_hash>/interest-lists',
           views.add_course_to_lists,
           name='add_course_to_lists'),
+     path('interest-lists/managed',
+          views.interest_lists_owned,
+          name='managed-lists'),
+     path('interest-lists/subscriptions',
+          views.interest_lists_subscriptions,
+          name='interest-list-subscriptions'),
+     path('interest-lists/<int:list_id>/subscribe',
+          views.interest_list_subscribe,
+          name='interest-list-subscribe'),
 ]

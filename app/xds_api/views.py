@@ -199,9 +199,6 @@ def interest_lists(request):
         user = request.user
         querySet = InterestList.objects.all()
 
-        if request.user.is_authenticated:
-            querySet = querySet.filter(owner=user)
-
         try:
             serializer_class = InterestListSerializer(querySet, many=True)
         except HTTPError as http_err:
@@ -215,7 +212,6 @@ def interest_lists(request):
 
     elif request.method == 'POST':
         # Assign data from request to serializer
-        user = request.user
         if not request.user.is_authenticated:
             return Response({'Please login to create Interest List'},
                             status.HTTP_401_UNAUTHORIZED)
@@ -357,4 +353,84 @@ def add_course_to_lists(request, exp_hash):
         return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return Response({"message": "course successfully added!"},
+                        status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def interest_lists_owned(request):
+    """Handles HTTP requests for interest lists managed by request user"""
+    errorMsg = {
+        "message": "Error fetching records please check the logs."
+    }
+    user = request.user
+
+    if not request.user.is_authenticated:
+        return Response({'Please login to view Interest Lists'},
+                        status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        querySet = InterestList.objects.filter(owner=user)
+        serializer_class = InterestListSerializer(querySet, many=True)
+    except HTTPError as http_err:
+        logger.error(http_err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as err:
+        logger.error(err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return Response(serializer_class.data, status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def interest_lists_subscriptions(request):
+    """Handles HTTP requests for interest lists that the request user is 
+        subscribed to"""
+    errorMsg = {
+        "message": "Error fetching records please check the logs."
+    }
+    user = request.user
+
+    if not request.user.is_authenticated:
+        return Response({'Please login to view Interest Lists'},
+                        status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        querySet = user.subscriptions
+        serializer_class = InterestListSerializer(querySet, many=True)
+    except HTTPError as http_err:
+        logger.error(http_err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as err:
+        logger.error(err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return Response(serializer_class.data, status.HTTP_200_OK)
+
+
+@api_view(['PATCH'])
+def interest_list_subscribe(request, list_id):
+    """This method handles a request for subscribing to an interest list"""
+    errorMsg = {
+        "message": "error: unable to subscribe user to list: " + str(list_id)
+    }
+
+    try:
+        # check user is authenticated
+        user = request.user
+
+        if not request.user.is_authenticated:
+            return Response({'Please login to subscribe to Interest List'},
+                            status.HTTP_401_UNAUTHORIZED)
+        # get interest list
+        interest_list = InterestList.objects.get(pk=list_id)
+        interest_list.subscribers.add(user)
+        interest_list.save()
+    except HTTPError as http_err:
+        logger.error(http_err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as err:
+        logger.error(err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return Response({"message": "user successfully subscribed to list!"},
                         status.HTTP_200_OK)
