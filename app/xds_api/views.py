@@ -247,7 +247,7 @@ def interest_list(request, list_id):
             serializer_class = InterestListSerializer(queryset)
             # fetch actual courses for each id in the courses array
             interestList = serializer_class.data
-            courseQuery = "?metadata_key_hash="
+            courseQuery = "?metadata_key_hash_list="
             coursesDict = interestList['experiences']
 
             # for each hash key in the courses list, append them to the query
