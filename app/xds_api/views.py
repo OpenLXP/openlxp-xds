@@ -231,7 +231,7 @@ def interest_lists(request):
                         status=status.HTTP_201_CREATED)
 
 
-@api_view(['GET', 'PATCH'])
+@api_view(['GET', 'PATCH', 'DELETE'])
 def interest_list(request, list_id):
     """This method defines an API to handle requests for a single interest
         list"""
@@ -304,6 +304,26 @@ def interest_list(request, list_id):
             serializer.save(owner=user)
 
             return Response(serializer.data,
+                            status=status.HTTP_200_OK)
+        elif request.method == 'DELETE':
+            # Assign data from request to serializer
+            user = request.user
+
+            # check user is logged in
+            if not request.user.is_authenticated:
+                return Response({'Please login to delete Interest List'},
+                                status.HTTP_401_UNAUTHORIZED)
+
+            # check user is owner of list
+            if not request.user == queryset.owner:
+                return Response({'Current user does not have access to delete '
+                                 'the list'},
+                                status.HTTP_401_UNAUTHORIZED)
+            # delete list
+            queryset = InterestList.objects.get(pk=list_id)
+            queryset.delete()
+
+            return Response({"message": "List successfully deleted!"},
                             status=status.HTTP_200_OK)
     except HTTPError as http_err:
         logger.error(http_err)
