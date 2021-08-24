@@ -21,6 +21,7 @@ from xds_api.serializers import (InterestListSerializer, LoginSerializer,
                                  XDSUserSerializer)
 from xds_api.utils.xds_utils import (get_request,
                                      get_spotlight_courses_api_url,
+                                     handle_unauthenticated_user,
                                      metadata_to_target, save_experiences)
 
 logger = logging.getLogger('dict_config_logger')
@@ -196,7 +197,6 @@ def interest_lists(request):
             "message": "Error fetching records please check the logs."
         }
         # initially fetch all active records
-        user = request.user
         querySet = InterestList.objects.all()
 
         try:
@@ -211,11 +211,12 @@ def interest_lists(request):
             return Response(serializer_class.data, status.HTTP_200_OK)
 
     elif request.method == 'POST':
-        # Assign data from request to serializer
-        if not request.user.is_authenticated:
-            return Response({'Please login to create Interest List'},
-                            status.HTTP_401_UNAUTHORIZED)
+        user = request.user
 
+        if not user.is_authenticated:
+            return handle_unauthenticated_user()
+
+        # Assign data from request to serializer
         serializer = InterestListSerializer(data=request.data)
 
         if not serializer.is_valid():
@@ -277,13 +278,11 @@ def interest_list(request, list_id):
                     return Response(response.json(),
                                     status=status.HTTP_503_SERVICE_UNAVAILABLE)
         elif request.method == 'PATCH':
-            # Assign data from request to serializer
             user = request.user
 
             # check user is logged in
-            if not request.user.is_authenticated:
-                return Response({'Please login to update Interest List'},
-                                status.HTTP_401_UNAUTHORIZED)
+            if not user.is_authenticated:
+                return handle_unauthenticated_user()
 
             # check user is owner of list
             if not request.user == queryset.owner:
@@ -292,7 +291,7 @@ def interest_list(request, list_id):
                                 status.HTTP_401_UNAUTHORIZED)
             # save new experiences
             save_experiences(request.data['experiences'])
-
+            # Assign data from request to serializer
             serializer = InterestListSerializer(queryset, data=request.data)
 
             if not serializer.is_valid():
@@ -310,9 +309,8 @@ def interest_list(request, list_id):
             user = request.user
 
             # check user is logged in
-            if not request.user.is_authenticated:
-                return Response({'Please login to delete Interest List'},
-                                status.HTTP_401_UNAUTHORIZED)
+            if not user.is_authenticated:
+                return handle_unauthenticated_user()
 
             # check user is owner of list
             if not request.user == queryset.owner:
@@ -350,9 +348,9 @@ def add_course_to_lists(request, exp_hash):
         # check user is authenticated
         user = request.user
 
-        if not request.user.is_authenticated:
-            return Response({'Please login to update Interest List'},
-                            status.HTTP_401_UNAUTHORIZED)
+        if not user.is_authenticated:
+            return handle_unauthenticated_user()
+
         # get or add course
         course, created = \
             Experience.objects.get_or_create(pk=exp_hash)
@@ -382,11 +380,11 @@ def interest_lists_owned(request):
     errorMsg = {
         "message": "Error fetching records please check the logs."
     }
+    # check user is authenticated
     user = request.user
 
-    if not request.user.is_authenticated:
-        return Response({'Please login to view Interest Lists'},
-                        status.HTTP_401_UNAUTHORIZED)
+    if not user.is_authenticated:
+        return handle_unauthenticated_user()
 
     try:
         querySet = InterestList.objects.filter(owner=user)
@@ -403,16 +401,16 @@ def interest_lists_owned(request):
 
 @api_view(['GET'])
 def interest_lists_subscriptions(request):
-    """Handles HTTP requests for interest lists that the request user is 
+    """Handles HTTP requests for interest lists that the request user is
         subscribed to"""
     errorMsg = {
         "message": "Error fetching records please check the logs."
     }
+    # check user is authenticated
     user = request.user
 
-    if not request.user.is_authenticated:
-        return Response({'Please login to view Interest Lists'},
-                        status.HTTP_401_UNAUTHORIZED)
+    if not user.is_authenticated:
+        return handle_unauthenticated_user()
 
     try:
         querySet = user.subscriptions
@@ -438,9 +436,9 @@ def interest_list_subscribe(request, list_id):
         # check user is authenticated
         user = request.user
 
-        if not request.user.is_authenticated:
-            return Response({'Please login to subscribe to Interest List'},
-                            status.HTTP_401_UNAUTHORIZED)
+        if not user.is_authenticated:
+            return handle_unauthenticated_user()
+
         # get interest list
         interest_list = InterestList.objects.get(pk=list_id)
         interest_list.subscribers.add(user)
@@ -460,17 +458,17 @@ def interest_list_subscribe(request, list_id):
 def interest_list_unsubscribe(request, list_id):
     """This method handles a request for unsubscribing from an interest list"""
     errorMsg = {
-        "message": "error: unable to unsubscribe user from list: " + \
-            str(list_id)
+        "message": "error: unable to unsubscribe user from list: " +
+        str(list_id)
     }
 
     try:
         # check user is authenticated
         user = request.user
 
-        if not request.user.is_authenticated:
-            return Response({'Please login to unsubscribe from Interest List'},
-                            status.HTTP_401_UNAUTHORIZED)
+        if not user.is_authenticated:
+            return handle_unauthenticated_user()
+
         # get interest list
         interest_list = InterestList.objects.get(pk=list_id)
         interest_list.subscribers.remove(user)
@@ -482,6 +480,6 @@ def interest_list_unsubscribe(request, list_id):
         logger.error(err)
         return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        return Response({"message": 
+        return Response({"message":
                         "user successfully unsubscribed from list!"},
                         status.HTTP_200_OK)

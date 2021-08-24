@@ -1,6 +1,8 @@
 import json
 
 import requests
+from rest_framework.response import Response
+from rest_framework import status
 
 from core.models import CourseSpotlight, Experience, XDSConfiguration
 
@@ -92,3 +94,9 @@ def save_experiences(course_list):
         newExperience, created = \
             Experience.objects.get_or_create(pk=course_hash)
         newExperience.save()
+
+
+def handle_unauthenticated_user():
+    """This method returns an HTTP response if user is not authenticated"""
+    return Response({'Access Denied: Unauthenticated user.'},
+                    status.HTTP_401_UNAUTHORIZED)

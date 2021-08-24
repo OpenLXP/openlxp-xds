@@ -106,24 +106,23 @@ def filters(request):
     if (request.GET.get('p')) and (request.GET.get('p') != ''):
         page_num = int(request.GET['p'])
 
-    if (request.GET.get('Course.CourseTitle') and 
-        request.GET.get('Course.CourseTitle') != ''):
-            filters['Course.CourseTitle'] = request.GET['Course.CourseTitle']
+    if (request.GET.get('Course.CourseTitle') and
+            request.GET.get('Course.CourseTitle') != ''):
+        filters['Course.CourseTitle'] = request.GET['Course.CourseTitle']
 
-    if (request.GET.get('Course.CourseProviderName') and 
-        request.GET.get('Course.CourseProviderName') != ''):
-            filters['Course.CourseProviderName'] = \
+    if (request.GET.get('Course.CourseProviderName') and
+            request.GET.get('Course.CourseProviderName') != ''):
+        filters['Course.CourseProviderName'] = \
                 request.GET['Course.CourseProviderName']
 
-    if (request.GET.get('CourseInstance.CourseLevel') and 
-        request.GET.get('CourseInstance.CourseLevel') != ''):
-            filters['CourseInstance.CourseLevel'] = \
-                request.GET['CourseInstance.CourseLevel']
-
+    if (request.GET.get('CourseInstance.CourseLevel') and
+            request.GET.get('CourseInstance.CourseLevel') != ''):
+        filters['CourseInstance.CourseLevel'] = \
+            request.GET['CourseInstance.CourseLevel']
 
     errorMsg = {
         "message": "error executing ElasticSearch query; Please contact " +
-                    "an administrator"
+        "an administrator"
     }
     errorMsgJSON = json.dumps(errorMsg)
 
@@ -133,11 +132,11 @@ def filters(request):
     except HTTPError as http_err:
         logger.error(http_err)
         return HttpResponseServerError(errorMsgJSON,
-                                        content_type="application/json")
+                                       content_type="application/json")
     except Exception as err:
         logger.error(err)
         return HttpResponseServerError(errorMsgJSON,
-                                        content_type="application/json")
+                                       content_type="application/json")
     else:
         logger.info(results)
         return HttpResponse(results, content_type="application/json")
