@@ -167,6 +167,32 @@ def spotlight_courses():
     return result
 
 
+def search_by_filters(page_num, filters={}):
+    """This method takes in a page number + a dict of field names and values
+        and queries ElasticSearch for the term then returns the
+        Response Object"""
+
+    # setting up the search object
+    s = Search(using='default', index=os.environ.get('ES_INDEX'))
+    # getting the page size for result pagination
+    configuration = XDSConfiguration.objects.first()
+    uiConfig = configuration.xdsuiconfiguration
+
+    for field_name in filters:
+        s = s.query(Q("match", **{field_name: filters[field_name]}))
+
+    page_size = uiConfig.search_results_per_page
+    start_index = get_page_start(page_num, page_size)
+    end_index = start_index + page_size
+    s = s[start_index:end_index]
+
+    # call to elasticsearch to execute the query
+    response = s.execute()
+    logger.info(s.to_dict())
+
+    return response
+
+
 def get_results(response):
     """This helper method consumes the response of an ElasticSearch Query and
         adds the hits to an array then returns a dictionary representing the

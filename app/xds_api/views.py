@@ -21,6 +21,7 @@ from xds_api.serializers import (InterestListSerializer, LoginSerializer,
                                  XDSUserSerializer)
 from xds_api.utils.xds_utils import (get_request,
                                      get_spotlight_courses_api_url,
+                                     handle_unauthenticated_user,
                                      metadata_to_target, save_experiences)
 
 logger = logging.getLogger('dict_config_logger')
@@ -196,11 +197,7 @@ def interest_lists(request):
             "message": "Error fetching records please check the logs."
         }
         # initially fetch all active records
-        user = request.user
         querySet = InterestList.objects.all()
-
-        if request.user.is_authenticated:
-            querySet = querySet.filter(owner=user)
 
         try:
             serializer_class = InterestListSerializer(querySet, many=True)
@@ -214,12 +211,12 @@ def interest_lists(request):
             return Response(serializer_class.data, status.HTTP_200_OK)
 
     elif request.method == 'POST':
-        # Assign data from request to serializer
         user = request.user
-        if not request.user.is_authenticated:
-            return Response({'Please login to create Interest List'},
-                            status.HTTP_401_UNAUTHORIZED)
 
+        if not user.is_authenticated:
+            return handle_unauthenticated_user()
+
+        # Assign data from request to serializer
         serializer = InterestListSerializer(data=request.data)
 
         if not serializer.is_valid():
@@ -235,7 +232,7 @@ def interest_lists(request):
                         status=status.HTTP_201_CREATED)
 
 
-@api_view(['GET', 'PATCH'])
+@api_view(['GET', 'PATCH', 'DELETE'])
 def interest_list(request, list_id):
     """This method defines an API to handle requests for a single interest
         list"""
@@ -251,7 +248,7 @@ def interest_list(request, list_id):
             serializer_class = InterestListSerializer(queryset)
             # fetch actual courses for each id in the courses array
             interestList = serializer_class.data
-            courseQuery = "?metadata_key_hash="
+            courseQuery = "?metadata_key_hash_list="
             coursesDict = interestList['experiences']
 
             # for each hash key in the courses list, append them to the query
@@ -281,13 +278,11 @@ def interest_list(request, list_id):
                     return Response(response.json(),
                                     status=status.HTTP_503_SERVICE_UNAVAILABLE)
         elif request.method == 'PATCH':
-            # Assign data from request to serializer
             user = request.user
 
             # check user is logged in
-            if not request.user.is_authenticated:
-                return Response({'Please login to update Interest List'},
-                                status.HTTP_401_UNAUTHORIZED)
+            if not user.is_authenticated:
+                return handle_unauthenticated_user()
 
             # check user is owner of list
             if not request.user == queryset.owner:
@@ -296,7 +291,7 @@ def interest_list(request, list_id):
                                 status.HTTP_401_UNAUTHORIZED)
             # save new experiences
             save_experiences(request.data['experiences'])
-
+            # Assign data from request to serializer
             serializer = InterestListSerializer(queryset, data=request.data)
 
             if not serializer.is_valid():
@@ -308,6 +303,25 @@ def interest_list(request, list_id):
             serializer.save(owner=user)
 
             return Response(serializer.data,
+                            status=status.HTTP_200_OK)
+        elif request.method == 'DELETE':
+            # Assign data from request to serializer
+            user = request.user
+
+            # check user is logged in
+            if not user.is_authenticated:
+                return handle_unauthenticated_user()
+
+            # check user is owner of list
+            if not request.user == queryset.owner:
+                return Response({'Current user does not have access to delete '
+                                 'the list'},
+                                status.HTTP_401_UNAUTHORIZED)
+            # delete list
+            queryset = InterestList.objects.get(pk=list_id)
+            queryset.delete()
+
+            return Response({"message": "List successfully deleted!"},
                             status=status.HTTP_200_OK)
     except HTTPError as http_err:
         logger.error(http_err)
@@ -334,9 +348,9 @@ def add_course_to_lists(request, exp_hash):
         # check user is authenticated
         user = request.user
 
-        if not request.user.is_authenticated:
-            return Response({'Please login to update Interest List'},
-                            status.HTTP_401_UNAUTHORIZED)
+        if not user.is_authenticated:
+            return handle_unauthenticated_user()
+
         # get or add course
         course, created = \
             Experience.objects.get_or_create(pk=exp_hash)
@@ -357,4 +371,115 @@ def add_course_to_lists(request, exp_hash):
         return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return Response({"message": "course successfully added!"},
+                        status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def interest_lists_owned(request):
+    """Handles HTTP requests for interest lists managed by request user"""
+    errorMsg = {
+        "message": "Error fetching records please check the logs."
+    }
+    # check user is authenticated
+    user = request.user
+
+    if not user.is_authenticated:
+        return handle_unauthenticated_user()
+
+    try:
+        querySet = InterestList.objects.filter(owner=user)
+        serializer_class = InterestListSerializer(querySet, many=True)
+    except HTTPError as http_err:
+        logger.error(http_err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as err:
+        logger.error(err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return Response(serializer_class.data, status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def interest_lists_subscriptions(request):
+    """Handles HTTP requests for interest lists that the request user is
+        subscribed to"""
+    errorMsg = {
+        "message": "Error fetching records please check the logs."
+    }
+    # check user is authenticated
+    user = request.user
+
+    if not user.is_authenticated:
+        return handle_unauthenticated_user()
+
+    try:
+        querySet = user.subscriptions
+        serializer_class = InterestListSerializer(querySet, many=True)
+    except HTTPError as http_err:
+        logger.error(http_err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as err:
+        logger.error(err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return Response(serializer_class.data, status.HTTP_200_OK)
+
+
+@api_view(['PATCH'])
+def interest_list_subscribe(request, list_id):
+    """This method handles a request for subscribing to an interest list"""
+    errorMsg = {
+        "message": "error: unable to subscribe user to list: " + str(list_id)
+    }
+
+    try:
+        # check user is authenticated
+        user = request.user
+
+        if not user.is_authenticated:
+            return handle_unauthenticated_user()
+
+        # get interest list
+        interest_list = InterestList.objects.get(pk=list_id)
+        interest_list.subscribers.add(user)
+        interest_list.save()
+    except HTTPError as http_err:
+        logger.error(http_err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as err:
+        logger.error(err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return Response({"message": "user successfully subscribed to list!"},
+                        status.HTTP_200_OK)
+
+
+@api_view(['PATCH'])
+def interest_list_unsubscribe(request, list_id):
+    """This method handles a request for unsubscribing from an interest list"""
+    errorMsg = {
+        "message": "error: unable to unsubscribe user from list: " +
+        str(list_id)
+    }
+
+    try:
+        # check user is authenticated
+        user = request.user
+
+        if not user.is_authenticated:
+            return handle_unauthenticated_user()
+
+        # get interest list
+        interest_list = InterestList.objects.get(pk=list_id)
+        interest_list.subscribers.remove(user)
+        interest_list.save()
+    except HTTPError as http_err:
+        logger.error(http_err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as err:
+        logger.error(err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return Response({"message":
+                        "user successfully unsubscribed from list!"},
                         status.HTTP_200_OK)

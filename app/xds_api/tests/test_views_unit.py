@@ -353,3 +353,61 @@ class ViewTests(TestSetUp):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(self.list_3.experiences.all()), 1)
+
+    def test_get_owned_interest_lists_auth(self):
+        """Test that an authenticated user only gets their created interest
+            lists when calling the /api/interest-lists/owned api"""
+        url = reverse('xds_api:owned-lists')
+        _, token = AuthToken.objects.create(self.user_1)
+        response = self.client \
+            .get(url, HTTP_AUTHORIZATION='Token {}'.format(token))
+        responseDict = json.loads(response.content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(responseDict[0]["owner"]["email"], self.user_1.email)
+        self.assertEqual(len(self.user_1.interest_lists.all()),
+                         len(responseDict))
+
+    def test_get_subscriptions_auth(self):
+        """Test that an authenticated user can get a list of interest lists
+            that they are subscribed to when calling the endpoint
+            /api/interest-lists/subscriptions"""
+        url = reverse('xds_api:interest-list-subscriptions')
+        _, token = AuthToken.objects.create(self.user_1)
+        # subscribe user 1 to interest list 3
+        self.list_3.subscribers.add(self.user_1)
+        self.list_3.save()
+        response = self.client \
+            .get(url, HTTP_AUTHORIZATION='Token {}'.format(token))
+        responseDict = json.loads(response.content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(self.list_3.subscribers.all()),
+                         len(responseDict))
+
+    def test_interest_list_subscribe(self):
+        """Test that an authenticated user can subscribe to an interest list
+            when calling the endpoint /api/interest-lists/<id>/subscribe"""
+        list_id = self.list_2.pk
+        url = reverse('xds_api:interest-list-subscribe', args=(list_id,))
+        _, token = AuthToken.objects.create(self.user_1)
+        response = self.client \
+            .patch(url, HTTP_AUTHORIZATION='Token {}'.format(token))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(self.list_2.subscribers.all()), 1)
+
+    def test_interest_list_unsubscribe(self):
+        """Test that an authenticated user can unsubscribe to an interest list
+            when calling the endpoint /api/interest-lists/<id>/unsubscribe"""
+        list_id = self.list_2.pk
+        url = reverse('xds_api:interest-list-unsubscribe', args=(list_id,))
+        _, token = AuthToken.objects.create(self.user_1)
+        # subscribe user 1 to interest list 3
+        self.list_2.subscribers.add(self.user_1)
+        self.list_2.save()
+        response = self.client \
+            .patch(url, HTTP_AUTHORIZATION='Token {}'.format(token))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(self.list_2.subscribers.all()), 0)

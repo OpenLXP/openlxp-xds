@@ -8,8 +8,8 @@ from core.models import (CourseSpotlight, SearchFilter, SearchSortOption,
                          XDSConfiguration, XDSUIConfiguration)
 from es_api.utils.queries import (add_search_aggregations, add_search_filters,
                                   add_search_sort, get_page_start, get_results,
-                                  more_like_this, search_by_keyword,
-                                  spotlight_courses)
+                                  more_like_this, search_by_filters,
+                                  search_by_keyword, spotlight_courses)
 
 
 @tag('unit')
@@ -285,3 +285,20 @@ class UtilTests(SimpleTestCase):
             result = spotlight_courses()
 
             self.assertEqual(len(result), 0)
+
+    def test_search_by_filters(self):
+        """Test that calling search_by_filters returns an JSON object"""
+        with patch('es_api.utils.queries.XDSConfiguration.objects') as xdsCfg,\
+                patch('elasticsearch_dsl.Search.execute') as es_execute:
+            configObj = XDSConfiguration(target_xis_metadata_api="dsds")
+            uiConfigObj = XDSUIConfiguration(search_results_per_page=10,
+                                             xds_configuration=configObj)
+            xdsCfg.xdsuiconfiguration = uiConfigObj
+            xdsCfg.first.return_value = configObj
+            expected_result = {
+                "test": "test"
+            }
+            es_execute.return_value = expected_result
+            result = search_by_filters(1, {'Course.CourseTitle': 'test'})
+
+            self.assertEqual(result, expected_result)
