@@ -12,10 +12,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.management.utils.xds_internal import send_log_email
-from core.models import (Experience, InterestList, XDSConfiguration,
-                         XDSUIConfiguration)
+from core.models import (Experience, InterestList, SavedFilter,
+                         XDSConfiguration, XDSUIConfiguration)
 from xds_api.serializers import (InterestListSerializer, LoginSerializer,
-                                 RegisterSerializer,
+                                 RegisterSerializer, SavedFilterSerializer,
                                  XDSConfigurationSerializer,
                                  XDSUIConfigurationSerializer,
                                  XDSUserSerializer)
@@ -237,7 +237,7 @@ def interest_list(request, list_id):
     """This method defines an API to handle requests for a single interest
         list"""
     errorMsg = {
-        "message": "error: no record for corresponding interest list id; " +
+        "message": "error: no record for corresponding interest list id: " +
                    "please check the logs"
     }
 
@@ -483,3 +483,142 @@ def interest_list_unsubscribe(request, list_id):
         return Response({"message":
                         "user successfully unsubscribed from list!"},
                         status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def saved_filters_owned(request):
+    """Handles HTTP requests for saved filters managed by request user"""
+    errorMsg = {
+        "message": "Error fetching records please check the logs."
+    }
+    # check user is authenticated
+    user = request.user
+
+    if not user.is_authenticated:
+        return handle_unauthenticated_user()
+
+    try:
+        querySet = SavedFilter.objects.filter(owner=user)
+        serializer_class = SavedFilterSerializer(querySet, many=True)
+    except HTTPError as http_err:
+        logger.error(http_err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as err:
+        logger.error(err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return Response(serializer_class.data, status.HTTP_200_OK)
+
+
+@api_view(['GET', 'PATCH', 'DELETE'])
+def saved_filter(request, filter_id):
+    """This method defines an API to handle requests for a single interest
+        list"""
+    errorMsg = {
+        "message": "error: no record for corresponding saved filter id: " +
+                   "please check the logs"
+    }
+
+    try:
+        queryset = SavedFilter.objects.get(pk=filter_id)
+
+        if request.method == 'GET':
+            serializer_class = SavedFilterSerializer(queryset)
+        
+            return Response(serializer_class.data, status.HTTP_200_OK)
+        elif request.method == 'PATCH':
+            user = request.user
+
+            # check user is logged in
+            if not user.is_authenticated:
+                return handle_unauthenticated_user()
+
+            # check user is owner of list
+            if not request.user == queryset.owner:
+                return Response({'Current user does not have access to modify '
+                                 'the saved filter'},
+                                status.HTTP_401_UNAUTHORIZED)
+            # Assign data from request to serializer
+            serializer = SavedFilterSerializer(queryset, data=request.data)
+
+            if not serializer.is_valid():
+                # If not received send error and bad request status
+                logger.info(json.dumps(request.data))
+                return Response(serializer.errors,
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            serializer.save()
+
+            return Response(serializer.data,
+                            status=status.HTTP_200_OK)
+        elif request.method == 'DELETE':
+            # Assign data from request to serializer
+            user = request.user
+
+            # check user is logged in
+            if not user.is_authenticated:
+                return handle_unauthenticated_user()
+
+            # check user is owner of list
+            if not request.user == queryset.owner:
+                return Response({'Current user does not have access to delete '
+                                 'the saved filter'},
+                                status.HTTP_401_UNAUTHORIZED)
+            # delete list
+            queryset = SavedFilter.objects.get(pk=filter_id)
+            queryset.delete()
+
+            return Response({"message": "Filter successfully deleted!"},
+                            status=status.HTTP_200_OK)
+    except HTTPError as http_err:
+        logger.error(http_err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except ObjectDoesNotExist as not_found_err:
+        logger.error(not_found_err)
+        return Response(errorMsg, status.HTTP_404_NOT_FOUND)
+    except Exception as err:
+        logger.error(err)
+        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    
+@api_view(['GET', 'POST'])
+def saved_filters(request):
+    """Handles HTTP requests for saved filters"""
+    if request.method == 'GET':
+        errorMsg = {
+            "message": "Error fetching records please check the logs."
+        }
+        # initially fetch all active records
+        querySet = SavedFilter.objects.all()
+
+        try:
+            serializer_class = SavedFilterSerializer(querySet, many=True)
+        except HTTPError as http_err:
+            logger.error(http_err)
+            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as err:
+            logger.error(err)
+            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return Response(serializer_class.data, status.HTTP_200_OK)
+
+    elif request.method == 'POST':
+        user = request.user
+
+        if not user.is_authenticated:
+            return handle_unauthenticated_user()
+
+        # Assign data from request to serializer
+        serializer = SavedFilterSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            # If not received send error and bad request status
+            logger.info(json.dumps(request.data))
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # If received save record in ledger and send response of UUID &
+        # status created
+        serializer.save(owner=request.user)
+        return Response(serializer.data,
+                        status=status.HTTP_201_CREATED)

@@ -352,3 +352,15 @@ class InterestList(TimeStampedModel):
                                          blank=True)
     name = models.CharField(max_length=200,
                             help_text="Enter the name of the list")
+
+
+class SavedFilter(TimeStampedModel):
+    """Model for Saved Filter"""
+
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL,
+                              on_delete=models.CASCADE,
+                              related_name="saved_filters")
+    name = models.CharField(max_length=200,
+                            help_text="Enter the name of the filter")
+    query = models.CharField(max_length=200,
+                             help_text="queryString for the filter")

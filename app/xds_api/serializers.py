@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 
 from core.models import (CourseDetailHighlight, CourseInformationMapping,
-                         Experience, InterestList,
+                         Experience, InterestList, SavedFilter,
                          SearchSortOption, XDSConfiguration,
                          XDSUIConfiguration, XDSUser)
 
@@ -169,6 +169,26 @@ class InterestListSerializer(serializers.ModelSerializer):
             if (exp not in experiences):
                 instance.experiences.remove(exp)
 
+        instance.save()
+
+        return instance
+
+
+class SavedFilterSerializer(serializers.ModelSerializer):
+    """Serializes the Saved filter model"""
+    owner = XDSUserSerializer(read_only=True)
+
+    class Meta:
+        model = SavedFilter
+        fields = '__all__'
+
+    def create(self, validated_data):
+        return SavedFilter.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.owner = validated_data.get('owner', instance.owner)
+        instance.name = validated_data.get('name', instance.name)
+        instance.query = validated_data.get('query', instance.query)
         instance.save()
 
         return instance
