@@ -564,7 +564,7 @@ def saved_filter(request, filter_id):
                 return Response({'Current user does not have access to delete '
                                  'the saved filter'},
                                 status.HTTP_401_UNAUTHORIZED)
-            # delete list
+            # delete filter
             queryset = SavedFilter.objects.get(pk=filter_id)
             queryset.delete()
 
@@ -588,7 +588,7 @@ def saved_filters(request):
         errorMsg = {
             "message": "Error fetching records please check the logs."
         }
-        # initially fetch all active records
+        # initially fetch all saved filters
         querySet = SavedFilter.objects.all()
 
         try:
@@ -617,8 +617,6 @@ def saved_filters(request):
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
 
-        # If received save record in ledger and send response of UUID &
-        # status created
         serializer.save(owner=request.user)
         return Response(serializer.data,
                         status=status.HTTP_201_CREATED)
