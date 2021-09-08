@@ -5,13 +5,14 @@ import requests
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
 from knox.models import AuthToken
+from openlxp_notifications.management.commands.conformance_alerts import \
+    send_log_email
 from requests.exceptions import HTTPError
 from rest_framework import generics, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.management.utils.xds_internal import send_log_email
 from core.models import (Experience, InterestList, XDSConfiguration,
                          XDSUIConfiguration)
 from xds_api.serializers import (InterestListSerializer, LoginSerializer,
@@ -258,7 +259,7 @@ def interest_list(request, list_id):
                 else:
                     courseQuery += (metadata_key_hash + ",")
 
-            if (len(coursesDict) > 0):
+            if len(coursesDict) > 0:
                 # get search string
                 composite_api_url = XDSConfiguration.objects.first()\
                     .target_xis_metadata_api
@@ -268,7 +269,7 @@ def interest_list(request, list_id):
                 response = get_request(api_url)
                 responseJSON = json.dumps(response.json())
 
-                if (response.status_code == 200):
+                if response.status_code == 200:
                     formattedResponse = metadata_to_target(responseJSON)
                     interestList['experiences'] = formattedResponse
 
