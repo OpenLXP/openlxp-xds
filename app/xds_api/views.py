@@ -4,12 +4,12 @@ import logging
 import requests
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
-from knox.models import AuthToken
 from requests.exceptions import HTTPError
 from rest_framework import generics, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_jwt.settings import api_settings
 
 from core.management.utils.xds_internal import send_log_email
 from core.models import (Experience, InterestList, XDSConfiguration,
@@ -158,8 +158,12 @@ class RegisterView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+        jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
         # creates a token for immediate login
-        _, token = AuthToken.objects.create(user)
+        payload = jwt_payload_handler(user)
+        token = jwt_encode_handler(payload)
 
         # Returning the user context, and token
         return Response({
@@ -178,8 +182,12 @@ class LoginView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data
-        # Getting the user token
-        _, token = AuthToken.objects.create(user)
+        jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+        jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+        # creates a token for immediate login
+        payload = jwt_payload_handler(user)
+        token = jwt_encode_handler(payload)
 
         return Response({
             "user": XDSUserSerializer(user,

@@ -52,7 +52,7 @@ class XDSUser(AbstractUser):
     """Model for a user"""
 
     # User attributes
-    username = None
+    username = models.CharField(max_length=200, null=True, blank=True)
     email = models.EmailField(max_length=200, unique=True)
     first_name = models.CharField(max_length=200)
     last_name = models.CharField(max_length=200)

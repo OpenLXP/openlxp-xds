@@ -17,8 +17,15 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+import django_saml2_auth.views
 
 urlpatterns = [
+    # These are the SAML2 related URLs. You can change "^saml2_auth/" regex to
+    # any path you want, like "^sso_auth/", "^sso_login/", etc. (required)
+    path('saml2_auth/', include('django_saml2_auth.urls')),
+    # If you want to specific the after-login-redirect-URL,
+    # use parameter "?next=/the/path/you/want" with this view.
+    path('saml2-login/', django_saml2_auth.views.signin),
     path('admin/', admin.site.urls),
     path('api/', include('xds_api.urls')),
     path('es-api/', include('es_api.urls')),

@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 import mimetypes
 import os
 import sys
+import datetime
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -45,7 +46,10 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
-    'knox',
+    #'knox',
+    'rest_framework_jwt',
+    'rest_framework_jwt.blacklist',
+    'django_saml2_auth',
     'xds_api',
     'core',
     'es_api',
@@ -176,9 +180,34 @@ AUTH_USER_MODEL = 'core.XDSUser'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'knox.auth.TokenAuthentication',  
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',  
     ],
 }
 
 EMAIL_BACKEND = 'django_ses.SESBackend'
 
+SAML2_AUTH = {
+    # Metadata is required, choose either remote url or local file path
+    'METADATA_AUTO_CONF_URL': 'https://samltest.id/saml/idp',
+
+    # Optional settings below
+    'DEFAULT_NEXT_URL': '/admin',  # Custom target redirect URL after the user get logged in. Default to /admin if not set. This setting will be overwritten if you have parameter ?next= specificed in the login URL.
+    'CREATE_USER': 'FALSE', # Create a new Django user when a new user logs in. Defaults to True.
+    'ATTRIBUTES_MAP': {  # Change Email/UserName/FirstName/LastName to corresponding SAML2 userprofile attributes.
+        'email': 'mail',
+        'username': 'mail',
+        'first_name': 'givenName',
+        'last_name': 'givenName',
+    },
+    'ASSERTION_URL': 'http://localhost:8100',
+    'ENTITY_ID': 'http://localhost:8100/saml2_auth/acs/', # Populates the Issuer element in authn request
+    'USE_JWT': True, # Set this to True if you are running a Single Page Application (SPA) with Django Rest Framework (DRF), and are using JWT authentication to authorize client users
+    'FRONTEND_URL': 'http://localhost:3001', # Redirect URL for the client if you are using JWT auth with DRF. See explanation below
+}
+
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(hours=1),
+    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(hours=8),
+    'JWT_ALLOW_REFRESH': True,
+    'JWT_AUTH_HEADER_PREFIX': 'JWT'
+}
