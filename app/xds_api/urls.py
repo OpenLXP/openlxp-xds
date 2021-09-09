@@ -21,7 +21,7 @@ urlpatterns = [
      path('auth/token', obtain_jwt_token),
      re_path(r'^jwt_refresh', refresh_jwt_token),
      path('experiences/<str:course_id>/', views.get_experiences,
-          name='get_experiences'),
+          name='get_courses'),
      path('interest-lists/', views.interest_lists,
           name='interest-lists'),
      path('interest-lists/<int:list_id>', views.interest_list,
