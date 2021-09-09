@@ -150,7 +150,6 @@ class InterestListSerializer(serializers.ModelSerializer):
         name = validated_data.get("name")
         description = validated_data.get("description")
         owner = validated_data.get("owner")
-        logger.info("Hello from create")
         return InterestList.objects.create(name=name,
                                            description=description,
                                            owner=owner)
@@ -161,7 +160,6 @@ class InterestListSerializer(serializers.ModelSerializer):
                                                   instance.description)
         instance.name = validated_data.get('name', instance.name)
         experiences = validated_data.get('experiences')
-        logger.info("Hello from update")
         # for each experience in the experience list, we add the experience to
         # the current interest list
         course_added_count = 0
