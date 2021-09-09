@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from django.test import tag
 from django.urls import reverse
-from knox.models import AuthToken
 from requests.exceptions import HTTPError, RequestException
 from rest_framework import status
 
@@ -25,16 +24,10 @@ class ViewTests(TestSetUp):
                                             xds_configuration=xds_config)
             xds_ui_Obj.return_value = xds_ui_Obj
             xds_ui_Obj.first.return_value = xds_ui_cfg
-
-            # create user, save user, login using client
-            user = XDSUser.objects.create_user(self.email,
-                                               self.password,
-                                               first_name=self.first_name,
-                                               last_name=self.last_name)
-            _, token = AuthToken.objects.create(user)
+            token = self.user_1_token
 
             response = self.client \
-                .get(url, HTTP_AUTHORIZATION='Token {}'.format(token))
+                .get(url, HTTP_AUTHORIZATION='JWT {}'.format(token))
             response_dict = json.loads(response.content)
 
             self.assertEqual(response_dict['search_results_per_page'],
@@ -178,9 +171,9 @@ class ViewTests(TestSetUp):
         """Test that an authenticated user only gets their created interest
             lists when calling the /api/interest-lists api"""
         url = reverse('xds_api:interest-lists')
-        _, token = AuthToken.objects.create(self.user_1)
+        token = self.user_1_token
         response = self.client \
-            .get(url, HTTP_AUTHORIZATION='Token {}'.format(token))
+            .get(url, HTTP_AUTHORIZATION='JWT {}'.format(token))
         responseDict = json.loads(response.content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(responseDict[0]["owner"]["email"], self.user_1.email)
@@ -205,11 +198,12 @@ class ViewTests(TestSetUp):
             "description": "Devops Desc",
             "courses": []
         }
-        _, token = AuthToken.objects.create(self.user_1)
+        token = self.user_1_token
+
         response = \
             self.client.post(url,
                              interest_list,
-                             HTTP_AUTHORIZATION='Token {}'.format(token))
+                             HTTP_AUTHORIZATION='JWT {}'.format(token))
         responseDict = json.loads(response.content)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED),
@@ -298,11 +292,11 @@ class ViewTests(TestSetUp):
             /api/interest-list/id PATCH"""
         id = self.list_2.pk
         url = reverse('xds_api:interest-list', args=(id,))
-        _, token = AuthToken.objects.create(self.user_1)
+        token = self.user_1_token
         response = \
             self.client.patch(url,
                               data={"test": "test"},
-                              HTTP_AUTHORIZATION='Token {}'.format(token))
+                              HTTP_AUTHORIZATION='JWT {}'.format(token))
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -311,16 +305,16 @@ class ViewTests(TestSetUp):
             /api/interest-list/id PATCH"""
         id = self.list_1.id
         url = reverse('xds_api:interest-list', args=(id,))
-        _, token = AuthToken.objects.create(self.user_1)
         new_name = "edited name"
         empty_list = []
         new_list = {"name": new_name,
                     "description": self.list_1.description,
                     "experiences": empty_list}
+        token = self.user_1_token
         response = \
             self.client.patch(url,
                               data=json.dumps(new_list),
-                              HTTP_AUTHORIZATION='Token {}'.format(token),
+                              HTTP_AUTHORIZATION='JWT {}'.format(token),
                               content_type="application/json")
         responseDict = json.loads(response.content)
 
@@ -338,18 +332,18 @@ class ViewTests(TestSetUp):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_add_course_multiple_lists_success(self):
-        """Test that adding a course to multple lists is successful when\
+        """Test that adding a course to multiple lists is successful when\
             user is owner for the /api/add-course-to-lists POST api"""
         id = self.course_1.pk
         url = reverse('xds_api:add_course_to_lists', args=(id,))
-        _, token = AuthToken.objects.create(self.user_2)
         data = {
             "lists": [self.list_3.pk]
         }
+        token = self.user_2_token
         response = \
             self.client.post(url,
                              data,
-                             HTTP_AUTHORIZATION='Token {}'.format(token))
+                             HTTP_AUTHORIZATION='JWT {}'.format(token))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(self.list_3.experiences.all()), 1)
@@ -358,9 +352,9 @@ class ViewTests(TestSetUp):
         """Test that an authenticated user only gets their created interest
             lists when calling the /api/interest-lists/owned api"""
         url = reverse('xds_api:owned-lists')
-        _, token = AuthToken.objects.create(self.user_1)
+        token = self.user_1_token
         response = self.client \
-            .get(url, HTTP_AUTHORIZATION='Token {}'.format(token))
+            .get(url, HTTP_AUTHORIZATION='JWT {}'.format(token))
         responseDict = json.loads(response.content)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -373,12 +367,12 @@ class ViewTests(TestSetUp):
             that they are subscribed to when calling the endpoint
             /api/interest-lists/subscriptions"""
         url = reverse('xds_api:interest-list-subscriptions')
-        _, token = AuthToken.objects.create(self.user_1)
         # subscribe user 1 to interest list 3
         self.list_3.subscribers.add(self.user_1)
         self.list_3.save()
+        token = self.user_1_token
         response = self.client \
-            .get(url, HTTP_AUTHORIZATION='Token {}'.format(token))
+            .get(url, HTTP_AUTHORIZATION='JWT {}'.format(token))
         responseDict = json.loads(response.content)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -390,9 +384,9 @@ class ViewTests(TestSetUp):
             when calling the endpoint /api/interest-lists/<id>/subscribe"""
         list_id = self.list_2.pk
         url = reverse('xds_api:interest-list-subscribe', args=(list_id,))
-        _, token = AuthToken.objects.create(self.user_1)
+        token = self.user_1_token
         response = self.client \
-            .patch(url, HTTP_AUTHORIZATION='Token {}'.format(token))
+            .patch(url, HTTP_AUTHORIZATION='JWT {}'.format(token))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(self.list_2.subscribers.all()), 1)
@@ -402,12 +396,12 @@ class ViewTests(TestSetUp):
             when calling the endpoint /api/interest-lists/<id>/unsubscribe"""
         list_id = self.list_2.pk
         url = reverse('xds_api:interest-list-unsubscribe', args=(list_id,))
-        _, token = AuthToken.objects.create(self.user_1)
         # subscribe user 1 to interest list 3
         self.list_2.subscribers.add(self.user_1)
         self.list_2.save()
+        token = self.user_1_token
         response = self.client \
-            .patch(url, HTTP_AUTHORIZATION='Token {}'.format(token))
+            .patch(url, HTTP_AUTHORIZATION='JWT {}'.format(token))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(self.list_2.subscribers.all()), 0)

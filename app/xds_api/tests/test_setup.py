@@ -1,4 +1,5 @@
 from rest_framework.test import APITestCase
+from rest_framework_jwt.settings import api_settings
 
 from core.models import Experience, InterestList, XDSConfiguration, XDSUser
 
@@ -45,6 +46,12 @@ class TestSetUp(APITestCase):
         self.list_3 = InterestList(owner=self.user_2,
                                    name="list 3",
                                    description='list 3')
+        jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+        jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+        payload = jwt_payload_handler(self.user_1)
+        self.user_1_token = jwt_encode_handler(payload)
+        payload_2 = jwt_payload_handler(self.user_2)
+        self.user_2_token = jwt_encode_handler(payload_2)
         self.list_1.save()
         self.list_2.save()
         self.list_3.save()
