@@ -524,7 +524,7 @@ def saved_filter(request, filter_id):
 
         if request.method == 'GET':
             serializer_class = SavedFilterSerializer(queryset)
-        
+
             return Response(serializer_class.data, status.HTTP_200_OK)
         elif request.method == 'PATCH':
             user = request.user
@@ -580,7 +580,7 @@ def saved_filter(request, filter_id):
         logger.error(err)
         return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    
+
 @api_view(['GET', 'POST'])
 def saved_filters(request):
     """Handles HTTP requests for saved filters"""
