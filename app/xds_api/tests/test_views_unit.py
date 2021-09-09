@@ -198,7 +198,7 @@ class ViewTests(TestSetUp):
 
     def test_create_interest_list_auth(self):
         """Test that trying to create an interest list through the
-            /api/interest-lists api returns an error"""
+            /api/interest-lists api succeeds"""
         url = reverse('xds_api:interest-lists')
         interest_list = {
             "name": "Devops",
@@ -411,3 +411,32 @@ class ViewTests(TestSetUp):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(self.list_2.subscribers.all()), 0)
+
+    def test_create_saved_filter_no_auth(self):
+        """Test that trying to create a saved filter through the
+            /api/saved-filters api returns an error"""
+        url = reverse('xds_api:saved-filters')
+        saved_filter = {
+            "name": "Devops",
+            "query": "randomQuery"
+        }
+        response = self.client.post(url, saved_filter)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_saved_filter_auth(self):
+        """Test that trying to create saved filter through the
+            /api/saved-filters api succeeds"""
+        url = reverse('xds_api:saved-filters')
+        saved_filter = {
+            "name": "Devops",
+            "query": "randomQuery"
+        }
+        _, token = AuthToken.objects.create(self.user_1)
+        response = \
+            self.client.post(url,
+                             saved_filter,
+                             HTTP_AUTHORIZATION='Token {}'.format(token))
+        responseDict = json.loads(response.content)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED),
+        self.assertEqual(responseDict["name"], "Devops")
