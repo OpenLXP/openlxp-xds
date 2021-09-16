@@ -2,10 +2,8 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 from core.models import (CourseDetailHighlight, CourseInformationMapping,
-                         CourseSpotlight, Experience,
-                         InterestList, ReceiverEmailConfiguration, SavedFilter,
-                         SearchFilter, SearchSortOption,
-                         SenderEmailConfiguration, XDSConfiguration,
+                         CourseSpotlight, Experience, InterestList,
+                         SearchFilter, SearchSortOption, XDSConfiguration,
                          XDSUIConfiguration, XDSUser)
 
 
@@ -64,7 +62,7 @@ class CourseInformationMappingAdmin(admin.ModelAdmin):
 
 class XDSUserAdmin(UserAdmin):
     model = XDSUser
-    search_fields = ('email',  'first_name',)
+    search_fields = ('email', 'first_name',)
     list_filter = ('is_active', 'is_staff', 'is_superuser')
     ordering = ('-date_joined', '-last_login')
     list_display = ('email', 'first_name',
@@ -83,16 +81,6 @@ class XDSUserAdmin(UserAdmin):
 
 
 admin.site.register(XDSUser, XDSUserAdmin)
-
-
-@admin.register(ReceiverEmailConfiguration)
-class ReceiverEmailConfigurationAdmin(admin.ModelAdmin):
-    list_display = ('email_address',)
-
-
-@admin.register(SenderEmailConfiguration)
-class SenderEmailConfigurationAdmin(admin.ModelAdmin):
-    list_display = ('sender_email_address',)
 
 
 @admin.register(Experience)

@@ -1,12 +1,16 @@
 import logging
 
 from django.contrib.auth import authenticate
+from openlxp_notifications.management.commands.conformance_alerts import \
+    send_log_email_with_msg
+from openlxp_notifications.models import SenderEmailConfiguration
 from rest_framework import serializers
 
 from core.models import (CourseDetailHighlight, CourseInformationMapping,
                          Experience, InterestList, SavedFilter,
                          SearchSortOption, XDSConfiguration,
                          XDSUIConfiguration, XDSUser)
+
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -61,7 +65,6 @@ class CourseDetailHighlightSerializer(serializers.ModelSerializer):
 
 
 class CourseInformationMappingSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = CourseInformationMapping
         fields = ['course_title', 'course_description', 'course_url']
@@ -84,6 +87,7 @@ class XDSUIConfigurationSerializer(serializers.ModelSerializer):
 # user serializer
 class XDSUserSerializer(serializers.ModelSerializer):
     """Serializes the XDSUser model"""
+
     class Meta:
         model = XDSUser
         fields = ('id', 'email', 'first_name', 'last_name')
@@ -92,6 +96,7 @@ class XDSUserSerializer(serializers.ModelSerializer):
 # register serializer
 class RegisterSerializer(serializers.ModelSerializer):
     """Serializes the registration form from the API"""
+
     class Meta:
         model = XDSUser
         fields = ('id', 'email', 'first_name', 'last_name', 'password')
@@ -110,7 +115,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 # login serializer
 class LoginSerializer(serializers.Serializer):
-
     username = serializers.CharField()
     password = serializers.CharField()
 
@@ -129,6 +133,7 @@ class LoginSerializer(serializers.Serializer):
 
 class ExperienceSerializer(serializers.ModelSerializer):
     """Serializes the Course model"""
+
     class Meta:
         model = Experience
         fields = ['metadata_key_hash']
@@ -157,11 +162,12 @@ class InterestListSerializer(serializers.ModelSerializer):
                                                   instance.description)
         instance.name = validated_data.get('name', instance.name)
         experiences = validated_data.get('experiences')
-
         # for each experience in the experience list, we add the experience to
         # the current interest list
+        course_added_count = 0
         for course in experiences:
             instance.experiences.add(course)
+            course_added_count += 1
 
         # for each saved experience in the experience list, we remove the
         # experience if we don't find it in the passed in the updated list
@@ -169,8 +175,19 @@ class InterestListSerializer(serializers.ModelSerializer):
             if exp not in experiences:
                 instance.experiences.remove(exp)
 
-        instance.save()
+        #  writing content to file
+        msg = ("Count of New Courses added: " + str(course_added_count))
 
+        list_subscribers = []
+        for each_subscriber in instance.subscribers.all():
+            list_subscribers.append(each_subscriber.email)
+
+        # Getting sender email id
+        sender_email_configuration = SenderEmailConfiguration.objects.first()
+        sender = sender_email_configuration.sender_email_address
+
+        instance.save()
+        send_log_email_with_msg(list_subscribers, sender, msg)
         return instance
 
 

@@ -2,7 +2,7 @@ mysqlclient>=2.0.3,<2.1.0
 
 django-mysql>=3.10.0,<3.11.0
 
-Django>=3.1.4,<3.2.0
+Django>=3.2.3
 
 djangorestframework>=3.12.2,<3.13.0
 
@@ -31,3 +31,5 @@ django-rest-knox>=4.1.0,<4.2.0
 boto3~=1.16.54
 
 django-ses>=2.0.0 , <2.1.0
+
+openlxp-notification >=1.1.1

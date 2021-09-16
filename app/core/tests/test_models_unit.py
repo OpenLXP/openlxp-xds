@@ -1,9 +1,8 @@
 from django.test import tag
 
-from core.models import (CourseDetailHighlight,
-                         CourseInformationMapping, CourseSpotlight,
-                         Experience, InterestList, SearchFilter,
-                         SearchSortOption, XDSConfiguration,
+from core.models import (CourseDetailHighlight, CourseInformationMapping,
+                         CourseSpotlight, Experience, InterestList,
+                         SearchFilter, SearchSortOption, XDSConfiguration,
                          XDSUIConfiguration, XDSUser)
 
 from .test_setup import TestSetUp
