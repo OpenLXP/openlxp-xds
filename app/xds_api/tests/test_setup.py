@@ -1,6 +1,7 @@
 from rest_framework.test import APITestCase
 
-from core.models import Experience, InterestList, XDSConfiguration, XDSUser
+from core.models import Experience, InterestList, XDSConfiguration, XDSUser, \
+    SavedFilter
 
 
 class TestSetUp(APITestCase):
@@ -45,9 +46,17 @@ class TestSetUp(APITestCase):
         self.list_3 = InterestList(owner=self.user_2,
                                    name="list 3",
                                    description='list 3')
+        self.filter_1 = SavedFilter(owner=self.user_1,
+                                    name="Devops",
+                                    query="randomQuery")
+        self.filter_2 = SavedFilter(owner=self.user_1,
+                                    name="Devops",
+                                    query="randomQuery2")
         self.list_1.save()
         self.list_2.save()
         self.list_3.save()
+        self.filter_1.save()
+        self.filter_2.save()
         self.course_1 = Experience('1234')
         self.course_1.save()
         self.list_1.experiences.add(self.course_1)

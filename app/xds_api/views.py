@@ -258,7 +258,7 @@ def interest_list(request, list_id):
                 else:
                     courseQuery += (metadata_key_hash + ",")
 
-            if (len(coursesDict) > 0):
+            if len(coursesDict) > 0:
                 # get search string
                 composite_api_url = XDSConfiguration.objects.first()\
                     .target_xis_metadata_api
@@ -268,7 +268,7 @@ def interest_list(request, list_id):
                 response = get_request(api_url)
                 responseJSON = json.dumps(response.json())
 
-                if (response.status_code == 200):
+                if response.status_code == 200:
                     formattedResponse = metadata_to_target(responseJSON)
                     interestList['experiences'] = formattedResponse
 

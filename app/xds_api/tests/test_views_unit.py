@@ -7,7 +7,8 @@ from knox.models import AuthToken
 from requests.exceptions import HTTPError, RequestException
 from rest_framework import status
 
-from core.models import XDSConfiguration, XDSUIConfiguration, XDSUser
+from core.models import XDSConfiguration, XDSUIConfiguration, XDSUser, \
+    SavedFilter
 
 from .test_setup import TestSetUp
 
@@ -50,8 +51,8 @@ class ViewTests(TestSetUp):
 
         with patch('xds_api.views.send_log_email'), \
                 patch('xds_api.views.get_request') as get_request, \
-                patch('xds_api.views.get_spotlight_courses_api_url') as \
-                get_api_url:
+                patch('xds_api.views.'
+                      'get_spotlight_courses_api_url') as get_api_url:
             get_api_url.return_value = "www.test.com"
             http_resp = get_request.return_value
             get_request.return_value = http_resp
@@ -72,8 +73,8 @@ class ViewTests(TestSetUp):
 
         with patch('xds_api.views.send_log_email'), \
                 patch('xds_api.views.get_request') as get_request, \
-                patch('xds_api.views.get_spotlight_courses_api_url') as \
-                get_api_url:
+                patch('xds_api.views.'
+                      'get_spotlight_courses_api_url') as get_api_url:
             get_api_url.return_value = "www.test.com"
             get_request.side_effect = [HTTPError]
 
@@ -338,7 +339,7 @@ class ViewTests(TestSetUp):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_add_course_multiple_lists_success(self):
-        """Test that adding a course to multple lists is successful when\
+        """Test that adding a course to multiple lists is successful when\
             user is owner for the /api/add-course-to-lists POST api"""
         id = self.course_1.pk
         url = reverse('xds_api:add_course_to_lists', args=(id,))
@@ -412,7 +413,7 @@ class ViewTests(TestSetUp):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(self.list_2.subscribers.all()), 0)
 
-    def test_create_saved_filter_no_auth(self):
+    def test_create_saved_filters_no_auth(self):
         """Test that trying to create a saved filter through the
             /api/saved-filters api returns an error"""
         url = reverse('xds_api:saved-filters')
@@ -423,7 +424,7 @@ class ViewTests(TestSetUp):
         response = self.client.post(url, saved_filter)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_create_saved_filter_auth(self):
+    def test_create_saved_filters_auth(self):
         """Test that trying to create saved filter through the
             /api/saved-filters api succeeds"""
         url = reverse('xds_api:saved-filters')
@@ -440,3 +441,110 @@ class ViewTests(TestSetUp):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED),
         self.assertEqual(responseDict["name"], "Devops")
+
+    def test_get_saved_filters(self):
+        """Test that trying to get saved filter through the
+            /api/saved-filters api succeeds"""
+        url = reverse('xds_api:saved-filters')
+
+        saved_config = SavedFilter(owner=self.user_1,
+                                   name="Devops", query="randomQuery")
+        saved_config.save()
+
+        response = self.client.get(url)
+        responseDict = json.loads(response.content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(responseDict[0]["name"], "Devops")
+
+    def test_get_saved_filter(self):
+        """Test that trying to get saved filter through the
+            /api/saved-filter api succeeds"""
+        filter_id = self.filter_1.pk
+        url = reverse('xds_api:saved-filter', args=(filter_id,))
+
+        response = self.client.get(url)
+        responseDict = json.loads(response.content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(responseDict["name"], "Devops")
+
+    def test_edit_saved_filter_no_auth(self):
+        """Test that unauthenticated users cannot made edits to filters
+        using the /api/saved-filter/id PATCH"""
+        filter_id = self.filter_1.pk
+        url = reverse('xds_api:saved-filter', args=(filter_id,))
+        response = self.client.patch(url, data={"test": "test"})
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_edit_saved_filter_not_owner(self):
+        """Test that users cannot made edits to filters they do not own
+        using the /api/saved-filter/id PATCH"""
+        filter_id = self.filter_1.pk
+        url = reverse('xds_api:saved-filter', args=(filter_id,))
+        _, token = AuthToken.objects.create(self.user_2)
+        response = \
+            self.client.patch(url,
+                              data={"test": "test"},
+                              HTTP_AUTHORIZATION='Token {}'.format(token))
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_edit_saved_filter_success(self):
+        """Test that editing an filter is successful using the \
+            /api/saved-filter/id PATCH"""
+        filter_id = self.filter_1.pk
+        url = reverse('xds_api:saved-filter', args=(filter_id,))
+        _, token = AuthToken.objects.create(self.user_1)
+        new_name = "edited name"
+        new_list = {"name": new_name,
+                    "query": self.filter_2.query
+                    }
+        response = \
+            self.client.patch(url,
+                              data=json.dumps(new_list),
+                              HTTP_AUTHORIZATION='Token {}'.format(token),
+                              content_type="application/json")
+        responseDict = json.loads(response.content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(responseDict["name"], new_name)
+        self.assertEqual(responseDict["query"], self.filter_2.query)
+
+    def test_delete_saved_filter_no_auth(self):
+        """Test that unauthenticated users cannot remove filters
+        using the /api/saved-filter/id DELETE"""
+        filter_id = self.filter_1.pk
+        url = reverse('xds_api:saved-filter', args=(filter_id,))
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_delete_saved_filter_not_owner(self):
+        """Test that users cannot remove filters they do not own
+        using the /api/saved-filter/id DELETE"""
+        filter_id = self.filter_1.pk
+        url = reverse('xds_api:saved-filter', args=(filter_id,))
+        _, token = AuthToken.objects.create(self.user_2)
+        response = \
+            self.client.delete(url,
+                               HTTP_AUTHORIZATION='Token {}'.format(token))
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_delete_saved_filter_success(self):
+        """Test that removing an filter is successful using the \
+            /api/saved-filter/id DELETE"""
+        filter_id = self.filter_1.pk
+        url = reverse('xds_api:saved-filter', args=(filter_id,))
+        _, token = AuthToken.objects.create(self.user_1)
+
+        response = \
+            self.client.delete(url,
+                               HTTP_AUTHORIZATION='Token {}'.format(token),
+                               content_type="application/json")
+        responseDict = json.loads(response.content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(responseDict["message"])

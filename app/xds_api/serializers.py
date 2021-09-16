@@ -166,7 +166,7 @@ class InterestListSerializer(serializers.ModelSerializer):
         # for each saved experience in the experience list, we remove the
         # experience if we don't find it in the passed in the updated list
         for exp in instance.experiences.all():
-            if (exp not in experiences):
+            if exp not in experiences:
                 instance.experiences.remove(exp)
 
         instance.save()
