@@ -3,8 +3,8 @@ from django.contrib.auth.admin import UserAdmin
 
 from core.models import (CourseDetailHighlight, CourseInformationMapping,
                          CourseSpotlight, Experience, InterestList,
-                         SearchFilter, SearchSortOption, XDSConfiguration,
-                         XDSUIConfiguration, XDSUser)
+                         SavedFilter, SearchFilter, SearchSortOption,
+                         XDSConfiguration, XDSUIConfiguration, XDSUser)
 
 
 # Register your models here.
@@ -92,3 +92,9 @@ class ExperienceAdmin(admin.ModelAdmin):
 class InterestListAdmin(admin.ModelAdmin):
     list_display = ('owner', 'name', 'created', 'modified',)
     fields = ['owner', 'name', 'description', 'experiences']
+
+
+@admin.register(SavedFilter)
+class SavedFilterAdmin(admin.ModelAdmin):
+    list_display = ('owner', 'name', 'query', 'modified',)
+    fields = ['owner', 'name', 'query']

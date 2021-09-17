@@ -37,4 +37,12 @@ urlpatterns = [
      path('interest-lists/<int:list_id>/unsubscribe',
           views.interest_list_unsubscribe,
           name='interest-list-unsubscribe'),
+     path('saved-filters/<int:filter_id>', views.saved_filter,
+          name='saved-filter'),
+     path('saved-filters/owned',
+          views.saved_filters_owned,
+          name='owned-filters'),
+     path('saved-filters',
+          views.saved_filters,
+          name='saved-filters'),
 ]

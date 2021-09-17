@@ -7,8 +7,9 @@ from openlxp_notifications.models import SenderEmailConfiguration
 from rest_framework import serializers
 
 from core.models import (CourseDetailHighlight, CourseInformationMapping,
-                         Experience, InterestList, SearchSortOption,
-                         XDSConfiguration, XDSUIConfiguration, XDSUser)
+                         Experience, InterestList, SavedFilter,
+                         SearchSortOption, XDSConfiguration,
+                         XDSUIConfiguration, XDSUser)
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -186,4 +187,24 @@ class InterestListSerializer(serializers.ModelSerializer):
 
         instance.save()
         send_log_email_with_msg(list_subscribers, sender, msg)
+        return instance
+
+
+class SavedFilterSerializer(serializers.ModelSerializer):
+    """Serializes the Saved filter model"""
+    owner = XDSUserSerializer(read_only=True)
+
+    class Meta:
+        model = SavedFilter
+        fields = '__all__'
+
+    def create(self, validated_data):
+        return SavedFilter.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.owner = validated_data.get('owner', instance.owner)
+        instance.name = validated_data.get('name', instance.name)
+        instance.query = validated_data.get('query', instance.query)
+        instance.save()
+
         return instance
