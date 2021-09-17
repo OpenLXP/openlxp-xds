@@ -12,10 +12,9 @@ from rest_framework import generics, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from core.management.utils.xds_internal import send_log_email
+
 from core.models import (Experience, InterestList, SavedFilter,
                          XDSConfiguration, XDSUIConfiguration)
-
 from xds_api.serializers import (InterestListSerializer, LoginSerializer,
                                  RegisterSerializer, SavedFilterSerializer,
                                  XDSConfigurationSerializer,

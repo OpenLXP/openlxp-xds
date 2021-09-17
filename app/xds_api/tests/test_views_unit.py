@@ -7,8 +7,8 @@ from knox.models import AuthToken
 from requests.exceptions import HTTPError, RequestException
 from rest_framework import status
 
-from core.models import XDSConfiguration, XDSUIConfiguration, XDSUser, \
-    SavedFilter
+from core.models import (SavedFilter, XDSConfiguration, XDSUIConfiguration,
+                         XDSUser)
 
 from .test_setup import TestSetUp
 

@@ -3,8 +3,8 @@ from django.contrib.auth.admin import UserAdmin
 
 from core.models import (CourseDetailHighlight, CourseInformationMapping,
                          CourseSpotlight, Experience, InterestList,
-                         SearchFilter, SearchSortOption, XDSConfiguration,
-                         XDSUIConfiguration, XDSUser)
+                         SavedFilter, SearchFilter, SearchSortOption,
+                         XDSConfiguration, XDSUIConfiguration, XDSUser)
 
 
 # Register your models here.

@@ -11,7 +11,6 @@ from core.models import (CourseDetailHighlight, CourseInformationMapping,
                          SearchSortOption, XDSConfiguration,
                          XDSUIConfiguration, XDSUser)
 
-
 logger = logging.getLogger('dict_config_logger')
 
 
