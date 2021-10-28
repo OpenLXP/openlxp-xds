@@ -32,4 +32,4 @@ boto3~=1.16.54
 
 django-ses>=2.0.0 , <2.1.0
 
-openlxp-notification >=1.1.1
+openlxp-notification >=1.2.0

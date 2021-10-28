@@ -5,8 +5,6 @@ import requests
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
 from knox.models import AuthToken
-from openlxp_notifications.management.commands.conformance_alerts import \
-    send_log_email
 from requests.exceptions import HTTPError
 from rest_framework import generics, status
 from rest_framework.decorators import api_view
@@ -57,7 +55,6 @@ def get_spotlight_courses(request):
         errorMsg = {"message": "error reaching out to configured XIS API; " +
                     "please check the XIS logs"}
         errorMsgJSON = json.dumps(errorMsg)
-        send_log_email(errorMsgJSON)
         logger.error(e)
         return HttpResponseServerError(errorMsgJSON,
                                        content_type="application/json")
