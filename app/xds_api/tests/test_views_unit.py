@@ -71,8 +71,7 @@ class ViewTests(TestSetUp):
         errorMsg = "error reaching out to configured XIS API; " + \
                    "please check the XIS logs"
 
-        with patch('xds_api.views.send_log_email'), \
-                patch('xds_api.views.get_request') as get_request, \
+        with patch('xds_api.views.get_request') as get_request, \
                 patch('xds_api.views.'
                       'get_spotlight_courses_api_url') as get_api_url:
             get_api_url.return_value = "www.test.com"
