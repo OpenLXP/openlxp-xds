@@ -39,8 +39,12 @@ services:
       ES_HOST: "${ES_HOST}"
       ES_INDEX: "${ES_INDEX}"
       LOG_PATH: "${LOG_PATH}"
+      ENTITY_ID: "$(ENTITY_ID)"
+      SP_PUBLIC_CERT: "$(SP_PUBLIC_CERT)"
+      SP_PRIVATE_KEY: "$(SP_PRIVATE_KEY)"
     volumes:
       - ./app:/opt/app/openlxp-xds
+      - ${CERT_VOLUME}:/etc/ssl/certs/ca-certificates.pem
     depends_on:
       - db
     networks:
