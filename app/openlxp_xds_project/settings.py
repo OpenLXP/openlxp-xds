@@ -184,7 +184,9 @@ if(os.environ.get('LOGIN_REDIRECT_URL') != None):
 if(os.environ.get('OVERIDE_HOST') != None):
     OVERIDE_HOST = os.environ.get('OVERIDE_HOST')
     BAD_HOST = os.environ.get('BAD_HOST')
-    STRATEGY = os.environ.get('STRATEGY')
+
+if(os.environ.get('STRATEGY') != None):
+    SOCIAL_AUTH_STRATEGY = os.environ.get('STRATEGY')
 
 SP_ENTITY_ID = os.environ.get('ENTITY_ID')
 
