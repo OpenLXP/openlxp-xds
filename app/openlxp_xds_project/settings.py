@@ -174,6 +174,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 AUTH_USER_MODEL = 'core.XDSUser'
 
 # openlxp_authentication settings
+# openlxp_authentication documentation: https://github.com/OpenLXP/openlxp-authentication#readme
+# social_django documentation: https://python-social-auth.readthedocs.io/en/latest/index.html
 SOCIAL_AUTH_STRATEGY = 'openlxp_authentication.models.SAMLDBStrategy'
 JSONFIELD_ENABLED = True
 USER_MODEL = 'core.XDSUser'
@@ -200,17 +202,19 @@ ORG_INFO = {
     }
 }
 TECHNICAL_CONTACT = {
-    "givenName": "Tech Gal",
+    "givenName": "Tech Person",
     "emailAddress": "technical@localhost.com"
 }
 SUPPORT_CONTACT = {
-    "givenName": "Support Guy",
+    "givenName": "Support Person",
     "emailAddress": "support@localhost.com",
 }
-USER_ATTRIBUTES = ["user_permanent_id",
-        "first_name",
-        "last_name",
-        "email"]
+USER_ATTRIBUTES = [
+    "user_permanent_id",
+    "first_name",
+    "last_name",
+    "email"
+]
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
