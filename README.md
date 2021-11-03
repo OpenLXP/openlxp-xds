@@ -1,6 +1,15 @@
 # Enterprise Course Catalog: OPENLXP-XDS
 
 
+## Authentication
+
+The enivronment variables `SP_PUBLIC_CERT`, `SP_PRIVATE_KEY` , and `SP_ENTITY_ID` must be defined (if using docker-compose the variables can be passed through).
+
+Information on the settings for the authentication module can be found on the [OpenLXP-Authentication repo](https://github.com/OpenLXP/openlxp-authentication).
+
+
+## Notification
+
 `Add email configuration` : To create customized email notifications content.
     
     `Subject`:  Add the subject line for the email. The default subject line is "OpenLXP Conformance Alerts."
