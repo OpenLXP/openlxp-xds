@@ -14,6 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.conf import settings
+from django.conf.urls import url
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
@@ -22,4 +23,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('xds_api.urls')),
     path('es-api/', include('es_api.urls')),
+    # url('', include('social_django.urls', namespace='social')),
+    url('', include('openlxp_authentication.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
