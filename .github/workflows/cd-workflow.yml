@@ -24,6 +24,8 @@ jobs:
 # Install dependencies required for tests
     - name: Install Dependencies
       run: |
+        apt-get update 
+        apt-get install libxml2-dev libxmlsec1-dev -y --no-install-recommends
         python -m pip install --upgrade pip
         pip install -r ./requirements.txt
 # Start running test scripts and generate the coverage report
