@@ -7,6 +7,8 @@ from django.urls import reverse
 from model_utils.models import TimeStampedModel
 from openlxp_notifications.management.utils.notification import \
     email_verification
+from rest_framework import exceptions
+from rest_framework.permissions import DjangoModelPermissions
 
 
 class XDSUserProfileManager(BaseUserManager):
@@ -333,3 +335,51 @@ class SavedFilter(TimeStampedModel):
                             help_text="Enter the name of the filter")
     query = models.CharField(max_length=200,
                              help_text="queryString for the filter")
+
+
+class PermissionsChecker(DjangoModelPermissions):
+    perms_map = {
+        'GET': ['%(app_label)s.view_%(model_name)s'],
+        'POST': ['%(app_label)s.add_%(model_name)s'],
+        'PUT': ['%(app_label)s.change_%(model_name)s'],
+        'PATCH': ['%(app_label)s.change_%(model_name)s'],
+        'DELETE': ['%(app_label)s.delete_%(model_name)s'],
+    }
+
+    def has_permission(self, request, view):
+        # Workaround to ensure DjangoModelPermissions are not applied
+        # to the root view when using DefaultRouter.
+        if getattr(view, '_ignore_model_permissions', False):
+            return True
+
+        if request.path_info in getattr(settings, 'OPEN_ENDPOINTS', []):
+            return True
+
+        if not request.user or (
+           not request.user.is_authenticated and self.authenticated_users_only):
+            return False
+
+        try:
+            model_meta = self._queryset(view).model._meta
+        except(Exception):
+            model_meta = lambda: None; model_meta.app_label = request.path_info.split('/')[1]; \
+                model_meta.model_name = request.path_info.split('/')[-2] \
+                    if request.path_info.split('/')[-1] == '' else request.path_info.split('/')[-1]
+        perms = self.get_required_permissions(request.method, model_meta)
+
+        return request.user.has_perms(perms)
+
+    def get_required_permissions(self, method, model_meta):
+        """
+        Given a model and an HTTP method, return the list of permission
+        codes that the user is required to have.
+        """
+        kwargs = {
+            'app_label': model_meta.app_label,
+            'model_name': model_meta.model_name
+        }
+
+        if method not in self.perms_map:
+            raise exceptions.MethodNotAllowed(method)
+
+        return [perm % kwargs for perm in self.perms_map[method]]

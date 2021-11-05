@@ -223,8 +223,16 @@ AUTHENTICATION_BACKENDS = (
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
         'knox.auth.TokenAuthentication',
     ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'core.models.PermissionsChecker',
+    ]
 }
+
+OPEN_ENDPOINTS = [
+    
+]
 
 EMAIL_BACKEND = 'django_ses.SESBackend'

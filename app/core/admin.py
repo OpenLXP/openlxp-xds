@@ -69,7 +69,7 @@ class XDSUserAdmin(UserAdmin):
                     'is_active', 'is_staff', 'last_login')
     fieldsets = (
         (None, {'fields': ('email', 'first_name', 'last_name',)}),
-        ('Permissions', {'fields': ('is_staff', 'is_active',)}),
+        ('Permissions', {'fields': ('is_staff', 'is_active','groups')}),
     )
     add_fieldsets = (
         (None, {
