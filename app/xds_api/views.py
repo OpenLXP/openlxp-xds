@@ -31,7 +31,7 @@ def get_spotlight_courses(request):
         from XIS"""
     errorMsg = {
         "message": "error fetching spotlight courses; " +
-        "please check the XDS logs"
+                   "please check the XDS logs"
     }
     errorMsgJSON = json.dumps(errorMsg)
 
@@ -53,7 +53,7 @@ def get_spotlight_courses(request):
 
     except requests.exceptions.RequestException as e:
         errorMsg = {"message": "error reaching out to configured XIS API; " +
-                    "please check the XIS logs"}
+                               "please check the XIS logs"}
         errorMsgJSON = json.dumps(errorMsg)
         logger.error(e)
         return HttpResponseServerError(errorMsgJSON,
@@ -74,12 +74,12 @@ def get_experiences(request, exp_hash):
         from the XIS"""
     errorMsg = {
         "message": "error fetching course with hash: " + exp_hash + "; " +
-        "please check the XDS logs"
+                   "please check the XDS logs"
     }
     errorMsgJSON = json.dumps(errorMsg)
 
     try:
-        composite_api_url = XDSConfiguration.objects.first()\
+        composite_api_url = XDSConfiguration.objects.first() \
             .target_xis_metadata_api
         courseQuery = "?metadata_key_hash_list=" + exp_hash
         api_url = composite_api_url + courseQuery
@@ -92,7 +92,7 @@ def get_experiences(request, exp_hash):
         responseJSON = json.dumps(responseDict[0])
         logger.info(responseJSON)
 
-        if (response.status_code == 200):
+        if response.status_code == 200:
             formattedResponse = json.dumps(metadata_to_target(responseJSON))
 
             return HttpResponse(formattedResponse,
@@ -103,7 +103,7 @@ def get_experiences(request, exp_hash):
 
     except requests.exceptions.RequestException as e:
         errorMsg = {"message": "error reaching out to configured XIS API; " +
-                    "please check the XIS logs"}
+                               "please check the XIS logs"}
         errorMsgJSON = json.dumps(errorMsg)
 
         logger.error(e)
@@ -135,7 +135,8 @@ class XDSConfigurationView(APIView):
 
 
 class XDSUIConfigurationView(APIView):
-    """XDSUI Condiguration View"""
+    """XDSUI Configuration View"""
+
     # permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -201,10 +202,12 @@ def interest_lists(request):
             serializer_class = InterestListSerializer(querySet, many=True)
         except HTTPError as http_err:
             logger.error(http_err)
-            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as err:
             logger.error(err)
-            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             return Response(serializer_class.data, status.HTTP_200_OK)
 
@@ -258,7 +261,7 @@ def interest_list(request, list_id):
 
             if len(coursesDict) > 0:
                 # get search string
-                composite_api_url = XDSConfiguration.objects.first()\
+                composite_api_url = XDSConfiguration.objects.first() \
                     .target_xis_metadata_api
                 api_url = composite_api_url + courseQuery
 
@@ -457,7 +460,7 @@ def interest_list_unsubscribe(request, list_id):
     """This method handles a request for unsubscribing from an interest list"""
     errorMsg = {
         "message": "error: unable to unsubscribe user from list: " +
-        str(list_id)
+                   str(list_id)
     }
 
     try:
@@ -479,7 +482,7 @@ def interest_list_unsubscribe(request, list_id):
         return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return Response({"message":
-                        "user successfully unsubscribed from list!"},
+                             "user successfully unsubscribed from list!"},
                         status.HTTP_200_OK)
 
 
@@ -593,10 +596,12 @@ def saved_filters(request):
             serializer_class = SavedFilterSerializer(querySet, many=True)
         except HTTPError as http_err:
             logger.error(http_err)
-            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as err:
             logger.error(err)
-            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             return Response(serializer_class.data, status.HTTP_200_OK)
 

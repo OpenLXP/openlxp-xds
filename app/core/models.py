@@ -1,5 +1,6 @@
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
+    PermissionsMixin
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.forms import ValidationError
@@ -9,6 +10,7 @@ from openlxp_notifications.management.utils.notification import \
     email_verification
 from rest_framework import exceptions
 from rest_framework.permissions import DjangoModelPermissions
+from django.utils import timezone
 
 
 class XDSUserProfileManager(BaseUserManager):
@@ -50,7 +52,7 @@ class XDSUserProfileManager(BaseUserManager):
         return user
 
 
-class XDSUser(AbstractUser):
+class XDSUser(AbstractBaseUser, PermissionsMixin):
     """Model for a user"""
 
     # User attributes
@@ -58,6 +60,7 @@ class XDSUser(AbstractUser):
     email = models.EmailField(max_length=200, unique=True)
     first_name = models.CharField(max_length=200)
     last_name = models.CharField(max_length=200)
+    date_joined = models.DateTimeField(default=timezone.now)
 
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
