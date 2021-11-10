@@ -10,7 +10,11 @@ GROUPS = ['System Operator', 'Experience Owner', 'Experience Manager',
 MODELS = ['course spotlight', 'experience', 'xds configuration',
           'xdsui configuration', 'search sort option', 'search filter',
           'interest list', 'course information mapping',
-          'course detail highlight', 'saved filter']
+          'course detail highlight', 'saved filter', 'interest lists',
+          'get spotlight courses', 'get experiences', 'add course to lists',
+          'interest lists owned', 'interest lists subscriptions',
+          'interest list subscribe', 'interest list unsubscribe',
+          'saved filters owned', 'saved filters']
 PERMISSIONS = ['view', 'access']
 
 
@@ -28,6 +32,12 @@ def forwards_func(apps, schema_editor):
         app_config.models_module = True
         create_contenttypes(app_config, verbosity=0)
         app_config.models_module = None
+    
+    for custom in MODELS:
+        ContentType.objects.get_or_create(
+            app_label='core',
+            model=custom.replace(" ", "")
+        )
 
     for group in GROUPS:
         new_group, created = Group.objects.get_or_create(name=group)
