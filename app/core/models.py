@@ -343,6 +343,7 @@ class SavedFilter(TimeStampedModel):
 class PermissionsChecker(DjangoModelPermissions):
     perms_map = {
         'GET': ['%(app_label)s.view_%(model_name)s'],
+        'OPTIONS': ['%(app_label)s.view_%(model_name)s'],
         'POST': ['%(app_label)s.add_%(model_name)s'],
         'PUT': ['%(app_label)s.change_%(model_name)s'],
         'PATCH': ['%(app_label)s.change_%(model_name)s'],
@@ -365,9 +366,8 @@ class PermissionsChecker(DjangoModelPermissions):
         try:
             model_meta = self._queryset(view).model._meta
         except(Exception):
-            model_meta = lambda: None; model_meta.app_label = request.path_info.split('/')[1]; \
-                model_meta.model_name = request.path_info.split('/')[-2] \
-                    if request.path_info.split('/')[-1] == '' else request.path_info.split('/')[-1]
+            model_meta = lambda: None; model_meta.app_label = "core"; \
+                model_meta.model_name = view.get_view_name().lower().replace(' ', '')
         perms = self.get_required_permissions(request.method, model_meta)
 
         return request.user.has_perms(perms)
