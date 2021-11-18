@@ -8,11 +8,12 @@ from knox.models import AuthToken
 from requests.exceptions import HTTPError
 from rest_framework import generics, status
 from rest_framework.decorators import api_view
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import (Experience, InterestList, SavedFilter,
-                         XDSConfiguration, XDSUIConfiguration)
+                         XDSConfiguration, XDSUIConfiguration, PermissionsChecker)
 from xds_api.serializers import (InterestListSerializer, LoginSerializer,
                                  RegisterSerializer, SavedFilterSerializer,
                                  XDSConfigurationSerializer,
@@ -29,6 +30,8 @@ logger = logging.getLogger('dict_config_logger')
 def get_spotlight_courses(request):
     """This method defines an API for fetching configured course spotlights
         from XIS"""
+
+    # permission_classes = [AllowAny]
     errorMsg = {
         "message": "error fetching spotlight courses; " +
                    "please check the XDS logs"
@@ -138,6 +141,7 @@ class XDSUIConfigurationView(APIView):
     """XDSUI Configuration View"""
 
     # permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         """Returns the XDSUI configuration fields from the model"""
@@ -149,7 +153,9 @@ class XDSUIConfigurationView(APIView):
 
 class RegisterView(generics.GenericAPIView):
     """User Registration API"""
+
     serializer_class = RegisterSerializer
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         """POST request that takes in: email, password, first_name, and
@@ -166,12 +172,16 @@ class RegisterView(generics.GenericAPIView):
                                       context=self.get_serializer_context()
                                       ).data,
             "token": token
+        }, headers={
+            "Authorization": f"Token {token}"
         })
 
 
 class LoginView(generics.GenericAPIView):
     """Logs user in and returns token"""
     serializer_class = LoginSerializer
+
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -185,12 +195,24 @@ class LoginView(generics.GenericAPIView):
                                       context=self.get_serializer_context()
                                       ).data,
             "token": token
+        }, headers={
+            "Authorization": f"Token {token}"
         })
+
+
+# class InterestLists(generics.GenericAPIView):
+#     permission_classes = [AllowAny]
+#
+#     def post(self, request, *args, **kwargs):
+#         return Response({
+#             "message": "Good response"
+#         })
 
 
 @api_view(['GET', 'POST'])
 def interest_lists(request):
     """Handles HTTP requests for interest lists"""
+
     if request.method == 'GET':
         errorMsg = {
             "message": "Error fetching records please check the logs."

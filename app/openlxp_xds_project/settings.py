@@ -173,21 +173,23 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 AUTH_USER_MODEL = 'core.XDSUser'
 
-# openlxp_authentication settings
-# openlxp_authentication documentation: https://github.com/OpenLXP/openlxp-authentication#readme
-# social_django documentation: https://python-social-auth.readthedocs.io/en/latest/index.html
+# openlxp_authentication settings openlxp_authentication documentation:
+# https://github.com/OpenLXP/openlxp-authentication#readme social_django
+# documentation: https://python-social-auth.readthedocs.io/en/latest/index
+# .html
 SOCIAL_AUTH_STRATEGY = 'openlxp_authentication.models.SAMLDBStrategy'
 JSONFIELD_ENABLED = True
 USER_MODEL = 'core.XDSUser'
 SESSION_EXPIRATION = True
-if(os.environ.get('LOGIN_REDIRECT_URL') != None):
+
+if os.environ.get('LOGIN_REDIRECT_URL') is not None:
     LOGIN_REDIRECT_URL = os.environ.get('LOGIN_REDIRECT_URL')
 
-if(os.environ.get('OVERIDE_HOST') != None):
+if os.environ.get('OVERIDE_HOST') is not None:
     OVERIDE_HOST = os.environ.get('OVERIDE_HOST')
     BAD_HOST = os.environ.get('BAD_HOST')
 
-if(os.environ.get('STRATEGY') != None):
+if os.environ.get('STRATEGY') is not None:
     SOCIAL_AUTH_STRATEGY = os.environ.get('STRATEGY')
 
 SP_ENTITY_ID = os.environ.get('ENTITY_ID')
@@ -232,7 +234,7 @@ REST_FRAMEWORK = {
 }
 
 OPEN_ENDPOINTS = [
-    
+
 ]
 
 EMAIL_BACKEND = 'django_ses.SESBackend'

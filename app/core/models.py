@@ -360,14 +360,18 @@ class PermissionsChecker(DjangoModelPermissions):
             return True
 
         if not request.user or (
-           not request.user.is_authenticated and self.authenticated_users_only):
+                not request.user.is_authenticated and
+                self.authenticated_users_only):
             return False
 
         try:
             model_meta = self._queryset(view).model._meta
-        except(Exception):
-            model_meta = lambda: None; model_meta.app_label = "core"; \
-                model_meta.model_name = view.get_view_name().lower().replace(' ', '')
+
+        except Exception:
+            model_meta = lambda: None;
+            model_meta.app_label = "core"; \
+                    model_meta.model_name = \
+                        view.get_view_name().lower().replace(' ', '')
         perms = self.get_required_permissions(request.method, model_meta)
 
         return request.user.has_perms(perms)
