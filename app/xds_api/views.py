@@ -8,12 +8,12 @@ from knox.models import AuthToken
 from requests.exceptions import HTTPError
 from rest_framework import generics, status
 from rest_framework.decorators import api_view
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import (Experience, InterestList, SavedFilter,
-                         XDSConfiguration, XDSUIConfiguration, PermissionsChecker)
+                         XDSConfiguration, XDSUIConfiguration,
+                         PermissionsChecker)
 from xds_api.serializers import (InterestListSerializer, LoginSerializer,
                                  RegisterSerializer, SavedFilterSerializer,
                                  XDSConfigurationSerializer,
@@ -31,7 +31,6 @@ def get_spotlight_courses(request):
     """This method defines an API for fetching configured course spotlights
         from XIS"""
 
-    # permission_classes = [AllowAny]
     errorMsg = {
         "message": "error fetching spotlight courses; " +
                    "please check the XDS logs"
@@ -40,7 +39,7 @@ def get_spotlight_courses(request):
 
     try:
         api_url = get_spotlight_courses_api_url()
-
+        logger.info(api_url)
         # make API call
         response = get_request(api_url)
         responseJSON = json.dumps(response.json())
@@ -86,7 +85,7 @@ def get_experiences(request, exp_hash):
             .target_xis_metadata_api
         courseQuery = "?metadata_key_hash_list=" + exp_hash
         api_url = composite_api_url + courseQuery
-
+        logger.info(api_url)
         # make API call
         response = get_request(api_url)
         logger.info(api_url)
@@ -140,9 +139,6 @@ class XDSConfigurationView(APIView):
 class XDSUIConfigurationView(APIView):
     """XDSUI Configuration View"""
 
-    # permission_classes = [IsAuthenticated]
-    permission_classes = [AllowAny]
-
     def get(self, request):
         """Returns the XDSUI configuration fields from the model"""
         ui_config = XDSUIConfiguration.objects.first()
@@ -155,7 +151,6 @@ class RegisterView(generics.GenericAPIView):
     """User Registration API"""
 
     serializer_class = RegisterSerializer
-    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         """POST request that takes in: email, password, first_name, and
@@ -181,8 +176,6 @@ class LoginView(generics.GenericAPIView):
     """Logs user in and returns token"""
     serializer_class = LoginSerializer
 
-    permission_classes = [AllowAny]
-
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -198,15 +191,6 @@ class LoginView(generics.GenericAPIView):
         }, headers={
             "Authorization": f"Token {token}"
         })
-
-
-# class InterestLists(generics.GenericAPIView):
-#     permission_classes = [AllowAny]
-#
-#     def post(self, request, *args, **kwargs):
-#         return Response({
-#             "message": "Good response"
-#         })
 
 
 @api_view(['GET', 'POST'])

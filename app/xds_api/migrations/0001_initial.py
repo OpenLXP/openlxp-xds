@@ -15,7 +15,7 @@ MODELS = ['course spotlight', 'experience', 'xds configuration',
           'interest lists owned', 'interest lists subscriptions',
           'interest list subscribe', 'interest list unsubscribe',
           'saved filters owned', 'saved filters']
-PERMISSIONS = ['view', ]
+PERMISSIONS = ['view', 'add']
 
 
 def forwards_func(apps, schema_editor):

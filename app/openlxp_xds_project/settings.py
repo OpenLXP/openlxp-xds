@@ -234,7 +234,8 @@ REST_FRAMEWORK = {
 }
 
 OPEN_ENDPOINTS = [
-
+    "/api/auth/register",
+    "/api/auth/login",
 ]
 
 EMAIL_BACKEND = 'django_ses.SESBackend'
