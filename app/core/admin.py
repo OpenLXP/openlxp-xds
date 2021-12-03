@@ -1,10 +1,9 @@
-from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-
 from core.models import (CourseDetailHighlight, CourseInformationMapping,
                          CourseSpotlight, Experience, InterestList,
                          SavedFilter, SearchFilter, SearchSortOption,
                          XDSConfiguration, XDSUIConfiguration, XDSUser)
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 
 
 # Register your models here.

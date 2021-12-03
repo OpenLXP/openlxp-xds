@@ -1,9 +1,8 @@
 import json
 from unittest.mock import patch
 
-from django.test import TestCase, tag
-
 from core.models import CourseSpotlight, Experience, XDSConfiguration
+from django.test import TestCase, tag
 from xds_api.utils.xds_utils import (get_spotlight_courses_api_url,
                                      metadata_to_target, save_experiences)
 

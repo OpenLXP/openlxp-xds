@@ -1,11 +1,10 @@
 import json
 
+from core.models import SearchSortOption, XDSConfiguration, XDSUIConfiguration
 from django.test import tag
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-
-from core.models import SearchSortOption, XDSConfiguration, XDSUIConfiguration
 
 
 @tag('integration')

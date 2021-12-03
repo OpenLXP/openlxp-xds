@@ -3,11 +3,10 @@ from unittest.mock import patch
 
 from django.test import tag
 from django.urls import reverse
+from es_api import views
 from requests.exceptions import HTTPError
 from rest_framework import status
 from rest_framework.test import APITestCase
-
-from es_api import views
 
 
 @tag('unit')

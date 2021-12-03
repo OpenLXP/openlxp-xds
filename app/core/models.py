@@ -1,16 +1,19 @@
+import re
+
 from django.conf import settings
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
-    PermissionsMixin
+from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
+                                        PermissionsMixin)
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.forms import ValidationError
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.translation import ugettext as _
 from model_utils.models import TimeStampedModel
 from openlxp_notifications.management.utils.notification import \
     email_verification
 from rest_framework import exceptions
 from rest_framework.permissions import DjangoModelPermissions
-from django.utils import timezone
 
 
 class XDSUserProfileManager(BaseUserManager):
@@ -390,3 +393,65 @@ class PermissionsChecker(DjangoModelPermissions):
             raise exceptions.MethodNotAllowed(method)
 
         return [perm % kwargs for perm in self.perms_map[method]]
+
+
+class NumberValidator(object):
+    def validate(self, password, user=None):
+        if not re.findall('\d', password):
+            raise ValidationError(
+                _("The password must contain at least 1 digit, 0-9."),
+                code='password_no_number',
+            )
+
+    def get_help_text(self):
+        return _(
+            "Your password must contain at least 1 digit, 0-9."
+        )
+
+
+class UppercaseValidator(object):
+    def validate(self, password, user=None):
+        if not re.findall('[A-Z]', password):
+            raise ValidationError(
+                _(
+                    "The password must contain at least 1 uppercase letter, "
+                    "A-Z."),
+                code='password_no_upper',
+            )
+
+    def get_help_text(self):
+        return _(
+            "Your password must contain at least 1 uppercase letter, A-Z."
+        )
+
+
+class LowercaseValidator(object):
+    def validate(self, password, user=None):
+        if not re.findall('[a-z]', password):
+            raise ValidationError(
+                _(
+                    "The password must contain at least 1 lowercase letter, "
+                    "a-z."),
+                code='password_no_lower',
+            )
+
+    def get_help_text(self):
+        return _(
+            "Your password must contain at least 1 lowercase letter, a-z."
+        )
+
+
+class SymbolValidator(object):
+    def validate(self, password, user=None):
+        if not re.findall('[()[\]{}|\\`~!@#$%^&*_\-+=;:\'",<>./?]', password):
+            raise ValidationError(
+                _("The password must contain at least 1 symbol: " +
+                  "()[]{}|\`~!@#$%^&*_-+=;:'\",<>./?"),
+                code='password_no_symbol',
+            )
+
+    def get_help_text(self):
+        return _(
+            "Your password must contain at least 1 symbol: " +
+            "()[]{}|\`~!@#$%^&*_-+=;:'\",<>./?"
+        )

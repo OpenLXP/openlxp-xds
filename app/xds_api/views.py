@@ -2,6 +2,8 @@ import json
 import logging
 
 import requests
+from core.models import (Experience, InterestList, PermissionsChecker,
+                         SavedFilter, XDSConfiguration, XDSUIConfiguration)
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
 from knox.models import AuthToken
@@ -10,10 +12,6 @@ from rest_framework import generics, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from core.models import (Experience, InterestList, SavedFilter,
-                         XDSConfiguration, XDSUIConfiguration,
-                         PermissionsChecker)
 from xds_api.serializers import (InterestListSerializer, LoginSerializer,
                                  RegisterSerializer, SavedFilterSerializer,
                                  XDSConfigurationSerializer,
