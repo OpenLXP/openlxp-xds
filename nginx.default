@@ -11,6 +11,10 @@ server {
         root /opt/app/openlxp-xds;
     }
 
+    location /media {
+        root /opt/app/openlxp-xds;
+    }
+
     location / {
         proxy_pass http://unix:/opt/xds.sock;
         proxy_set_header Host $host;
