@@ -29,6 +29,7 @@ from xds_api.utils.xds_utils import (get_request,
 logger = logging.getLogger('dict_config_logger')
 
 
+@api_view(['GET'])
 def get_spotlight_courses(request):
     """This method defines an API for fetching configured course spotlights
         from XIS"""
@@ -73,6 +74,7 @@ def get_spotlight_courses(request):
                                        content_type="application/json")
 
 
+@api_view(['GET'])
 def get_experiences(request, exp_hash):
     """This method defines an API for fetching a single course by ID
         from the XIS"""
