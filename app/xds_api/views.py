@@ -1,19 +1,22 @@
 import json
 import logging
+from openlxp_authentication.serializers import SAMLConfigurationSerializer
 
 import requests
+from core.models import (Experience, InterestList, SavedFilter,
+                         XDSConfiguration, XDSUIConfiguration)
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
 from knox.models import AuthToken
+from openlxp_authentication.models import SAMLConfiguration
 from requests.exceptions import HTTPError
 from rest_framework import generics, status
 from rest_framework.decorators import api_view
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from social_django.utils import load_strategy
 
-from core.models import (Experience, InterestList, SavedFilter,
-                         XDSConfiguration, XDSUIConfiguration, PermissionsChecker)
 from xds_api.serializers import (InterestListSerializer, LoginSerializer,
                                  RegisterSerializer, SavedFilterSerializer,
                                  XDSConfigurationSerializer,
@@ -148,7 +151,12 @@ class XDSUIConfigurationView(APIView):
         ui_config = XDSUIConfiguration.objects.first()
         serializer = XDSUIConfigurationSerializer(ui_config)
 
-        return Response(serializer.data)
+        login_path = load_strategy(request).build_absolute_uri('/')[:-1]
+
+        serialized_ssos = [{"path": login_path + conf['endpoint'], "name": conf['name']}
+                               for conf in SAMLConfigurationSerializer(SAMLConfiguration.objects.all(), many=True).data]
+
+        return Response(dict(**serializer.data, **{"single_sign_on_options": serialized_ssos}))
 
 
 class RegisterView(generics.GenericAPIView):
@@ -504,7 +512,7 @@ def interest_list_unsubscribe(request, list_id):
         return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return Response({"message":
-                             "user successfully unsubscribed from list!"},
+                         "user successfully unsubscribed from list!"},
                         status.HTTP_200_OK)
 
 
