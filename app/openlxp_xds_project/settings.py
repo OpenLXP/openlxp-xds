@@ -116,6 +116,19 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+    {
+        'NAME': 'core.models.NumberValidator',
+    },
+    {
+        'NAME': 'core.models.UppercaseValidator',
+    },
+    {
+        'NAME': 'core.models.LowercaseValidator',
+    },
+    {
+        'NAME': 'core.models.SymbolValidator',
+    },
+
 ]
 
 # Internationalization
@@ -234,7 +247,9 @@ REST_FRAMEWORK = {
 }
 
 OPEN_ENDPOINTS = [
-
+    "/api/auth/register",
+    "/api/auth/login",
+    "/api/ui-configuration/",
 ]
 
 EMAIL_BACKEND = 'django_ses.SESBackend'
