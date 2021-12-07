@@ -4,7 +4,7 @@ import logging
 import requests
 from core.models import (Experience, InterestList, SavedFilter,
                          XDSConfiguration, XDSUIConfiguration)
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
 from django.http.response import JsonResponse
@@ -219,6 +219,16 @@ class LoginView(generics.GenericAPIView):
         login(request, user)
         # return JsonResponse({"info": "User logged in successfully"})
         return Response({"user": XDSUserSerializer(user, context=self.get_serializer_context()).data})
+
+
+@api_view(['POST'])
+def logout_user(request):
+    """
+    Logs out a user and removes session tokens
+    """
+    # logs a user out and delete the session
+    logout(request)
+    return Response({"message": "User has been logged out"}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET', 'POST'])
