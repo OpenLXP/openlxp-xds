@@ -1,14 +1,17 @@
 import json
 import logging
-from openlxp_authentication.serializers import SAMLConfigurationSerializer
 
 import requests
 from core.models import (Experience, InterestList, SavedFilter,
                          XDSConfiguration, XDSUIConfiguration)
+from django.contrib.auth import authenticate, login
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
+from django.http.response import JsonResponse
+from django.middleware.csrf import get_token
 from knox.models import AuthToken
 from openlxp_authentication.models import SAMLConfiguration
+from openlxp_authentication.serializers import SAMLConfigurationSerializer
 from requests.exceptions import HTTPError
 from rest_framework import generics, status
 from rest_framework.decorators import api_view
@@ -151,7 +154,7 @@ class XDSUIConfigurationView(APIView):
         login_path = load_strategy(request).build_absolute_uri('/')[:-1]
 
         serialized_ssos = [{"path": login_path + conf['endpoint'], "name": conf['name']}
-                               for conf in SAMLConfigurationSerializer(SAMLConfiguration.objects.all(), many=True).data]
+                           for conf in SAMLConfigurationSerializer(SAMLConfiguration.objects.all(), many=True).data]
 
         return Response(dict(**serializer.data, **{"single_sign_on_options": serialized_ssos}))
 
@@ -186,20 +189,36 @@ class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data
-        # Getting the user token
-        _, token = AuthToken.objects.create(user)
+        # serializer = self.get_serializer(data=request.data)
+        # serializer.is_valid(raise_exception=True)
+        # user = serializer.validated_data
+        # # Getting the user token
+        # _, token = AuthToken.objects.create(user)
+        #
+        # return Response({
+        #     "user": XDSUserSerializer(user,
+        #                               context=self.get_serializer_context()
+        #                               ).data,
+        #     "token": token
+        # }, headers={
+        #     "Authorization": f"Token {token}"
+        # })
 
-        return Response({
-            "user": XDSUserSerializer(user,
-                                      context=self.get_serializer_context()
-                                      ).data,
-            "token": token
-        }, headers={
-            "Authorization": f"Token {token}"
-        })
+        data = json.loads(request.body)
+        username = data.get("username")
+        password = data.get("password")
+
+        if username is None or password is None:
+            return JsonResponse({"info": "Username and Password is needed"})
+
+        user = authenticate(username=username, password=password)
+
+        if user is None:
+            return JsonResponse({"info": "User does not exist"}, status=400)
+
+        login(request, user)
+        # return JsonResponse({"info": "User logged in successfully"})
+        return Response({"user": XDSUserSerializer(user, context=self.get_serializer_context()).data})
 
 
 @api_view(['GET', 'POST'])
