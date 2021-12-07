@@ -161,27 +161,33 @@ class XDSUIConfigurationView(APIView):
 
 class RegisterView(generics.GenericAPIView):
     """User Registration API"""
-
     serializer_class = RegisterSerializer
 
     def post(self, request, *args, **kwargs):
-        """POST request that takes in: email, password, first_name, and
-            last_name"""
+        """
+        POST request that takes in: email, password, first_name, and last_name
+        """
+        # grab the data before its serialized
+        data = json.loads(request.body)
+        username = data.get('email')
+        password = data.get('password')
+
+        # create the user in the db
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        # creates a token for immediate login
-        _, token = AuthToken.objects.create(user)
+        
+        # authenticates the user after creation
+        user = authenticate(username=username, password=password)
 
-        # Returning the user context, and token
+        # logs the user in and assigns a sessionID
+        login(request, user)
+
+        # responds with a HTTP 201 created and the user details.
         return Response({
-            "user": XDSUserSerializer(user,
-                                      context=self.get_serializer_context()
-                                      ).data,
-            "token": token
-        }, headers={
-            "Authorization": f"Token {token}"
-        })
+            'user': XDSUserSerializer(user, context=self.get_serializer_context()).data},
+            status=status.HTTP_201_CREATED
+        )
 
 
 class LoginView(generics.GenericAPIView):
