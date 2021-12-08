@@ -344,6 +344,9 @@ class SavedFilter(TimeStampedModel):
 
 
 class PermissionsChecker(DjangoModelPermissions):
+    """
+    Class to define the method for checking permissions for the XDS API
+    """
     perms_map = {
         'GET': ['%(app_label)s.view_%(model_name)s'],
         'OPTIONS': ['%(app_label)s.view_%(model_name)s'],
@@ -359,24 +362,31 @@ class PermissionsChecker(DjangoModelPermissions):
         if getattr(view, '_ignore_model_permissions', False):
             return True
 
+        # if current request is in OPEN_ENDPOINTS doesn't check permissions, returns true
         if request.path_info in getattr(settings, 'OPEN_ENDPOINTS', []):
             return True
 
+        # checks if there is a logged in user
         if not request.user or (
                 not request.user.is_authenticated and
                 self.authenticated_users_only):
             return False
 
         try:
+            # tries to get app and model names from view
             model_meta = self._queryset(view).model._meta
 
         except Exception:
+            # if unable, generates app and model names
             model_meta = lambda: None;
             model_meta.app_label = "core"; \
                     model_meta.model_name = \
                         view.get_view_name().lower().replace(' ', '')
+        
+        # determines permission required to access this endpoint
         perms = self.get_required_permissions(request.method, model_meta)
 
+        # checks if the user has the required permission
         return request.user.has_perms(perms)
 
     def get_required_permissions(self, method, model_meta):

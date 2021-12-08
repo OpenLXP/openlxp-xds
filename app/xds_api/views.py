@@ -196,36 +196,31 @@ class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
 
     def post(self, request, *args, **kwargs):
-        # serializer = self.get_serializer(data=request.data)
-        # serializer.is_valid(raise_exception=True)
-        # user = serializer.validated_data
-        # # Getting the user token
-        # _, token = AuthToken.objects.create(user)
-        #
-        # return Response({
-        #     "user": XDSUserSerializer(user,
-        #                               context=self.get_serializer_context()
-        #                               ).data,
-        #     "token": token
-        # }, headers={
-        #     "Authorization": f"Token {token}"
-        # })
-
+        """
+        POST endpoint that accepts a username and password, returns the sessionid cookie on success
+        """
+        # read login info
         data = json.loads(request.body)
         username = data.get("username")
         password = data.get("password")
 
+        # check that credentials aren't empty
         if username is None or password is None:
-            return JsonResponse({"info": "Username and Password is needed"})
+            return JsonResponse({"info": "Username and Password is needed"}, status=status.HTTP_401_UNAUTHORIZED)
 
+        # attempt login using credentials
         user = authenticate(username=username, password=password)
 
+        # check if authentication was successful
         if user is None:
-            return JsonResponse({"info": "User does not exist"}, status=400)
+            return JsonResponse({"info": "User does not exist"}, status=status.HTTP_401_UNAUTHORIZED)
 
+        # complete login, creates sessionid cookie if none supplied
         login(request, user)
-        # return JsonResponse({"info": "User logged in successfully"})
+
+        # responds with user info and sessionid cookie
         return Response({"user": XDSUserSerializer(user, context=self.get_serializer_context()).data})
+
 
 @api_view(["GET"])
 def is_logged_in(request):
