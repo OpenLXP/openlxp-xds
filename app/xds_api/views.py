@@ -176,7 +176,7 @@ class RegisterView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        
+
         # authenticates the user after creation
         user = authenticate(username=username, password=password)
 
@@ -227,14 +227,14 @@ class LoginView(generics.GenericAPIView):
         return Response({"user": XDSUserSerializer(user, context=self.get_serializer_context()).data})
 
 
-@api_view(['POST'])
-def logout_user(request):
+@api_view(["POST"])
+def logout_view(request):
     """
-    Logs out a user and removes session tokens
+    Logs a user out of their session
     """
-    # logs a user out and delete the session
     logout(request)
-    return Response({"message": "User has been logged out"}, status=status.HTTP_200_OK)
+    response = Response(status=status.HTTP_200_OK)
+    return response
 
 
 @api_view(['GET', 'POST'])
