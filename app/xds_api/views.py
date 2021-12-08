@@ -8,6 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
 from django.http.response import JsonResponse
+from django.contrib.sessions.models import Session
 from django.middleware.csrf import get_token
 from knox.models import AuthToken
 from openlxp_authentication.models import SAMLConfiguration
@@ -225,6 +226,17 @@ class LoginView(generics.GenericAPIView):
         login(request, user)
         # return JsonResponse({"info": "User logged in successfully"})
         return Response({"user": XDSUserSerializer(user, context=self.get_serializer_context()).data})
+
+@api_view(["GET"])
+def is_logged_in(request):
+    """
+    Validates that a user has a valid sessionid
+    """
+    # if the user is not found/authenticated (invalid session id)
+    if not request.user.is_authenticated:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    return Response({'message': 'valid'}, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])
