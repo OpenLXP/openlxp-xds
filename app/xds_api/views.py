@@ -5,7 +5,6 @@ import requests
 from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
-from django.http.response import JsonResponse
 from openlxp_authentication.models import SAMLConfiguration
 from openlxp_authentication.serializers import SAMLConfigurationSerializer
 from requests.exceptions import HTTPError
@@ -211,7 +210,7 @@ class LoginView(generics.GenericAPIView):
 
         # check that credentials aren't empty
         if username is None or password is None:
-            return JsonResponse({"info": "Username and Password is needed"},
+            return Response({"info": "Username and Password is needed"},
                                 status=status.HTTP_401_UNAUTHORIZED)
 
         # attempt login using credentials
@@ -219,7 +218,7 @@ class LoginView(generics.GenericAPIView):
 
         # check if authentication was successful
         if user is None:
-            return JsonResponse({"info": "User does not exist"},
+            return Response({"info": "User does not exist"},
                                 status=status.HTTP_401_UNAUTHORIZED)
 
         # complete login, creates sessionid cookie if none supplied
