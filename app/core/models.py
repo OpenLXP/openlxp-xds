@@ -379,11 +379,11 @@ class PermissionsChecker(DjangoModelPermissions):
 
         except Exception:
             # if unable, generates app and model names
-            model_meta = lambda: None;
-            model_meta.app_label = "core"; \
-                    model_meta.model_name = \
-                        view.get_view_name().lower().replace(' ', '')
-        
+            def model_meta(): return None
+            model_meta.app_label = "core"
+            model_meta.model_name = \
+                view.get_view_name().lower().replace(' ', '')
+
         # determines permission required to access this endpoint
         perms = self.get_required_permissions(request.method, model_meta)
 
