@@ -8,9 +8,6 @@ from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
 from django.http.response import JsonResponse
-from django.contrib.sessions.models import Session
-from django.middleware.csrf import get_token
-from knox.models import AuthToken
 from openlxp_authentication.models import SAMLConfiguration
 from openlxp_authentication.serializers import SAMLConfigurationSerializer
 from requests.exceptions import HTTPError
