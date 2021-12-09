@@ -1,14 +1,15 @@
 import logging
 
-from core.models import (CourseDetailHighlight, CourseInformationMapping,
-                         Experience, InterestList, SavedFilter,
-                         SearchSortOption, XDSConfiguration,
-                         XDSUIConfiguration, XDSUser)
 from django.contrib.auth import authenticate
 from openlxp_notifications.management.commands.conformance_alerts import \
     send_log_email_with_msg
 from openlxp_notifications.models import SenderEmailConfiguration
 from rest_framework import serializers
+
+from core.models import (CourseDetailHighlight, CourseInformationMapping,
+                         Experience, InterestList, SavedFilter,
+                         SearchSortOption, XDSConfiguration,
+                         XDSUIConfiguration, XDSUser)
 
 logger = logging.getLogger('dict_config_logger')
 

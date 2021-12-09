@@ -2,10 +2,11 @@ import json
 import logging
 import os
 
-from core.models import (CourseSpotlight, SearchFilter, SearchSortOption,
-                         XDSConfiguration)
 from elasticsearch_dsl import A, Document, Q, Search, connections
 from elasticsearch_dsl.query import MoreLikeThis
+
+from core.models import (CourseSpotlight, SearchFilter, SearchSortOption,
+                         XDSConfiguration)
 
 connections.create_connection(alias='default',
                               hosts=[os.environ.get('ES_HOST'), ], timeout=60)

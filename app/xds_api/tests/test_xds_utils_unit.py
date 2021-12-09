@@ -1,8 +1,9 @@
 import json
 from unittest.mock import patch
 
-from core.models import CourseSpotlight, Experience, XDSConfiguration
 from django.test import TestCase, tag
+
+from core.models import CourseSpotlight, Experience, XDSConfiguration
 from xds_api.utils.xds_utils import (get_spotlight_courses_api_url,
                                      metadata_to_target, save_experiences)
 
@@ -15,7 +16,7 @@ class UtilTests(TestCase):
             configured XIS api and saved spotlight courses IDs"""
         spotlight = CourseSpotlight(course_id='123')
         config = XDSConfiguration(target_xis_metadata_api="test.com/")
-        expected_result = 'test.com/?id=123'
+        expected_result = 'test.com/?metadata_key_hash_list=123'
 
         with patch('xds_api.utils.xds_utils.CourseSpotlight.objects') as \
             courseSpotlight, patch('xds_api.utils.xds_utils'

@@ -362,7 +362,8 @@ class PermissionsChecker(DjangoModelPermissions):
         if getattr(view, '_ignore_model_permissions', False):
             return True
 
-        # if current request is in OPEN_ENDPOINTS doesn't check permissions, returns true
+        # if current request is in OPEN_ENDPOINTS doesn't check permissions,
+        # returns true
         if request.path_info in getattr(settings, 'OPEN_ENDPOINTS', []):
             return True
 

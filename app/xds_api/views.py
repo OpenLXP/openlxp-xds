@@ -2,8 +2,6 @@ import json
 import logging
 
 import requests
-from core.models import (Experience, InterestList, SavedFilter,
-                         XDSConfiguration, XDSUIConfiguration)
 from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
@@ -17,6 +15,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from social_django.utils import load_strategy
 
+from core.models import (Experience, InterestList, SavedFilter,
+                         XDSConfiguration, XDSUIConfiguration)
 from xds_api.serializers import (InterestListSerializer, LoginSerializer,
                                  RegisterSerializer, SavedFilterSerializer,
                                  XDSConfigurationSerializer,
@@ -151,10 +151,15 @@ class XDSUIConfigurationView(APIView):
 
         login_path = load_strategy(request).build_absolute_uri('/')[:-1]
 
-        serialized_ssos = [{"path": login_path + conf['endpoint'], "name": conf['name']}
-                           for conf in SAMLConfigurationSerializer(SAMLConfiguration.objects.all(), many=True).data]
+        serialized_ssos = [
+            {"path": login_path + conf['endpoint'], "name": conf['name']}
+            for conf in
+            SAMLConfigurationSerializer(SAMLConfiguration.
+                                        objects.all(), many=True
+                                        ).data]
 
-        return Response(dict(**serializer.data, **{"single_sign_on_options": serialized_ssos}))
+        return Response(dict(**serializer.data,
+                             **{"single_sign_on_options": serialized_ssos}))
 
 
 class RegisterView(generics.GenericAPIView):
@@ -182,10 +187,12 @@ class RegisterView(generics.GenericAPIView):
         login(request, user)
 
         # responds with a HTTP 201 created and the user details.
-        return Response({
-            'user': XDSUserSerializer(user, context=self.get_serializer_context()).data},
-            status=status.HTTP_201_CREATED
-        )
+        return \
+            Response(
+                {'user': XDSUserSerializer(user,
+                                           context=self.
+                                           get_serializer_context()).data},
+                status=status.HTTP_201_CREATED)
 
 
 class LoginView(generics.GenericAPIView):
@@ -194,7 +201,8 @@ class LoginView(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         """
-        POST endpoint that accepts a username and password, returns the sessionid cookie on success
+        POST endpoint that accepts a username and password, returns the
+        sessionid cookie on success
         """
         # read login info
         data = json.loads(request.body)
@@ -203,20 +211,25 @@ class LoginView(generics.GenericAPIView):
 
         # check that credentials aren't empty
         if username is None or password is None:
-            return JsonResponse({"info": "Username and Password is needed"}, status=status.HTTP_401_UNAUTHORIZED)
+            return JsonResponse({"info": "Username and Password is needed"},
+                                status=status.HTTP_401_UNAUTHORIZED)
 
         # attempt login using credentials
         user = authenticate(username=username, password=password)
 
         # check if authentication was successful
         if user is None:
-            return JsonResponse({"info": "User does not exist"}, status=status.HTTP_401_UNAUTHORIZED)
+            return JsonResponse({"info": "User does not exist"},
+                                status=status.HTTP_401_UNAUTHORIZED)
 
         # complete login, creates sessionid cookie if none supplied
         login(request, user)
 
         # responds with user info and sessionid cookie
-        return Response({"user": XDSUserSerializer(user, context=self.get_serializer_context()).data})
+        return Response({"user": XDSUserSerializer(user,
+                                                   context=self.
+                                                   get_serializer_context()).
+                        data})
 
 
 @api_view(["GET"])
@@ -535,9 +548,9 @@ def interest_list_unsubscribe(request, list_id):
         logger.error(err)
         return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        return Response({"message":
-                         "user successfully unsubscribed from list!"},
-                        status.HTTP_200_OK)
+        return \
+            Response({"message": "user successfully unsubscribed from list!"},
+                     status.HTTP_200_OK)
 
 
 @api_view(['GET'])

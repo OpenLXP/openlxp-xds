@@ -1,7 +1,8 @@
-from core.models import (CourseDetailHighlight, CourseInformationMapping,
-                         XDSConfiguration, XDSUIConfiguration)
 from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
+
+from core.models import (CourseDetailHighlight, CourseInformationMapping,
+                         XDSConfiguration, XDSUIConfiguration)
 
 
 @tag('integration')

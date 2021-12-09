@@ -1,9 +1,10 @@
 from unittest.mock import patch
 
-from core.models import (Experience, InterestList, SavedFilter,
-                         XDSConfiguration, XDSUser)
 from openlxp_notifications.models import SenderEmailConfiguration
 from rest_framework.test import APITestCase
+
+from core.models import (Experience, InterestList, SavedFilter,
+                         XDSConfiguration, XDSUser)
 
 
 class TestSetUp(APITestCase):

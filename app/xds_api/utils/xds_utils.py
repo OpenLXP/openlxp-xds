@@ -1,9 +1,10 @@
 import json
 
 import requests
-from core.models import CourseSpotlight, Experience, XDSConfiguration
 from rest_framework import status
 from rest_framework.response import Response
+
+from core.models import CourseSpotlight, Experience, XDSConfiguration
 
 
 def get_request(request_url):
