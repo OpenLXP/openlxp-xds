@@ -379,7 +379,9 @@ class PermissionsChecker(DjangoModelPermissions):
 
         except Exception:
             # if unable, generates app and model names
-            def model_meta(): return None
+            def model_meta():
+                return None
+
             model_meta.app_label = "core"
             model_meta.model_name = \
                 view.get_view_name().lower().replace(' ', '')
@@ -408,7 +410,7 @@ class PermissionsChecker(DjangoModelPermissions):
 
 class NumberValidator(object):
     def validate(self, password, user=None):
-        if not re.findall('\d', password):
+        if not re.findall('\\d', password):
             raise ValidationError(
                 _("The password must contain at least 1 digit, 0-9."),
                 code='password_no_number',
@@ -454,15 +456,16 @@ class LowercaseValidator(object):
 
 class SymbolValidator(object):
     def validate(self, password, user=None):
-        if not re.findall('[()[\]{}|\\`~!@#$%^&*_\-+=;:\'",<>./?]', password):
+        if not re.findall('[()[\\]{}|\\\\`~!@#$%^&*_\\-+=;:\'",<>./?]',
+                          password):
             raise ValidationError(
                 _("The password must contain at least 1 symbol: " +
-                  "()[]{}|\`~!@#$%^&*_-+=;:'\",<>./?"),
+                  "()[]{}|\\`~!@#$%^&*_-+=;:'\",<>./?"),
                 code='password_no_symbol',
             )
 
     def get_help_text(self):
         return _(
             "Your password must contain at least 1 symbol: " +
-            "()[]{}|\`~!@#$%^&*_-+=;:'\",<>./?"
+            "()[]{}|\\`~!@#$%^&*_-+=;:'\",<>./?"
         )

@@ -201,7 +201,7 @@ class LoginView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         """
         POST endpoint that accepts a username and password, returns the
-        sessionid cookie on success
+        session id cookie on success
         """
         # read login info
         data = json.loads(request.body)
@@ -211,7 +211,7 @@ class LoginView(generics.GenericAPIView):
         # check that credentials aren't empty
         if username is None or password is None:
             return Response({"info": "Username and Password is needed"},
-                                status=status.HTTP_401_UNAUTHORIZED)
+                            status=status.HTTP_401_UNAUTHORIZED)
 
         # attempt login using credentials
         user = authenticate(username=username, password=password)
@@ -219,12 +219,12 @@ class LoginView(generics.GenericAPIView):
         # check if authentication was successful
         if user is None:
             return Response({"info": "User does not exist"},
-                                status=status.HTTP_401_UNAUTHORIZED)
+                            status=status.HTTP_401_UNAUTHORIZED)
 
-        # complete login, creates sessionid cookie if none supplied
+        # complete login, creates session id cookie if none supplied
         login(request, user)
 
-        # responds with user info and sessionid cookie
+        # responds with user info and session id cookie
         return Response({"user": XDSUserSerializer(user,
                                                    context=self.
                                                    get_serializer_context()).
