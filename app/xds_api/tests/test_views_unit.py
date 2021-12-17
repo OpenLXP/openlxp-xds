@@ -354,7 +354,6 @@ class ViewTests(TestSetUp):
             get(name='Can add add course to lists')
         self.user_2.user_permissions.add(permission)
         self.client.force_authenticate(user=self.user_2)
-        # _, token = AuthToken.objects.create(self.user_2)
         data = {
             "lists": [self.list_3.pk]
         }
