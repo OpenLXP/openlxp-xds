@@ -1,7 +1,7 @@
 from unittest.mock import patch
+
 from openlxp_notifications.models import SenderEmailConfiguration
 from rest_framework.test import APITestCase
-
 
 from core.models import (Experience, InterestList, SavedFilter,
                          XDSConfiguration, XDSUser)
@@ -12,7 +12,6 @@ class TestSetUp(APITestCase):
 
     def setUp(self):
         """Function to set up necessary data for testing"""
-        # self.create_session()
 
         self.patcher = patch('core.models.email_verification')
         self.mock_email_verification = self.patcher.start()

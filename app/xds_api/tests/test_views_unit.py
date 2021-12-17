@@ -1,16 +1,15 @@
 import json
 from unittest.mock import patch
 
+from django.contrib.auth.models import Permission
 from django.test import tag
 from django.urls import reverse
-
 from requests.exceptions import HTTPError, RequestException
 from rest_framework import status
 
 from core.models import (SavedFilter, XDSConfiguration, XDSUIConfiguration,
                          XDSUser)
 
-from django.contrib.auth.models import Permission
 from .test_setup import TestSetUp
 
 
