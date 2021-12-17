@@ -1,7 +1,7 @@
 from unittest.mock import patch
-
 from openlxp_notifications.models import SenderEmailConfiguration
 from rest_framework.test import APITestCase
+
 
 from core.models import (Experience, InterestList, SavedFilter,
                          XDSConfiguration, XDSUser)
@@ -12,11 +12,26 @@ class TestSetUp(APITestCase):
 
     def setUp(self):
         """Function to set up necessary data for testing"""
+        # self.create_session()
+
         self.patcher = patch('core.models.email_verification')
         self.mock_email_verification = self.patcher.start()
 
         self.patcher_2 = patch('xds_api.serializers.send_log_email_with_msg')
         self.mock_send_email = self.patcher_2.start()
+
+        # create user, save user, login using client
+        self.auth_email = "test_auth@test.com"
+        self.auth_password = "test_auth1234"
+        self.auth_first_name = "first_name_auth"
+        self.auth_last_name = "last_name_auth"
+
+        XDSUser.objects.create_user(self.auth_email,
+                                    self.auth_password,
+                                    first_name=self.auth_first_name,
+                                    last_name=self.auth_last_name,
+                                    is_superuser=True)
+        self.auth_user = XDSUser.objects.get(email=self.auth_email)
 
         self.email = "test@test.com"
         self.password = "test1234"
