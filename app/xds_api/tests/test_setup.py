@@ -52,6 +52,14 @@ class TestSetUp(APITestCase):
             "password": "test"
         }
 
+        self.userDict_login_fail_no_username = {
+            "password": "test"
+        }
+
+        self.userDict_login_fail_no_password = {
+            "username": "test@test.com"
+        }
+
         self.user_1 = XDSUser.objects.create_user("test3@test.com",
                                                   "1234",
                                                   first_name="john",
@@ -75,6 +83,7 @@ class TestSetUp(APITestCase):
         self.filter_2 = SavedFilter(owner=self.user_1,
                                     name="Devops",
                                     query="randomQuery2")
+
         self.list_1.save()
         self.list_2.save()
         self.list_3.save()
@@ -89,6 +98,7 @@ class TestSetUp(APITestCase):
         self.sender_email_configuration = \
             SenderEmailConfiguration(sender_email_address='sender@test.com')
         self.sender_email_configuration.save()
+
 
         return super().setUp()
 

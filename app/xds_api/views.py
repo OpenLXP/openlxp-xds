@@ -64,15 +64,6 @@ def get_spotlight_courses(request):
         return HttpResponseServerError(errorMsgJSON,
                                        content_type="application/json")
 
-    except HTTPError as http_err:
-        logger.error(http_err)
-        return HttpResponseServerError(errorMsgJSON,
-                                       content_type="application/json")
-    except Exception as err:
-        logger.error(err)
-        return HttpResponseServerError(errorMsgJSON,
-                                       content_type="application/json")
-
 
 @api_view(['GET'])
 def get_experiences(request, exp_hash):
@@ -119,14 +110,6 @@ def get_experiences(request, exp_hash):
         errorMsg = {"message": "No configured XIS URL found"}
         logger.error(not_found_err)
         return Response(errorMsg, status.HTTP_404_NOT_FOUND)
-    except HTTPError as http_err:
-        logger.error(http_err)
-        return HttpResponseServerError(errorMsgJSON,
-                                       content_type="application/json")
-    except Exception as err:
-        logger.error(err)
-        return HttpResponseServerError(errorMsgJSON,
-                                       content_type="application/json")
 
 
 class XDSConfigurationView(APIView):
