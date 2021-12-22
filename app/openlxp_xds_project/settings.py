@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'openlxp_notifications',
     'social_django',
     'openlxp_authentication',
-    'knox',
     'xds_api',
     'core',
     'es_api',
@@ -116,6 +115,19 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+    {
+        'NAME': 'core.models.NumberValidator',
+    },
+    {
+        'NAME': 'core.models.UppercaseValidator',
+    },
+    {
+        'NAME': 'core.models.LowercaseValidator',
+    },
+    {
+        'NAME': 'core.models.SymbolValidator',
+    },
+
 ]
 
 # Internationalization
@@ -167,27 +179,30 @@ LOGGING = {
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 AUTH_USER_MODEL = 'core.XDSUser'
 
-# openlxp_authentication settings
-# openlxp_authentication documentation: https://github.com/OpenLXP/openlxp-authentication#readme
-# social_django documentation: https://python-social-auth.readthedocs.io/en/latest/index.html
+# openlxp_authentication settings openlxp_authentication documentation:
+# https://github.com/OpenLXP/openlxp-authentication#readme social_django
+# documentation: https://python-social-auth.readthedocs.io/en/latest/index
+# .html
 SOCIAL_AUTH_STRATEGY = 'openlxp_authentication.models.SAMLDBStrategy'
 JSONFIELD_ENABLED = True
 USER_MODEL = 'core.XDSUser'
 SESSION_EXPIRATION = True
-if(os.environ.get('LOGIN_REDIRECT_URL') != None):
+
+if os.environ.get('LOGIN_REDIRECT_URL') is not None:
     LOGIN_REDIRECT_URL = os.environ.get('LOGIN_REDIRECT_URL')
 
-if(os.environ.get('OVERIDE_HOST') != None):
+if os.environ.get('OVERIDE_HOST') is not None:
     OVERIDE_HOST = os.environ.get('OVERIDE_HOST')
     BAD_HOST = os.environ.get('BAD_HOST')
 
-if(os.environ.get('STRATEGY') != None):
+if os.environ.get('STRATEGY') is not None:
     SOCIAL_AUTH_STRATEGY = os.environ.get('STRATEGY')
 
 SP_ENTITY_ID = os.environ.get('ENTITY_ID')
@@ -223,8 +238,20 @@ AUTHENTICATION_BACKENDS = (
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'knox.auth.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'core.models.PermissionsChecker',
+    ]
 }
+
+OPEN_ENDPOINTS = [
+    "/api/auth/register",
+    "/api/auth/login",
+    "/api/auth/logout",
+    "/api/auth/validate",
+    "/api/ui-configuration/",
+
+]
 
 EMAIL_BACKEND = 'django_ses.SESBackend'

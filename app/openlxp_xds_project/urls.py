@@ -24,5 +24,7 @@ urlpatterns = [
     path('api/', include('xds_api.urls')),
     path('es-api/', include('es_api.urls')),
     # url('', include('social_django.urls', namespace='social')),
+    path('api-auth/', include('rest_framework.urls',
+                              namespace='rest_framework')),
     url('', include('openlxp_authentication.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

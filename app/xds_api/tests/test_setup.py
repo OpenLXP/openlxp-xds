@@ -12,11 +12,25 @@ class TestSetUp(APITestCase):
 
     def setUp(self):
         """Function to set up necessary data for testing"""
+
         self.patcher = patch('core.models.email_verification')
         self.mock_email_verification = self.patcher.start()
 
         self.patcher_2 = patch('xds_api.serializers.send_log_email_with_msg')
         self.mock_send_email = self.patcher_2.start()
+
+        # create user, save user, login using client
+        self.auth_email = "test_auth@test.com"
+        self.auth_password = "test_auth1234"
+        self.auth_first_name = "first_name_auth"
+        self.auth_last_name = "last_name_auth"
+
+        XDSUser.objects.create_user(self.auth_email,
+                                    self.auth_password,
+                                    first_name=self.auth_first_name,
+                                    last_name=self.auth_last_name,
+                                    is_superuser=True)
+        self.auth_user = XDSUser.objects.get(email=self.auth_email)
 
         self.email = "test@test.com"
         self.password = "test1234"
@@ -36,6 +50,14 @@ class TestSetUp(APITestCase):
         self.userDict_login_fail = {
             "username": "test@test.com",
             "password": "test"
+        }
+
+        self.userDict_login_fail_no_username = {
+            "password": "test"
+        }
+
+        self.userDict_login_fail_no_password = {
+            "username": "test@test.com"
         }
 
         self.user_1 = XDSUser.objects.create_user("test3@test.com",
@@ -61,6 +83,7 @@ class TestSetUp(APITestCase):
         self.filter_2 = SavedFilter(owner=self.user_1,
                                     name="Devops",
                                     query="randomQuery2")
+
         self.list_1.save()
         self.list_2.save()
         self.list_3.save()
@@ -75,6 +98,7 @@ class TestSetUp(APITestCase):
         self.sender_email_configuration = \
             SenderEmailConfiguration(sender_email_address='sender@test.com')
         self.sender_email_configuration.save()
+
 
         return super().setUp()
 

@@ -2,14 +2,17 @@ import json
 import logging
 
 import requests
+from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
-from knox.models import AuthToken
+from openlxp_authentication.models import SAMLConfiguration
+from openlxp_authentication.serializers import SAMLConfigurationSerializer
 from requests.exceptions import HTTPError
 from rest_framework import generics, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from social_django.utils import load_strategy
 
 from core.models import (Experience, InterestList, SavedFilter,
                          XDSConfiguration, XDSUIConfiguration)
@@ -26,18 +29,20 @@ from xds_api.utils.xds_utils import (get_request,
 logger = logging.getLogger('dict_config_logger')
 
 
+@api_view(['GET'])
 def get_spotlight_courses(request):
     """This method defines an API for fetching configured course spotlights
         from XIS"""
+
     errorMsg = {
         "message": "error fetching spotlight courses; " +
-        "please check the XDS logs"
+                   "please check the XDS logs"
     }
     errorMsgJSON = json.dumps(errorMsg)
 
     try:
         api_url = get_spotlight_courses_api_url()
-
+        logger.info(api_url)
         # make API call
         response = get_request(api_url)
         responseJSON = json.dumps(response.json())
@@ -53,37 +58,29 @@ def get_spotlight_courses(request):
 
     except requests.exceptions.RequestException as e:
         errorMsg = {"message": "error reaching out to configured XIS API; " +
-                    "please check the XIS logs"}
+                               "please check the XIS logs"}
         errorMsgJSON = json.dumps(errorMsg)
         logger.error(e)
         return HttpResponseServerError(errorMsgJSON,
                                        content_type="application/json")
 
-    except HTTPError as http_err:
-        logger.error(http_err)
-        return HttpResponseServerError(errorMsgJSON,
-                                       content_type="application/json")
-    except Exception as err:
-        logger.error(err)
-        return HttpResponseServerError(errorMsgJSON,
-                                       content_type="application/json")
 
-
+@api_view(['GET'])
 def get_experiences(request, exp_hash):
     """This method defines an API for fetching a single course by ID
         from the XIS"""
     errorMsg = {
         "message": "error fetching course with hash: " + exp_hash + "; " +
-        "please check the XDS logs"
+                   "please check the XDS logs"
     }
     errorMsgJSON = json.dumps(errorMsg)
 
     try:
-        composite_api_url = XDSConfiguration.objects.first()\
+        composite_api_url = XDSConfiguration.objects.first() \
             .target_xis_metadata_api
         courseQuery = "?metadata_key_hash_list=" + exp_hash
         api_url = composite_api_url + courseQuery
-
+        logger.info(api_url)
         # make API call
         response = get_request(api_url)
         logger.info(api_url)
@@ -92,7 +89,7 @@ def get_experiences(request, exp_hash):
         responseJSON = json.dumps(responseDict[0])
         logger.info(responseJSON)
 
-        if (response.status_code == 200):
+        if response.status_code == 200:
             formattedResponse = json.dumps(metadata_to_target(responseJSON))
 
             return HttpResponse(formattedResponse,
@@ -103,7 +100,7 @@ def get_experiences(request, exp_hash):
 
     except requests.exceptions.RequestException as e:
         errorMsg = {"message": "error reaching out to configured XIS API; " +
-                    "please check the XIS logs"}
+                               "please check the XIS logs"}
         errorMsgJSON = json.dumps(errorMsg)
 
         logger.error(e)
@@ -113,14 +110,6 @@ def get_experiences(request, exp_hash):
         errorMsg = {"message": "No configured XIS URL found"}
         logger.error(not_found_err)
         return Response(errorMsg, status.HTTP_404_NOT_FOUND)
-    except HTTPError as http_err:
-        logger.error(http_err)
-        return HttpResponseServerError(errorMsgJSON,
-                                       content_type="application/json")
-    except Exception as err:
-        logger.error(err)
-        return HttpResponseServerError(errorMsgJSON,
-                                       content_type="application/json")
 
 
 class XDSConfigurationView(APIView):
@@ -135,15 +124,24 @@ class XDSConfigurationView(APIView):
 
 
 class XDSUIConfigurationView(APIView):
-    """XDSUI Condiguration View"""
-    # permission_classes = [IsAuthenticated]
+    """XDSUI Configuration View"""
 
     def get(self, request):
         """Returns the XDSUI configuration fields from the model"""
         ui_config = XDSUIConfiguration.objects.first()
         serializer = XDSUIConfigurationSerializer(ui_config)
 
-        return Response(serializer.data)
+        login_path = load_strategy(request).build_absolute_uri('/')[:-1]
+
+        serialized_ssos = [
+            {"path": login_path + conf['endpoint'], "name": conf['name']}
+            for conf in
+            SAMLConfigurationSerializer(SAMLConfiguration.
+                                        objects.all(), many=True
+                                        ).data]
+
+        return Response(dict(**serializer.data,
+                             **{"single_sign_on_options": serialized_ssos}))
 
 
 class RegisterView(generics.GenericAPIView):
@@ -151,21 +149,32 @@ class RegisterView(generics.GenericAPIView):
     serializer_class = RegisterSerializer
 
     def post(self, request, *args, **kwargs):
-        """POST request that takes in: email, password, first_name, and
-            last_name"""
+        """
+        POST request that takes in: email, password, first_name, and last_name
+        """
+        # grab the data before its serialized
+        data = json.loads(request.body)
+        username = data.get('email')
+        password = data.get('password')
+
+        # create the user in the db
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        # creates a token for immediate login
-        _, token = AuthToken.objects.create(user)
 
-        # Returning the user context, and token
-        return Response({
-            "user": XDSUserSerializer(user,
-                                      context=self.get_serializer_context()
-                                      ).data,
-            "token": token
-        })
+        # authenticates the user after creation
+        user = authenticate(username=username, password=password)
+
+        # logs the user in and assigns a sessionID
+        login(request, user)
+
+        # responds with a HTTP 201 created and the user details.
+        return \
+            Response(
+                {'user': XDSUserSerializer(user,
+                                           context=self.
+                                           get_serializer_context()).data},
+                status=status.HTTP_201_CREATED)
 
 
 class LoginView(generics.GenericAPIView):
@@ -173,23 +182,64 @@ class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data
-        # Getting the user token
-        _, token = AuthToken.objects.create(user)
+        """
+        POST endpoint that accepts a username and password, returns the
+        session id cookie on success
+        """
+        # read login info
+        data = json.loads(request.body)
+        username = data.get("username")
+        password = data.get("password")
 
-        return Response({
-            "user": XDSUserSerializer(user,
-                                      context=self.get_serializer_context()
-                                      ).data,
-            "token": token
-        })
+        # check that credentials aren't empty
+        if username is None or password is None:
+            return Response({"info": "Username and Password is needed"},
+                            status=status.HTTP_401_UNAUTHORIZED)
+
+        # attempt login using credentials
+        user = authenticate(username=username, password=password)
+
+        # check if authentication was successful
+        if user is None:
+            return Response({"info": "User does not exist"},
+                            status=status.HTTP_401_UNAUTHORIZED)
+
+        # complete login, creates session id cookie if none supplied
+        login(request, user)
+
+        # responds with user info and session id cookie
+        return Response({"user": XDSUserSerializer(user,
+                                                   context=self.
+                                                   get_serializer_context()).
+                        data})
+
+
+@api_view(["GET"])
+def is_logged_in(request):
+    """
+    Validates that a user has a valid sessionid
+    """
+    # if the user is not found/authenticated (invalid session id)
+    if not request.user.is_authenticated:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    return Response({'message': 'valid'}, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def logout_view(request):
+    """
+    Logs a user out of their session
+    """
+    logout(request)
+    response = Response(status=status.HTTP_200_OK)
+    return response
 
 
 @api_view(['GET', 'POST'])
 def interest_lists(request):
     """Handles HTTP requests for interest lists"""
+
     if request.method == 'GET':
         errorMsg = {
             "message": "Error fetching records please check the logs."
@@ -201,10 +251,12 @@ def interest_lists(request):
             serializer_class = InterestListSerializer(querySet, many=True)
         except HTTPError as http_err:
             logger.error(http_err)
-            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as err:
             logger.error(err)
-            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             return Response(serializer_class.data, status.HTTP_200_OK)
 
@@ -258,7 +310,7 @@ def interest_list(request, list_id):
 
             if len(coursesDict) > 0:
                 # get search string
-                composite_api_url = XDSConfiguration.objects.first()\
+                composite_api_url = XDSConfiguration.objects.first() \
                     .target_xis_metadata_api
                 api_url = composite_api_url + courseQuery
 
@@ -457,7 +509,7 @@ def interest_list_unsubscribe(request, list_id):
     """This method handles a request for unsubscribing from an interest list"""
     errorMsg = {
         "message": "error: unable to unsubscribe user from list: " +
-        str(list_id)
+                   str(list_id)
     }
 
     try:
@@ -478,9 +530,9 @@ def interest_list_unsubscribe(request, list_id):
         logger.error(err)
         return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
-        return Response({"message":
-                        "user successfully unsubscribed from list!"},
-                        status.HTTP_200_OK)
+        return \
+            Response({"message": "user successfully unsubscribed from list!"},
+                     status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -593,10 +645,12 @@ def saved_filters(request):
             serializer_class = SavedFilterSerializer(querySet, many=True)
         except HTTPError as http_err:
             logger.error(http_err)
-            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as err:
             logger.error(err)
-            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             return Response(serializer_class.data, status.HTTP_200_OK)
 
