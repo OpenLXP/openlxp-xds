@@ -1,15 +1,13 @@
 import logging
 
-from django.contrib.auth import authenticate
+from users.serializers import XDSUserSerializer
+from core.models import (CourseDetailHighlight, CourseInformationMapping,
+                         Experience, InterestList, SavedFilter,
+                         SearchSortOption)
 from openlxp_notifications.management.commands.conformance_alerts import \
     send_log_email_with_msg
 from openlxp_notifications.models import SenderEmailConfiguration
 from rest_framework import serializers
-
-from core.models import (CourseDetailHighlight, CourseInformationMapping,
-                         Experience, InterestList, SavedFilter,
-                         SearchSortOption, XDSConfiguration,
-                         XDSUIConfiguration, XDSUser)
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -30,15 +28,6 @@ class OrderedListSerializer(serializers.ListSerializer):
     def to_representation(self, data):
         data = data.filter(active=True).order_by('rank')
         return super(OrderedListSerializer, self).to_representation(data)
-
-
-class XDSConfigurationSerializer(serializers.ModelSerializer):
-    """Serializes the XDSConfiguration Model"""
-
-    class Meta:
-        model = XDSConfiguration
-
-        fields = ['target_xis_metadata_api']
 
 
 class SearchSortOptionSerializer(serializers.ModelSerializer):
@@ -67,67 +56,6 @@ class CourseInformationMappingSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseInformationMapping
         fields = ['course_title', 'course_description', 'course_url']
-
-
-class XDSUIConfigurationSerializer(serializers.ModelSerializer):
-    """Serializes the XDSUIConfiguration Model"""
-
-    search_sort_options = SearchSortOptionSerializer(many=True, read_only=True)
-    course_highlights = CourseDetailHighlightSerializer(many=True,
-                                                        read_only=True)
-    course_information = CourseInformationMappingSerializer(read_only=True)
-
-    class Meta:
-        model = XDSUIConfiguration
-
-        exclude = ('xds_configuration',)
-
-
-# user serializer
-class XDSUserSerializer(serializers.ModelSerializer):
-    """Serializes the XDSUser model"""
-
-    class Meta:
-        model = XDSUser
-        fields = ('id', 'email', 'first_name', 'last_name')
-
-
-# register serializer
-class RegisterSerializer(serializers.ModelSerializer):
-    """Serializes the registration form from the API"""
-
-    class Meta:
-        model = XDSUser
-        fields = ('id', 'email', 'first_name', 'last_name', 'password')
-        extra_kwargs = {'password': {'write_only': True}}
-
-    def create(self, validated_data):
-        """Create a user"""
-        user = XDSUser.objects \
-            .create_user(validated_data['email'],
-                         validated_data['password'],
-                         first_name=validated_data['first_name'],
-                         last_name=validated_data['last_name'])
-
-        return user
-
-
-# login serializer
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField()
-
-    def validate(self, data):
-        """Validate a user is active in the system"""
-
-        # the user object
-        user = authenticate(**data)
-
-        if user and user.is_active:
-            return user
-
-        # returns when user is inactive or not in the system
-        raise serializers.ValidationError('Incorrect Credentials')
 
 
 class ExperienceSerializer(serializers.ModelSerializer):

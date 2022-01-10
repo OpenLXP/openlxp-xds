@@ -1,25 +1,8 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
 
 from core.models import (CourseDetailHighlight, CourseInformationMapping,
                          CourseSpotlight, Experience, InterestList,
-                         SavedFilter, SearchFilter, SearchSortOption,
-                         XDSConfiguration, XDSUIConfiguration, XDSUser)
-
-
-# Register your models here.
-@admin.register(XDSConfiguration)
-class XDSConfigurationAdmin(admin.ModelAdmin):
-    list_display = ('target_xis_metadata_api', 'created', 'modified',)
-    fields = [('target_xis_metadata_api',)]
-
-
-@admin.register(XDSUIConfiguration)
-class XDSUIConfigurationAdmin(admin.ModelAdmin):
-    list_display = ('search_results_per_page', 'xds_configuration',
-                    'created', 'modified',)
-    fields = [('search_results_per_page', 'xds_configuration',
-               'course_img_fallback')]
+                         SavedFilter, SearchFilter, SearchSortOption)
 
 
 @admin.register(SearchFilter)
@@ -58,31 +41,6 @@ class CourseInformationMappingAdmin(admin.ModelAdmin):
 
     fields = ['course_title', 'course_description',
               'course_url', 'xds_ui_configuration']
-
-
-class XDSUserAdmin(UserAdmin):
-    model = XDSUser
-    search_fields = ('email', 'first_name',)
-    list_filter = ('is_active', 'is_staff', 'is_superuser')
-    ordering = ('-date_joined', '-last_login')
-    list_display = ('email', 'first_name',
-                    'is_active', 'is_staff', 'last_login')
-    fieldsets = (
-        (None, {'fields': ('email', 'first_name', 'last_name',)}),
-        ('Permissions', {'fields': ('is_staff', 'is_active', 'groups',
-                                    'user_permissions',)}),
-    )
-    add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('email', 'first_name', 'last_name',
-                       'password1', 'password2', 'is_active', 'is_staff',
-                       'groups', 'user_permissions')}
-         ),
-    )
-
-
-admin.site.register(XDSUser, XDSUserAdmin)
 
 
 @admin.register(Experience)

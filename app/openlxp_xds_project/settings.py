@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     'xds_api',
     'core',
     'es_api',
+    'users',
+    'configurations',
 ]
 
 MIDDLEWARE = [
@@ -116,16 +118,16 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
     {
-        'NAME': 'core.models.NumberValidator',
+        'NAME': 'users.models.NumberValidator',
     },
     {
-        'NAME': 'core.models.UppercaseValidator',
+        'NAME': 'users.models.UppercaseValidator',
     },
     {
-        'NAME': 'core.models.LowercaseValidator',
+        'NAME': 'users.models.LowercaseValidator',
     },
     {
-        'NAME': 'core.models.SymbolValidator',
+        'NAME': 'users.models.SymbolValidator',
     },
 
 ]
@@ -184,7 +186,7 @@ CORS_ALLOW_CREDENTIALS = True
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-AUTH_USER_MODEL = 'core.XDSUser'
+AUTH_USER_MODEL = 'users.XDSUser'
 
 # openlxp_authentication settings openlxp_authentication documentation:
 # https://github.com/OpenLXP/openlxp-authentication#readme social_django
@@ -192,7 +194,7 @@ AUTH_USER_MODEL = 'core.XDSUser'
 # .html
 SOCIAL_AUTH_STRATEGY = 'openlxp_authentication.models.SAMLDBStrategy'
 JSONFIELD_ENABLED = True
-USER_MODEL = 'core.XDSUser'
+USER_MODEL = 'users.XDSUser'
 SESSION_EXPIRATION = True
 
 if os.environ.get('LOGIN_REDIRECT_URL') is not None:
@@ -241,7 +243,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'core.models.PermissionsChecker',
+        'users.models.PermissionsChecker',
     ]
 }
 

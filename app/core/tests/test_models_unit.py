@@ -2,29 +2,15 @@ from django.test import tag
 
 from core.models import (CourseDetailHighlight, CourseInformationMapping,
                          CourseSpotlight, Experience, InterestList,
-                         SearchFilter, SearchSortOption, XDSConfiguration,
-                         XDSUIConfiguration, XDSUser)
+                         SearchFilter, SearchSortOption, XDSUIConfiguration)
+from configurations.models import XDSConfiguration
+from users.models import XDSUser
 
 from .test_setup import TestSetUp
 
 
 @tag('unit')
 class ModelTests(TestSetUp):
-
-    def test_create_xds_configuration(self):
-        """Test that creating a new XDS Configuration entry is successful\
-        with defaults """
-        xdsConfig = XDSConfiguration(target_xis_metadata_api="test")
-
-        self.assertEqual(xdsConfig.target_xis_metadata_api, "test")
-
-    def test_create_xds_ui_configuration(self):
-        """Test that creating a new XDSUI Configuration is successful with \
-            defaults"""
-        config = XDSConfiguration(target_xis_metadata_api="test")
-        uiConfig = XDSUIConfiguration(xds_configuration=config)
-
-        self.assertEqual(uiConfig.search_results_per_page, 10)
 
     def test_create_search_filter(self):
         """Test that creating a search filter object works correctly"""

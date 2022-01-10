@@ -4,7 +4,8 @@ import requests
 from rest_framework import status
 from rest_framework.response import Response
 
-from core.models import CourseSpotlight, Experience, XDSConfiguration
+from core.models import CourseSpotlight, Experience
+from configurations.models import XDSConfiguration
 
 
 def get_request(request_url):
