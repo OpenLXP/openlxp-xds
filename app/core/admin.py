@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from core.models import (CourseDetailHighlight, CourseInformationMapping,
+from core.models import (CourseDetailHighlight,
                          CourseSpotlight, Experience, InterestList,
                          SavedFilter, SearchFilter, SearchSortOption)
 
@@ -32,15 +32,6 @@ class CourseDetailHighlightAdmin(admin.ModelAdmin):
 @admin.register(CourseSpotlight)
 class CourseSpotlightAdmin(admin.ModelAdmin):
     list_display = ('course_id', 'active',)
-
-
-@admin.register(CourseInformationMapping)
-class CourseInformationMappingAdmin(admin.ModelAdmin):
-    list_display = ('course_title', 'course_description',
-                    'course_url', 'xds_ui_configuration')
-
-    fields = ['course_title', 'course_description',
-              'course_url', 'xds_ui_configuration']
 
 
 @admin.register(Experience)

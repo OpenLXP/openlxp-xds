@@ -1,13 +1,13 @@
 import logging
 
-from users.serializers import XDSUserSerializer
-from core.models import (CourseDetailHighlight, CourseInformationMapping,
-                         Experience, InterestList, SavedFilter,
-                         SearchSortOption)
+from configurations.models import CourseInformationMapping
+from core.models import (CourseDetailHighlight, Experience, InterestList,
+                         SavedFilter, SearchSortOption)
 from openlxp_notifications.management.commands.conformance_alerts import \
     send_log_email_with_msg
 from openlxp_notifications.models import SenderEmailConfiguration
 from rest_framework import serializers
+from users.serializers import XDSUserSerializer
 
 logger = logging.getLogger('dict_config_logger')
 

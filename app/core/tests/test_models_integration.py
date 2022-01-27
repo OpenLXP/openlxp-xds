@@ -1,7 +1,6 @@
 from configurations.models import XDSConfiguration, XDSUIConfiguration
-from core.models import CourseDetailHighlight, CourseInformationMapping
+from core.models import CourseDetailHighlight
 from django.core.exceptions import ValidationError
-from django.db.utils import IntegrityError
 from django.test import TestCase, tag
 
 
@@ -64,26 +63,3 @@ class ModelTests(TestCase):
 
         self.assertEqual(retrievedObj.field_name, field)
         self.assertEqual(retrievedObj.display_name, name)
-
-    def test_save_course_information_mapping_failure(self):
-        """Tests that creating more than one course mapping throws an error."""
-
-        config = XDSConfiguration(target_xis_metadata_api="test")
-        config.save()
-
-        ui_config = XDSUIConfiguration(xds_configuration=config)
-        ui_config.save()
-
-        # course mappings
-        course_title = 'Course.TestTitle'
-        course_description = 'Course.TestDescription'
-        course_url = 'Course.TestUrl'
-        with self.assertRaises(IntegrityError):
-            for x in range(2):
-                course_information = CourseInformationMapping(
-                    course_title=course_title,
-                    course_description=course_description,
-                    course_url=course_url,
-                    xds_ui_configuration=ui_config)
-                # Attempting to save the data
-                course_information.save()

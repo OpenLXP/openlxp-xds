@@ -3,7 +3,7 @@ import logging
 
 import requests
 from configurations.models import XDSConfiguration
-from core.models import Experience, InterestList, SavedFilter
+from core.models import CourseSpotlight, Experience, InterestList, SavedFilter
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
 from requests.exceptions import HTTPError
@@ -33,21 +33,24 @@ class GetSpotlightCoursesView(APIView):
         errorMsgJSON = json.dumps(errorMsg)
 
         try:
-            api_url = get_spotlight_courses_api_url()
-            logger.info(api_url)
-            # make API call
-            response = get_request(api_url)
-            responseJSON = json.dumps(response.json())
+            if CourseSpotlight.objects.filter(active=True).count() > 0:
+                api_url = get_spotlight_courses_api_url()
+                logger.info(api_url)
+                # make API call
+                response = get_request(api_url)
+                responseJSON = json.dumps(response.json())
 
-            if response.status_code == 200:
-                formattedResponse = json.dumps(
-                    metadata_to_target(responseJSON))
+                if response.status_code == 200:
+                    formattedResponse = json.dumps(
+                        metadata_to_target(responseJSON))
 
-                return HttpResponse(formattedResponse,
-                                    content_type="application/json")
+                    return HttpResponse(formattedResponse,
+                                        content_type="application/json")
+                else:
+                    return HttpResponse(responseJSON,
+                                        content_type="application/json")
             else:
-                return HttpResponse(responseJSON,
-                                    content_type="application/json")
+                return HttpResponse([])
 
         except requests.exceptions.RequestException as e:
             errorMsg = {"message": "error reaching out to configured XIS" +

@@ -247,13 +247,16 @@ REST_FRAMEWORK = {
     ]
 }
 
+# Accepts regex arguments
 OPEN_ENDPOINTS = [
     "/api/auth/register",
     "/api/auth/login",
     "/api/auth/logout",
     "/api/auth/validate",
     "/api/ui-configuration/",
-
+    "/es-api/filter-search/",
+    "/es-api/more-like-this/[a-z0-9]+/",
+    "/es-api/",
 ]
 
 EMAIL_BACKEND = 'django_ses.SESBackend'

@@ -1,5 +1,6 @@
 import json
 from django.core.exceptions import ValidationError
+from django.db.utils import IntegrityError
 
 from django.test import tag, TestCase
 from django.urls import reverse
@@ -7,7 +8,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from core.models import SearchSortOption
-from configurations.models import XDSConfiguration, XDSUIConfiguration
+from configurations.models import (XDSConfiguration, XDSUIConfiguration,
+                                   CourseInformationMapping)
 
 
 @tag('integration')
@@ -73,3 +75,26 @@ class ModelTests(TestCase):
         retrievedObj = XDSConfiguration.objects.first()
 
         self.assertEqual(retrievedObj.target_xis_metadata_api, "test")
+
+    def test_save_course_information_mapping_failure(self):
+        """Tests that creating more than one course mapping throws an error."""
+
+        config = XDSConfiguration(target_xis_metadata_api="test")
+        config.save()
+
+        ui_config = XDSUIConfiguration(xds_configuration=config)
+        ui_config.save()
+
+        # course mappings
+        course_title = 'Course.TestTitle'
+        course_description = 'Course.TestDescription'
+        course_url = 'Course.TestUrl'
+        with self.assertRaises(IntegrityError):
+            for x in range(2):
+                course_information = CourseInformationMapping(
+                    course_title=course_title,
+                    course_description=course_description,
+                    course_url=course_url,
+                    xds_ui_configuration=ui_config)
+                # Attempting to save the data
+                course_information.save()

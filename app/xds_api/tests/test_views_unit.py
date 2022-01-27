@@ -2,13 +2,14 @@ import json
 from unittest.mock import patch
 
 from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 from django.test import tag
 from django.urls import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from requests.exceptions import HTTPError, RequestException
 from rest_framework import status
 
-from core.models import SavedFilter
+from core.models import CourseSpotlight, SavedFilter
 from configurations.models import XDSConfiguration
 
 from .test_setup import TestSetUp
@@ -245,10 +246,13 @@ class InterestListsTests(TestSetUp):
                     "description": self.list_1.description,
                     "experiences": empty_list}
 
+        cont_type = ContentType.objects.get(app_label='xds_api',
+                                            model='interestlist')
         permission = Permission.objects. \
-            get(name='Can change interest list')
+            get(name='Can change interest list', content_type=cont_type)
         self.user_1.user_permissions.add(permission)
-        self.client.force_authenticate(user=self.user_1)
+        self.client.login(email=self.user_1_email,
+                          password=self.user_1_password)
 
         response = \
             self.client.patch(url,
@@ -272,10 +276,13 @@ class InterestListsTests(TestSetUp):
         new_list = {"description": self.list_1.description,
                     "experiences": empty_list}
 
+        cont_type = ContentType.objects.get(app_label='xds_api',
+                                            model='interestlist')
         permission = Permission.objects. \
-            get(name='Can change interest list')
+            get(name='Can change interest list', content_type=cont_type)
         self.user_1.user_permissions.add(permission)
-        self.client.force_authenticate(user=self.user_1)
+        self.client.login(email=self.user_1_email,
+                          password=self.user_1_password)
 
         response = \
             self.client.patch(url,
@@ -316,10 +323,13 @@ class InterestListsTests(TestSetUp):
         list_id = self.list_1.id
         url = reverse('xds_api:interest-list', args=(list_id,))
 
+        cont_type = ContentType.objects.get(app_label='xds_api',
+                                            model='interestlist')
         permission = Permission.objects. \
-            get(name='Can delete interest list')
+            get(name='Can delete interest list', content_type=cont_type)
         self.user_1.user_permissions.add(permission)
-        self.client.force_authenticate(user=self.user_1)
+        self.client.login(email=self.user_1_email,
+                          password=self.user_1_password)
 
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -537,10 +547,13 @@ class SavedFiltersTests(TestSetUp):
         filter_id = self.filter_1.pk
         url = reverse('xds_api:saved-filter', args=(filter_id,))
 
+        cont_type = ContentType.objects.get(app_label='xds_api',
+                                            model='savedfilter')
         permission = Permission.objects. \
-            get(name='Can view saved filter')
+            get(name='Can view saved filter', content_type=cont_type)
         self.user_1.user_permissions.add(permission)
-        self.client.force_authenticate(user=self.user_1)
+        self.client.login(email=self.user_1_email,
+                          password=self.user_1_password)
 
         response = self.client.get(url)
         responseDict = json.loads(response.content)
@@ -579,10 +592,13 @@ class SavedFiltersTests(TestSetUp):
         }
 
         url = reverse('xds_api:saved-filter', args=(filter_id,))
+        cont_type = ContentType.objects.get(app_label='xds_api',
+                                            model='savedfilter')
         permission = Permission.objects. \
-            get(name='Can change saved filter')
+            get(codename='change_savedfilter', content_type=cont_type)
         self.user_1.user_permissions.add(permission)
-        self.client.force_authenticate(user=self.user_1)
+        self.client.login(email=self.user_1_email,
+                          password=self.user_1_password)
 
         response = self.client.patch(url, data=edit_filter)
 
@@ -593,8 +609,10 @@ class SavedFiltersTests(TestSetUp):
             /api/saved-filter/id PATCH"""
         filter_id = self.filter_1.pk
         url = reverse('xds_api:saved-filter', args=(filter_id,))
+        cont_type = ContentType.objects.get(app_label='xds_api',
+                                            model='savedfilter')
         permission = Permission.objects. \
-            get(name='Can change saved filter')
+            get(name='Can change saved filter', content_type=cont_type)
         self.user_1.user_permissions.add(permission)
         self.client.force_authenticate(user=self.user_1)
         new_name = "edited name"
@@ -627,10 +645,13 @@ class SavedFiltersTests(TestSetUp):
             /api/saved-filter/id DELETE"""
         filter_id = self.filter_1.pk
         url = reverse('xds_api:saved-filter', args=(filter_id,))
+        cont_type = ContentType.objects.get(app_label='xds_api',
+                                            model='savedfilter')
         permission = Permission.objects. \
-            get(name='Can delete saved filter')
+            get(name='Can delete saved filter', content_type=cont_type)
         self.user_1.user_permissions.add(permission)
-        self.client.force_authenticate(user=self.user_1)
+        self.client.login(email=self.user_1_email,
+                          password=self.user_1_password)
 
         response = \
             self.client.delete(url,
@@ -678,6 +699,7 @@ class SpotlightCoursesTests(TestSetUp):
             get(name='Can view get spotlight courses')
         self.auth_user.user_permissions.add(permission)
         self.client.login(email=self.auth_email, password=self.auth_password)
+        CourseSpotlight(course_id='abc123').save()
 
         with patch('xds_api.views.get_request') as get_request, \
                 patch('xds_api.views.'
@@ -691,6 +713,25 @@ class SpotlightCoursesTests(TestSetUp):
             self.assertEqual(response.status_code,
                              status.HTTP_500_INTERNAL_SERVER_ERROR)
             self.assertEqual(responseDict['message'], errorMsg)
+
+    def test_get_spotlight_courses_empty(self):
+        """test that calling the endpoint /api/spotlight-courses returns
+            nothing if there are no spotlight courses"""
+        url = reverse('xds_api:spotlight-courses')
+        permission = Permission.objects. \
+            get(name='Can view get spotlight courses')
+        self.auth_user.user_permissions.add(permission)
+        self.client.login(email=self.auth_email, password=self.auth_password)
+
+        with patch('xds_api.views.get_request'), \
+                patch('xds_api.views.'
+                      'get_spotlight_courses_api_url'):
+
+            response = self.client.get(url)
+
+            self.assertEqual(response.status_code,
+                             status.HTTP_200_OK)
+            self.assertEqual(len(response.content), 0)
 
 
 @tag('unit')

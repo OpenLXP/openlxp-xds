@@ -77,9 +77,6 @@ class XDSUser(AbstractBaseUser, PermissionsMixin):
         email_verification(self.email)
         return super(XDSUser, self).save(*args, **kwargs)
 
-    # class Meta:
-    #     db_table = 'core_xdsuser'
-
 
 class PermissionsChecker(DjangoModelPermissions):
     """
@@ -102,7 +99,9 @@ class PermissionsChecker(DjangoModelPermissions):
 
         # if current request is in OPEN_ENDPOINTS doesn't check permissions,
         # returns true
-        if request.path_info in getattr(settings, 'OPEN_ENDPOINTS', []):
+        open_endpoints_regex = '(?:% s)' % '|'.join(
+            getattr(settings, 'OPEN_ENDPOINTS', []))
+        if re.fullmatch(open_endpoints_regex, request.path_info):
             return True
 
         # checks if there is a logged in user
@@ -120,7 +119,7 @@ class PermissionsChecker(DjangoModelPermissions):
             def model_meta():
                 return None
 
-            model_meta.app_label = "core"
+            model_meta.app_label = view.__module__.split('.')[0]
             model_meta.model_name = \
                 view.get_view_name().lower().replace(' ', '')
 
