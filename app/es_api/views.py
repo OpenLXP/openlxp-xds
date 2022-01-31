@@ -1,14 +1,13 @@
 import json
 import logging
 
+from core.models import SearchFilter
 from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseServerError)
-from requests.exceptions import HTTPError
-from rest_framework.views import APIView
-
-from core.models import SearchFilter
 from es_api.utils.queries import (get_results, more_like_this,
                                   search_by_filters, search_by_keyword)
+from requests.exceptions import HTTPError
+from rest_framework.views import APIView
 
 logger = logging.getLogger('dict_config_logger')
 

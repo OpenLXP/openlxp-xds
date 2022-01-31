@@ -1,8 +1,8 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.forms import ValidationError
-from model_utils.models import TimeStampedModel
-from django.core.validators import MinValueValidator
 from django.urls import reverse
+from model_utils.models import TimeStampedModel
 
 
 class XDSConfiguration(TimeStampedModel):
