@@ -1,135 +1,17 @@
 import json
 from unittest.mock import patch
 
+from configurations.models import XDSConfiguration
+from core.models import CourseSpotlight, SavedFilter
 from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
 from django.test import tag
 from django.urls import reverse
-from django.core.exceptions import ObjectDoesNotExist
 from requests.exceptions import HTTPError, RequestException
 from rest_framework import status
 
-from core.models import (SavedFilter, XDSConfiguration, XDSUIConfiguration,
-                         XDSUser)
-
 from .test_setup import TestSetUp
-
-
-@tag('unit')
-class LoginTests(TestSetUp):
-    def test_login_success(self):
-        """
-        Test that a user can login successfully
-        """
-
-        url = reverse('xds_api:login')
-
-        # create a user
-        user = XDSUser.objects.create_user(
-            self.email,
-            self.password,
-            first_name=self.first_name,
-            last_name=self.last_name,
-        )
-
-        response = self.client.post(url, self.userDict_login, format='json')
-
-        responseDict = json.loads(response.content)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(responseDict['user'] is not None)
-
-    def test_login_no_user_fail(self):
-        """
-        Test that a user can not login with a non-existent user
-        """
-
-        url = reverse('xds_api:login')
-
-        response = self.client.post(url, self.userDict_login, format='json')
-
-        responseDict = json.loads(response.content)
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertEqual(responseDict['info'], 'User does not exist')
-
-    def test_login_no_username_fail(self):
-        """
-        Test that a user can not login with a non-existent username
-        """
-
-        url = reverse('xds_api:login')
-
-        response = self.client.post(url, self.userDict_login_fail_no_username, format='json')
-
-        responseDict = json.loads(response.content)
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_login_no_password_fail(self):
-        """
-        Test that a user can not login with a non-existent password
-        """
-
-        url = reverse('xds_api:login')
-
-        response = self.client.post(url, self.userDict_login_fail_no_password, format='json')
-
-        responseDict = json.loads(response.content)
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_is_logged_in_success(self):
-        """
-        Test that calling /api/auth/validate with a user sessionid returns a 200 response
-        """
-        url = reverse('xds_api:validate')
-
-        # log the user in
-        self.client.login(email=self.auth_email, password=self.auth_password)
-
-        # verify the user is logged in
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_is_logged_in_fail(self):
-        """
-        Test that calling /api/auth/validate returns a unauthorized error
-        """
-        url = reverse('xds_api:validate')
-
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_logout_success(self):
-        """Test that calling /api/auth/logout returns a success message"""
-        url = reverse('xds_api:logout')
-
-        # login
-        self.client.login(email=self.email, password=self.password)
-
-        response = self.client.post(url)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-
-@tag('unit')
-class RegisterTests(TestSetUp):
-    def test_register_view(self):
-        """
-        Test the registration
-        """
-
-        # url
-        url = reverse('xds_api:register')
-
-        response = self.client.post(url, self.userDict, format="json")
-
-        responseDict = json.loads(response.content)
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(responseDict['user'] is not None)
 
 
 @tag('unit')
@@ -142,8 +24,6 @@ class InterestListsTests(TestSetUp):
         url = reverse('xds_api:interest-lists')
 
         response = self.client.get(url)
-
-        responseDict = json.loads(response.content)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -170,11 +50,11 @@ class InterestListsTests(TestSetUp):
 
         url = reverse('xds_api:interest-lists')
 
+        # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
-        with patch('xds_api.views.interest_lists') as mock:
+        with patch('xds_api.views.InterestListsView') as mock:
             mock.side_effect = Exception
-            # login user
 
             response = self.client.post(url)
 
@@ -246,7 +126,8 @@ class InterestListsTests(TestSetUp):
 
     def test_get_interest_list_with_courses_authenticated(self):
         """
-        Test that an authenticated user can get an interest list by id, and the list has a formatted course.
+        Test that an authenticated user can get an interest list by id,
+        and the list has a formatted course.
         """
 
         list_id = self.list_1.pk
@@ -256,7 +137,8 @@ class InterestListsTests(TestSetUp):
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         with patch('xds_api.views.get_request') as get_request, \
-                patch('xds_api.views.XDSConfiguration.objects') as conf_obj:
+                patch('configurations.views.XDSConfiguration.objects') \
+                as conf_obj:
             # mock the configuration object
             conf_obj.return_value = conf_obj
             conf_obj.first.return_value = \
@@ -280,7 +162,8 @@ class InterestListsTests(TestSetUp):
 
     def test_get_interest_list_by_id_no_xis(self):
         """
-        Test that an authenticated user can get an interest list by id, and the list has a formatted course.
+        Test that an authenticated user can get an interest list by id,
+        and the list has a formatted course.
         """
 
         list_id = self.list_1.pk
@@ -290,7 +173,8 @@ class InterestListsTests(TestSetUp):
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         with patch('xds_api.views.get_request') as get_request, \
-                patch('xds_api.views.XDSConfiguration.objects') as conf_obj:
+                patch('configurations.views.XDSConfiguration.objects') \
+                as conf_obj:
             # mock the configuration object
             conf_obj.return_value = conf_obj
             conf_obj.first.return_value = \
@@ -308,11 +192,14 @@ class InterestListsTests(TestSetUp):
 
             response = self.client.get(url)
 
-            self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+            self.assertEqual(response.status_code,
+                             status.HTTP_503_SERVICE_UNAVAILABLE)
 
     def test_get_interest_list_by_id_not_found(self):
-        """Test that requesting an interest list by ID using the
-            /api/interest-lists/id api returns an error if none is found"""
+        """
+        Test that requesting an interest list by ID using the
+        /api/interest-lists/id api returns an error if none is found
+        """
         id = '1234'
         self.client.login(email=self.auth_email, password=self.auth_password)
         url = reverse('xds_api:interest-list', args=(id,))
@@ -332,7 +219,8 @@ class InterestListsTests(TestSetUp):
 
     def test_edit_interest_list_authenticated_not_owner(self):
         """
-        Test that an authenticated user cannot edit an interest list that is not theirs.
+        Test that an authenticated user cannot edit an interest list that is
+        not theirs.
         """
         list_id = self.list_2.pk
         url = reverse('xds_api:interest-list', args=(list_id,))
@@ -345,7 +233,8 @@ class InterestListsTests(TestSetUp):
 
     def test_edit_interest_list_authenticated_owner(self):
         """
-        Test that an authenticated user can edit an interest list that is theirs.
+        Test that an authenticated user can edit an interest list that
+        is theirs.
         """
         list_id = self.list_1.id
         url = reverse('xds_api:interest-list', args=(list_id,))
@@ -356,10 +245,13 @@ class InterestListsTests(TestSetUp):
                     "description": self.list_1.description,
                     "experiences": empty_list}
 
+        cont_type = ContentType.objects.get(app_label='xds_api',
+                                            model='interestlist')
         permission = Permission.objects. \
-            get(name='Can change interest list')
+            get(name='Can change interest list', content_type=cont_type)
         self.user_1.user_permissions.add(permission)
-        self.client.force_authenticate(user=self.user_1)
+        self.client.login(email=self.user_1_email,
+                          password=self.user_1_password)
 
         response = \
             self.client.patch(url,
@@ -373,26 +265,28 @@ class InterestListsTests(TestSetUp):
 
     def test_edit_interest_list_authenticated_invalid_change(self):
         """
-        Test that an authenticated user making an invlid change to a list returns a 400.
+        Test that an authenticated user making an invlid change to a
+        list returns a 400.
         """
         list_id = self.list_1.id
         url = reverse('xds_api:interest-list', args=(list_id,))
 
-        new_name = "edited name"
         empty_list = []
         new_list = {"description": self.list_1.description,
                     "experiences": empty_list}
 
+        cont_type = ContentType.objects.get(app_label='xds_api',
+                                            model='interestlist')
         permission = Permission.objects. \
-            get(name='Can change interest list')
+            get(name='Can change interest list', content_type=cont_type)
         self.user_1.user_permissions.add(permission)
-        self.client.force_authenticate(user=self.user_1)
+        self.client.login(email=self.user_1_email,
+                          password=self.user_1_password)
 
         response = \
             self.client.patch(url,
                               data=json.dumps(new_list),
                               content_type="application/json")
-        response_dict = json.loads(response.content)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -408,7 +302,8 @@ class InterestListsTests(TestSetUp):
 
     def test_delete_interest_list_authenticated_not_owner(self):
         """
-        Test that an authenticated user cannot delete an interest list that is not theirs.
+        Test that an authenticated user cannot delete an interest list
+        that is not theirs.
         """
         list_id = self.list_2.pk
         url = reverse('xds_api:interest-list', args=(list_id,))
@@ -421,15 +316,19 @@ class InterestListsTests(TestSetUp):
 
     def test_delete_interest_list_authenticated_owner(self):
         """
-        Test that an authenticated user can delete an interest list that is theirs.
+        Test that an authenticated user can delete an interest list
+        that is theirs.
         """
         list_id = self.list_1.id
         url = reverse('xds_api:interest-list', args=(list_id,))
 
+        cont_type = ContentType.objects.get(app_label='xds_api',
+                                            model='interestlist')
         permission = Permission.objects. \
-            get(name='Can delete interest list')
+            get(name='Can delete interest list', content_type=cont_type)
         self.user_1.user_permissions.add(permission)
-        self.client.force_authenticate(user=self.user_1)
+        self.client.login(email=self.user_1_email,
+                          password=self.user_1_password)
 
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -446,8 +345,10 @@ class InterestListsTests(TestSetUp):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_add_course_multiple_lists_success(self):
-        """Test that adding a course to multiple lists is successful when\
-            user is owner for the /api/add-course-to-lists POST api"""
+        """
+        Test that adding a course to multiple lists is successful when
+        user is owner for the /api/add-course-to-lists POST api
+        """
         course_id = self.course_1.pk
         url = reverse('xds_api:add_course_to_lists', args=(course_id,))
         permission = Permission.objects. \
@@ -557,7 +458,6 @@ class SavedFiltersTests(TestSetUp):
         self.user_1.user_permissions.add(permission)
         self.client.force_authenticate(user=self.user_1)
         response = self.client.get(url)
-        response_dict = json.loads(response.content)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(self.user_1.saved_filters.all()), 2)
@@ -616,7 +516,6 @@ class SavedFiltersTests(TestSetUp):
         response = \
             self.client.post(url,
                              saved_filter)
-        response_dict = json.loads(response.content)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST),
 
@@ -647,10 +546,13 @@ class SavedFiltersTests(TestSetUp):
         filter_id = self.filter_1.pk
         url = reverse('xds_api:saved-filter', args=(filter_id,))
 
+        cont_type = ContentType.objects.get(app_label='xds_api',
+                                            model='savedfilter')
         permission = Permission.objects. \
-            get(name='Can view saved filter')
+            get(name='Can view saved filter', content_type=cont_type)
         self.user_1.user_permissions.add(permission)
-        self.client.force_authenticate(user=self.user_1)
+        self.client.login(email=self.user_1_email,
+                          password=self.user_1_password)
 
         response = self.client.get(url)
         responseDict = json.loads(response.content)
@@ -689,13 +591,15 @@ class SavedFiltersTests(TestSetUp):
         }
 
         url = reverse('xds_api:saved-filter', args=(filter_id,))
+        cont_type = ContentType.objects.get(app_label='xds_api',
+                                            model='savedfilter')
         permission = Permission.objects. \
-            get(name='Can change saved filter')
+            get(codename='change_savedfilter', content_type=cont_type)
         self.user_1.user_permissions.add(permission)
-        self.client.force_authenticate(user=self.user_1)
+        self.client.login(email=self.user_1_email,
+                          password=self.user_1_password)
 
         response = self.client.patch(url, data=edit_filter)
-        response_dict = json.loads(response.content)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -704,8 +608,10 @@ class SavedFiltersTests(TestSetUp):
             /api/saved-filter/id PATCH"""
         filter_id = self.filter_1.pk
         url = reverse('xds_api:saved-filter', args=(filter_id,))
+        cont_type = ContentType.objects.get(app_label='xds_api',
+                                            model='savedfilter')
         permission = Permission.objects. \
-            get(name='Can change saved filter')
+            get(name='Can change saved filter', content_type=cont_type)
         self.user_1.user_permissions.add(permission)
         self.client.force_authenticate(user=self.user_1)
         new_name = "edited name"
@@ -738,10 +644,13 @@ class SavedFiltersTests(TestSetUp):
             /api/saved-filter/id DELETE"""
         filter_id = self.filter_1.pk
         url = reverse('xds_api:saved-filter', args=(filter_id,))
+        cont_type = ContentType.objects.get(app_label='xds_api',
+                                            model='savedfilter')
         permission = Permission.objects. \
-            get(name='Can delete saved filter')
+            get(name='Can delete saved filter', content_type=cont_type)
         self.user_1.user_permissions.add(permission)
-        self.client.force_authenticate(user=self.user_1)
+        self.client.login(email=self.user_1_email,
+                          password=self.user_1_password)
 
         response = \
             self.client.delete(url,
@@ -789,6 +698,7 @@ class SpotlightCoursesTests(TestSetUp):
             get(name='Can view get spotlight courses')
         self.auth_user.user_permissions.add(permission)
         self.client.login(email=self.auth_email, password=self.auth_password)
+        CourseSpotlight(course_id='abc123').save()
 
         with patch('xds_api.views.get_request') as get_request, \
                 patch('xds_api.views.'
@@ -803,30 +713,28 @@ class SpotlightCoursesTests(TestSetUp):
                              status.HTTP_500_INTERNAL_SERVER_ERROR)
             self.assertEqual(responseDict['message'], errorMsg)
 
+    def test_get_spotlight_courses_empty(self):
+        """test that calling the endpoint /api/spotlight-courses returns
+            nothing if there are no spotlight courses"""
+        url = reverse('xds_api:spotlight-courses')
+        permission = Permission.objects. \
+            get(name='Can view get spotlight courses')
+        self.auth_user.user_permissions.add(permission)
+        self.client.login(email=self.auth_email, password=self.auth_password)
+
+        with patch('xds_api.views.get_request'), \
+                patch('xds_api.views.'
+                      'get_spotlight_courses_api_url'):
+
+            response = self.client.get(url)
+
+            self.assertEqual(response.status_code,
+                             status.HTTP_200_OK)
+            self.assertEqual(len(response.content), 0)
+
 
 @tag('unit')
 class ViewTests(TestSetUp):
-
-    def test_xds_ui_config_view(self):
-        """Test that making a GET request to the api gives us a JSON of the
-            stored XDSUIConfiguration model"""
-        url = reverse('xds_api:xds-ui-configuration')
-        with patch('xds_api.views.XDSUIConfiguration.objects') as xds_ui_Obj:
-            xds_config = XDSConfiguration(target_xis_metadata_api="test")
-            xds_ui_cfg = XDSUIConfiguration(search_results_per_page=10,
-                                            xds_configuration=xds_config)
-            xds_ui_Obj.return_value = xds_ui_Obj
-            xds_ui_Obj.first.return_value = xds_ui_cfg
-
-            response = self.client \
-                .get(url)
-            response_dict = json.loads(response.content)
-
-            self.assertEqual(response_dict['search_results_per_page'],
-                             xds_ui_cfg.search_results_per_page)
-            self.assertEqual(response_dict['search_sort_options'], [])
-            self.assertEqual(response_dict['course_highlights'], [])
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_experiences_server_error(self):
         """Test that calling the endpoint /api/experiences returns an
@@ -848,7 +756,8 @@ class ViewTests(TestSetUp):
 
     def test_get_experiences_not_found(self):
         """
-        Test that calling /api/experiences returns an http 404 error when a course is not found.
+        Test that calling /api/experiences returns an http 404 error when
+        a course is not found.
         """
         doc_id = '123456'
         url = reverse('xds_api:get_courses', args=(doc_id,))
@@ -860,7 +769,6 @@ class ViewTests(TestSetUp):
             get_request.side_effect = ObjectDoesNotExist
 
             response = self.client.get(url)
-            responseDict = json.loads(response.content)
 
             self.assertEqual(response.status_code,
                              status.HTTP_404_NOT_FOUND)
