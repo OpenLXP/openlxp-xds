@@ -1,9 +1,9 @@
 from unittest.mock import patch
 
+from rest_framework.test import APITestCase
+
 from configurations.models import XDSConfiguration
 from core.models import Experience, InterestList, SavedFilter
-from openlxp_notifications.models import SenderEmailConfiguration
-from rest_framework.test import APITestCase
 from users.models import XDSUser
 
 
@@ -98,9 +98,6 @@ class TestSetUp(APITestCase):
         self.list_2.experiences.add(self.course_1)
 
         self.config = XDSConfiguration(target_xis_metadata_api="test").save()
-        self.sender_email_configuration = \
-            SenderEmailConfiguration(sender_email_address='sender@test.com')
-        self.sender_email_configuration.save()
 
         return super().setUp()
 

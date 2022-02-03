@@ -1,8 +1,6 @@
 import json
 from unittest.mock import patch
 
-from configurations.models import XDSConfiguration
-from core.models import CourseSpotlight, SavedFilter
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
@@ -10,6 +8,9 @@ from django.test import tag
 from django.urls import reverse
 from requests.exceptions import HTTPError, RequestException
 from rest_framework import status
+
+from configurations.models import XDSConfiguration
+from core.models import CourseSpotlight, SavedFilter
 
 from .test_setup import TestSetUp
 
