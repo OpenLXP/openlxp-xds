@@ -46,6 +46,7 @@ class ModelTests(TestSetUp):
         xdsConfig = XDSConfiguration(target_xis_metadata_api="test")
 
         self.assertEqual(xdsConfig.target_xis_metadata_api, "test")
+        self.assertEqual(str(xdsConfig), str(xdsConfig.id))
 
     def test_create_xds_ui_configuration(self):
         """Test that creating a new XDSUI Configuration is successful with \
@@ -54,6 +55,7 @@ class ModelTests(TestSetUp):
         uiConfig = XDSUIConfiguration(xds_configuration=config)
 
         self.assertEqual(uiConfig.search_results_per_page, 10)
+        self.assertEqual(str(uiConfig), str(uiConfig.id))
 
     def test_create_courseInformationMapping(self):
         """Tests the creation of a course information object"""
@@ -76,3 +78,4 @@ class ModelTests(TestSetUp):
         self.assertEqual(courseInformation.course_description,
                          course_description)
         self.assertEqual(courseInformation.course_url, course_url)
+        self.assertEqual(str(courseInformation), str(courseInformation.id))

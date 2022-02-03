@@ -20,6 +20,7 @@ class ModelTests(TestSetUp):
                           field_name="test",
                           xds_ui_configuration=uiConfig)
         self.assertEqual(sf.xds_ui_configuration, uiConfig)
+        self.assertEqual(str(sf), str(sf.id))
 
     def test_create_search_sort_option(self):
         """Test that creating a search sort option works as expected"""
@@ -30,6 +31,7 @@ class ModelTests(TestSetUp):
         self.assertEqual(name, sort_option.display_name)
         self.assertEqual(field, sort_option.field_name)
         self.assertTrue(sort_option.active)
+        self.assertEqual(str(sort_option), str(sort_option.id))
 
     def test_create_course_detail_highlight(self):
         """Test creating a course detail highlight object"""
@@ -50,6 +52,7 @@ class ModelTests(TestSetUp):
         self.assertEqual(courseHighlight.highlight_icon, highlight_icon)
         self.assertEqual(courseHighlight.rank, 1)
         self.assertEqual(courseHighlight.active, active)
+        self.assertEqual(str(courseHighlight), str(courseHighlight.id))
 
     def test_create_courseSpotlight(self):
         """Test the creation of a course spotlight object"""
@@ -58,6 +61,7 @@ class ModelTests(TestSetUp):
 
         self.assertEqual(c_id, spotlight.course_id)
         self.assertTrue(spotlight.active)
+        self.assertEqual(str(spotlight), str(spotlight.id))
 
     def test_create_experience(self):
         """Tests that creating a course is successful"""
