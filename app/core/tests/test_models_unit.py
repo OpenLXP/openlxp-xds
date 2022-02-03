@@ -1,8 +1,9 @@
+from django.test import tag
+
 from configurations.models import XDSConfiguration
 from core.models import (CourseDetailHighlight, CourseSpotlight, Experience,
                          InterestList, SearchFilter, SearchSortOption,
                          XDSUIConfiguration)
-from django.test import tag
 from users.models import XDSUser
 
 from .test_setup import TestSetUp

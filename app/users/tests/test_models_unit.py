@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.test import tag
+
 from users.models import (LowercaseValidator, NumberValidator, SymbolValidator,
                           UppercaseValidator)
 

@@ -7,7 +7,7 @@ from django.db import models
 from django.forms import ValidationError
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from openlxp_notifications.management.utils.notification import \
+from openlxp_notifications.management.utils.ses_client import \
     email_verification
 from rest_framework import exceptions
 from rest_framework.permissions import DjangoModelPermissions

@@ -1,12 +1,12 @@
 import logging
 
+from openlxp_notifications.management.commands.conformance_alerts import \
+    send_log_email_with_msg
+from rest_framework import serializers
+
 from configurations.models import CourseInformationMapping
 from core.models import (CourseDetailHighlight, Experience, InterestList,
                          SavedFilter, SearchSortOption)
-from openlxp_notifications.management.commands.conformance_alerts import \
-    send_log_email_with_msg
-from openlxp_notifications.models import SenderEmailConfiguration
-from rest_framework import serializers
 from users.serializers import XDSUserSerializer
 
 logger = logging.getLogger('dict_config_logger')
@@ -109,12 +109,8 @@ class InterestListSerializer(serializers.ModelSerializer):
         for each_subscriber in instance.subscribers.all():
             list_subscribers.append(each_subscriber.email)
 
-        # Getting sender email id
-        sender_email_configuration = SenderEmailConfiguration.objects.first()
-        sender = sender_email_configuration.sender_email_address
-
         instance.save()
-        send_log_email_with_msg(list_subscribers, sender, msg)
+        send_log_email_with_msg(list_subscribers, msg)
         return instance
 
 
