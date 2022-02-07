@@ -93,8 +93,9 @@ class InterestListSerializer(serializers.ModelSerializer):
         # the current interest list
         course_added_count = 0
         for course in experiences:
-            instance.experiences.add(course)
-            course_added_count += 1
+            if course not in instance.experiences.all():
+                instance.experiences.add(course)
+                course_added_count += 1
 
         # for each saved experience in the experience list, we remove the
         # experience if we don't find it in the passed in the updated list
