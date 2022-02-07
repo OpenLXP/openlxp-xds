@@ -253,8 +253,7 @@ class InterestListView(APIView):
             return Response(self.errorMsg, status.HTTP_404_NOT_FOUND)
         except Exception as err:
             logger.error(err)
-            return Response(self.errorMsg,
-                            status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(err, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def delete(self, request, list_id):
         """This method deletes a single interest list"""
