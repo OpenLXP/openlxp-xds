@@ -5,8 +5,10 @@ from es_api import views
 
 router = DefaultRouter()
 
+app_name = 'es_api'
 urlpatterns = [
-    path('more-like-this/<str:doc_id>/', views.get_more_like_this),
-    path('filter-search/', views.filters),
-    path('', views.search_index),
+    path('more-like-this/<str:doc_id>/', views.GetMoreLikeThisView.as_view(),
+         name='get-more-like-this'),
+    path('filter-search/', views.FiltersView.as_view(), name='filters'),
+    path('', views.SearchIndexView.as_view(), name='search-index'),
 ]

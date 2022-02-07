@@ -8,6 +8,12 @@ The environment variables `SP_PUBLIC_CERT`, `SP_PRIVATE_KEY` , and `SP_ENTITY_ID
 Information on the settings for the authentication module can be found on the [OpenLXP-Authentication repo](https://github.com/OpenLXP/openlxp-authentication).
 
 
+## Authorization
+
+The setting `OPEN_ENDPOINTS` can be defined in the django settings file.
+It is a list of strings (regex notation may be used) for URLs that should not check for authentication or authorization.
+
+
 ## Notification
 
 `Add email configuration` : To create customized email notifications content.

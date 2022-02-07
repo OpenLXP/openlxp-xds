@@ -1,30 +1,16 @@
 from django.test import tag
 
-from core.models import (CourseDetailHighlight, CourseInformationMapping,
-                         CourseSpotlight, Experience, InterestList,
-                         SearchFilter, SearchSortOption, XDSConfiguration,
-                         XDSUIConfiguration, XDSUser)
+from configurations.models import XDSConfiguration
+from core.models import (CourseDetailHighlight, CourseSpotlight, Experience,
+                         InterestList, SearchFilter, SearchSortOption,
+                         XDSUIConfiguration)
+from users.models import XDSUser
 
 from .test_setup import TestSetUp
 
 
 @tag('unit')
 class ModelTests(TestSetUp):
-
-    def test_create_xds_configuration(self):
-        """Test that creating a new XDS Configuration entry is successful\
-        with defaults """
-        xdsConfig = XDSConfiguration(target_xis_metadata_api="test")
-
-        self.assertEqual(xdsConfig.target_xis_metadata_api, "test")
-
-    def test_create_xds_ui_configuration(self):
-        """Test that creating a new XDSUI Configuration is successful with \
-            defaults"""
-        config = XDSConfiguration(target_xis_metadata_api="test")
-        uiConfig = XDSUIConfiguration(xds_configuration=config)
-
-        self.assertEqual(uiConfig.search_results_per_page, 10)
 
     def test_create_search_filter(self):
         """Test that creating a search filter object works correctly"""
@@ -34,6 +20,7 @@ class ModelTests(TestSetUp):
                           field_name="test",
                           xds_ui_configuration=uiConfig)
         self.assertEqual(sf.xds_ui_configuration, uiConfig)
+        self.assertEqual(str(sf), str(sf.id))
 
     def test_create_search_sort_option(self):
         """Test that creating a search sort option works as expected"""
@@ -44,6 +31,7 @@ class ModelTests(TestSetUp):
         self.assertEqual(name, sort_option.display_name)
         self.assertEqual(field, sort_option.field_name)
         self.assertTrue(sort_option.active)
+        self.assertEqual(str(sort_option), str(sort_option.id))
 
     def test_create_course_detail_highlight(self):
         """Test creating a course detail highlight object"""
@@ -64,6 +52,7 @@ class ModelTests(TestSetUp):
         self.assertEqual(courseHighlight.highlight_icon, highlight_icon)
         self.assertEqual(courseHighlight.rank, 1)
         self.assertEqual(courseHighlight.active, active)
+        self.assertEqual(str(courseHighlight), str(courseHighlight.id))
 
     def test_create_courseSpotlight(self):
         """Test the creation of a course spotlight object"""
@@ -72,28 +61,7 @@ class ModelTests(TestSetUp):
 
         self.assertEqual(c_id, spotlight.course_id)
         self.assertTrue(spotlight.active)
-
-    def test_create_courseInformationMapping(self):
-        """Tests the creation of a course information object"""
-
-        config = XDSConfiguration(target_xis_metadata_api="test")
-        uiConfig = XDSUIConfiguration(xds_configuration=config)
-
-        # course mappings
-        course_title = 'Course.TestTitle'
-        course_description = 'Course.TestDescription'
-        course_url = 'Course.TestUrl'
-
-        courseInformation = CourseInformationMapping(
-            xds_ui_configuration=uiConfig,
-            course_title=course_title,
-            course_description=course_description,
-            course_url=course_url)
-
-        self.assertEqual(courseInformation.course_title, course_title)
-        self.assertEqual(courseInformation.course_description,
-                         course_description)
-        self.assertEqual(courseInformation.course_url, course_url)
+        self.assertEqual(str(spotlight), str(spotlight.id))
 
     def test_create_experience(self):
         """Tests that creating a course is successful"""

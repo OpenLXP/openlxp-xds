@@ -1,25 +1,8 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
 
-from core.models import (CourseDetailHighlight, CourseInformationMapping,
-                         CourseSpotlight, Experience, InterestList,
-                         SavedFilter, SearchFilter, SearchSortOption,
-                         XDSConfiguration, XDSUIConfiguration, XDSUser)
-
-
-# Register your models here.
-@admin.register(XDSConfiguration)
-class XDSConfigurationAdmin(admin.ModelAdmin):
-    list_display = ('target_xis_metadata_api', 'created', 'modified',)
-    fields = [('target_xis_metadata_api',)]
-
-
-@admin.register(XDSUIConfiguration)
-class XDSUIConfigurationAdmin(admin.ModelAdmin):
-    list_display = ('search_results_per_page', 'xds_configuration',
-                    'created', 'modified',)
-    fields = [('search_results_per_page', 'xds_configuration',
-               'course_img_fallback')]
+from core.models import (CourseDetailHighlight, CourseSpotlight, Experience,
+                         InterestList, SavedFilter, SearchFilter,
+                         SearchSortOption)
 
 
 @admin.register(SearchFilter)
@@ -49,38 +32,6 @@ class CourseDetailHighlightAdmin(admin.ModelAdmin):
 @admin.register(CourseSpotlight)
 class CourseSpotlightAdmin(admin.ModelAdmin):
     list_display = ('course_id', 'active',)
-
-
-@admin.register(CourseInformationMapping)
-class CourseInformationMappingAdmin(admin.ModelAdmin):
-    list_display = ('course_title', 'course_description',
-                    'course_url', 'xds_ui_configuration')
-
-    fields = ['course_title', 'course_description',
-              'course_url', 'xds_ui_configuration']
-
-
-class XDSUserAdmin(UserAdmin):
-    model = XDSUser
-    search_fields = ('email', 'first_name',)
-    list_filter = ('is_active', 'is_staff', 'is_superuser')
-    ordering = ('-date_joined', '-last_login')
-    list_display = ('email', 'first_name',
-                    'is_active', 'is_staff', 'last_login')
-    fieldsets = (
-        (None, {'fields': ('email', 'first_name', 'last_name',)}),
-        ('Permissions', {'fields': ('is_staff', 'is_active',)}),
-    )
-    add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('email', 'first_name', 'last_name',
-                       'password1', 'password2', 'is_active', 'is_staff')}
-         ),
-    )
-
-
-admin.site.register(XDSUser, XDSUserAdmin)
 
 
 @admin.register(Experience)

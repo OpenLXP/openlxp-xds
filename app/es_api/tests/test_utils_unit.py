@@ -4,8 +4,8 @@ from unittest.mock import patch
 from django.test import SimpleTestCase, tag
 from elasticsearch_dsl import Q, Search
 
-from core.models import (CourseSpotlight, SearchFilter, SearchSortOption,
-                         XDSConfiguration, XDSUIConfiguration)
+from configurations.models import XDSConfiguration, XDSUIConfiguration
+from core.models import CourseSpotlight, SearchFilter, SearchSortOption
 from es_api.utils.queries import (add_search_aggregations, add_search_filters,
                                   add_search_sort, get_page_start, get_results,
                                   more_like_this, search_by_filters,

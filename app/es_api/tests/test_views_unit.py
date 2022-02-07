@@ -7,8 +7,6 @@ from requests.exceptions import HTTPError
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from es_api import views
-
 
 @tag('unit')
 class ViewTests(APITestCase):
@@ -16,14 +14,14 @@ class ViewTests(APITestCase):
     def test_search_index_no_keyword(self):
         """Test that the /es-api/ endpoint sends an HTTP error when no
             keyword is provided"""
-        url = reverse(views.search_index)
+        url = reverse('es_api:search-index')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_search_index_with_keyword(self):
         """Test that the /es-api/ endpoint succeeds when a valid
             keyword is provided"""
-        url = "%s?keyword=hello" % (reverse(views.search_index))
+        url = "%s?keyword=hello" % (reverse('es_api:search-index'))
         with patch('es_api.views.search_by_keyword') as searchByKW, \
                 patch('es_api.views.get_results') as getResults, \
                 patch('es_api.views.SearchFilter.objects') as sfObj:
@@ -47,7 +45,7 @@ class ViewTests(APITestCase):
         # Test that the /es-api/more-like-this/{doc_id} endpoint returns code
         # 200 when successful
         doc_id = 19
-        url = reverse(views.get_more_like_this, args=(doc_id,))
+        url = reverse('es_api:get-more-like-this', args=(doc_id,))
         with patch('es_api.views.more_like_this') as moreLikeThis, \
                 patch('es_api.views.get_results') as getResults:
             result_json = json.dumps({"test": "value"})
@@ -67,7 +65,7 @@ class ViewTests(APITestCase):
         # server error when an exception is raised
         doc_id = 19
         errorMsg = "error executing ElasticSearch query; please check the logs"
-        url = reverse(views.get_more_like_this, args=(doc_id,))
+        url = reverse('es_api:get-more-like-this', args=(doc_id,))
         with patch('es_api.views.more_like_this') as moreLikeThis:
             moreLikeThis.side_effect = [HTTPError]
             response = self.client.get(url)
@@ -80,7 +78,7 @@ class ViewTests(APITestCase):
     def test_filters(self):
         # Test that the /es-api/filter-search? endpoint returns code
         # 200 when successful
-        url = "%s?Course.CourseTitle=hi" % (reverse(views.filters)) + \
+        url = "%s?Course.CourseTitle=hi" % (reverse('es_api:filters')) + \
             "&Course.CourseProviderName=test&CourseInstance.CourseLevel=3"
         with patch('es_api.views.search_by_filters') as searchByFilters, \
                 patch('es_api.views.get_results') as getResults:
@@ -101,7 +99,7 @@ class ViewTests(APITestCase):
         # when an exception is raised
         errorMsg = "error executing ElasticSearch query; Please contact " + \
             "an administrator"
-        url = "%s?Course.CourseTitle=hi" % (reverse(views.filters))
+        url = "%s?Course.CourseTitle=hi" % (reverse('es_api:filters'))
         with patch('es_api.views.search_by_filters') as searchByFilters:
             searchByFilters.side_effect = [HTTPError]
             response = self.client.get(url)

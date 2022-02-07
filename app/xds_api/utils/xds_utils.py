@@ -4,7 +4,8 @@ import requests
 from rest_framework import status
 from rest_framework.response import Response
 
-from core.models import CourseSpotlight, Experience, XDSConfiguration
+from configurations.models import XDSConfiguration
+from core.models import CourseSpotlight, Experience
 
 
 def get_request(request_url):
@@ -23,7 +24,7 @@ def get_spotlight_courses_api_url():
     # get search string
     composite_api_url = XDSConfiguration.objects.first()\
         .target_xis_metadata_api
-    queryString = '?id='
+    queryString = '?metadata_key_hash_list='
 
     for num, spotlight in enumerate(course_spotlights):
         if num >= (len(course_spotlights) - 1):

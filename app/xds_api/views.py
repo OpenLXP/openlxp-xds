@@ -4,193 +4,123 @@ import logging
 import requests
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
-from knox.models import AuthToken
 from requests.exceptions import HTTPError
-from rest_framework import generics, status
-from rest_framework.decorators import api_view
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.models import (Experience, InterestList, SavedFilter,
-                         XDSConfiguration, XDSUIConfiguration)
-from xds_api.serializers import (InterestListSerializer, LoginSerializer,
-                                 RegisterSerializer, SavedFilterSerializer,
-                                 XDSConfigurationSerializer,
-                                 XDSUIConfigurationSerializer,
-                                 XDSUserSerializer)
+from configurations.models import XDSConfiguration
+from core.models import CourseSpotlight, Experience, InterestList, SavedFilter
+from xds_api.serializers import InterestListSerializer, SavedFilterSerializer
 from xds_api.utils.xds_utils import (get_request,
                                      get_spotlight_courses_api_url,
-                                     handle_unauthenticated_user,
                                      metadata_to_target, save_experiences)
 
 logger = logging.getLogger('dict_config_logger')
 
 
-def get_spotlight_courses(request):
-    """This method defines an API for fetching configured course spotlights
-        from XIS"""
-    errorMsg = {
-        "message": "error fetching spotlight courses; " +
-        "please check the XDS logs"
-    }
-    errorMsgJSON = json.dumps(errorMsg)
-
-    try:
-        api_url = get_spotlight_courses_api_url()
-
-        # make API call
-        response = get_request(api_url)
-        responseJSON = json.dumps(response.json())
-
-        if response.status_code == 200:
-            formattedResponse = json.dumps(metadata_to_target(responseJSON))
-
-            return HttpResponse(formattedResponse,
-                                content_type="application/json")
-        else:
-            return HttpResponse(responseJSON,
-                                content_type="application/json")
-
-    except requests.exceptions.RequestException as e:
-        errorMsg = {"message": "error reaching out to configured XIS API; " +
-                    "please check the XIS logs"}
-        errorMsgJSON = json.dumps(errorMsg)
-        logger.error(e)
-        return HttpResponseServerError(errorMsgJSON,
-                                       content_type="application/json")
-
-    except HTTPError as http_err:
-        logger.error(http_err)
-        return HttpResponseServerError(errorMsgJSON,
-                                       content_type="application/json")
-    except Exception as err:
-        logger.error(err)
-        return HttpResponseServerError(errorMsgJSON,
-                                       content_type="application/json")
-
-
-def get_experiences(request, exp_hash):
-    """This method defines an API for fetching a single course by ID
-        from the XIS"""
-    errorMsg = {
-        "message": "error fetching course with hash: " + exp_hash + "; " +
-        "please check the XDS logs"
-    }
-    errorMsgJSON = json.dumps(errorMsg)
-
-    try:
-        composite_api_url = XDSConfiguration.objects.first()\
-            .target_xis_metadata_api
-        courseQuery = "?metadata_key_hash_list=" + exp_hash
-        api_url = composite_api_url + courseQuery
-
-        # make API call
-        response = get_request(api_url)
-        logger.info(api_url)
-        # expected response is a list of 1 element
-        responseDict = response.json()
-        responseJSON = json.dumps(responseDict[0])
-        logger.info(responseJSON)
-
-        if (response.status_code == 200):
-            formattedResponse = json.dumps(metadata_to_target(responseJSON))
-
-            return HttpResponse(formattedResponse,
-                                content_type="application/json")
-        else:
-            return HttpResponse(responseJSON,
-                                content_type="application/json")
-
-    except requests.exceptions.RequestException as e:
-        errorMsg = {"message": "error reaching out to configured XIS API; " +
-                    "please check the XIS logs"}
-        errorMsgJSON = json.dumps(errorMsg)
-
-        logger.error(e)
-        return HttpResponseServerError(errorMsgJSON,
-                                       content_type="application/json")
-    except ObjectDoesNotExist as not_found_err:
-        errorMsg = {"message": "No configured XIS URL found"}
-        logger.error(not_found_err)
-        return Response(errorMsg, status.HTTP_404_NOT_FOUND)
-    except HTTPError as http_err:
-        logger.error(http_err)
-        return HttpResponseServerError(errorMsgJSON,
-                                       content_type="application/json")
-    except Exception as err:
-        logger.error(err)
-        return HttpResponseServerError(errorMsgJSON,
-                                       content_type="application/json")
-
-
-class XDSConfigurationView(APIView):
-    """XDS Configuration View"""
+class GetSpotlightCoursesView(APIView):
+    """Gets Spotlight Courses from XIS"""
 
     def get(self, request):
-        """Returns the configuration fields from the model"""
-        config = XDSConfiguration.objects.first()
-        serializer = XDSConfigurationSerializer(config)
+        """This method defines an API for fetching configured course
+            spotlights from XIS"""
 
-        return Response(serializer.data)
+        errorMsg = {
+            "message": "error fetching spotlight courses; " +
+            "please check the XDS logs"
+        }
+        errorMsgJSON = json.dumps(errorMsg)
 
+        try:
+            if CourseSpotlight.objects.filter(active=True).count() > 0:
+                api_url = get_spotlight_courses_api_url()
+                logger.info(api_url)
+                # make API call
+                response = get_request(api_url)
+                responseJSON = json.dumps(response.json())
 
-class XDSUIConfigurationView(APIView):
-    """XDSUI Condiguration View"""
-    # permission_classes = [IsAuthenticated]
+                if response.status_code == 200:
+                    formattedResponse = json.dumps(
+                        metadata_to_target(responseJSON))
 
-    def get(self, request):
-        """Returns the XDSUI configuration fields from the model"""
-        ui_config = XDSUIConfiguration.objects.first()
-        serializer = XDSUIConfigurationSerializer(ui_config)
+                    return HttpResponse(formattedResponse,
+                                        content_type="application/json")
+                else:
+                    return HttpResponse(responseJSON,
+                                        content_type="application/json")
+            else:
+                return HttpResponse([])
 
-        return Response(serializer.data)
-
-
-class RegisterView(generics.GenericAPIView):
-    """User Registration API"""
-    serializer_class = RegisterSerializer
-
-    def post(self, request, *args, **kwargs):
-        """POST request that takes in: email, password, first_name, and
-            last_name"""
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        # creates a token for immediate login
-        _, token = AuthToken.objects.create(user)
-
-        # Returning the user context, and token
-        return Response({
-            "user": XDSUserSerializer(user,
-                                      context=self.get_serializer_context()
-                                      ).data,
-            "token": token
-        })
+        except requests.exceptions.RequestException as e:
+            errorMsg = {"message": "error reaching out to configured XIS" +
+                        " API; please check the XIS logs"}
+            errorMsgJSON = json.dumps(errorMsg)
+            logger.error(e)
+            return HttpResponseServerError(errorMsgJSON,
+                                           content_type="application/json")
 
 
-class LoginView(generics.GenericAPIView):
-    """Logs user in and returns token"""
-    serializer_class = LoginSerializer
+class GetExperiencesView(APIView):
+    """Gets a specific Experience from XIS"""
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data
-        # Getting the user token
-        _, token = AuthToken.objects.create(user)
+    def get(self, request, exp_hash):
+        """This method defines an API for fetching a single course by ID
+            from the XIS"""
+        errorMsg = {
+            "message": "error fetching course with hash: " + exp_hash +
+            "; please check the XDS logs"
+        }
+        errorMsgJSON = json.dumps(errorMsg)
 
-        return Response({
-            "user": XDSUserSerializer(user,
-                                      context=self.get_serializer_context()
-                                      ).data,
-            "token": token
-        })
+        try:
+            composite_api_url = XDSConfiguration.objects.first() \
+                .target_xis_metadata_api
+            courseQuery = "?metadata_key_hash_list=" + exp_hash
+            api_url = composite_api_url + courseQuery
+            logger.info(api_url)
+            # make API call
+            response = get_request(api_url)
+            logger.info(api_url)
+            # expected response is a list of 1 element
+            responseDict = response.json()
+            responseJSON = json.dumps(responseDict[0])
+            logger.info(responseJSON)
+
+            if response.status_code == 200:
+                formattedResponse = json.dumps(
+                    metadata_to_target(responseJSON))
+
+                return HttpResponse(formattedResponse,
+                                    content_type="application/json")
+            else:
+                return HttpResponse(responseJSON,
+                                    content_type="application/json")
+
+        except requests.exceptions.RequestException as e:
+            errorMsg = {"message": "error reaching out to configured XIS "
+                        + "API; please check the XIS logs"}
+            errorMsgJSON = json.dumps(errorMsg)
+
+            logger.error(e)
+            return HttpResponseServerError(errorMsgJSON,
+                                           content_type="application/json")
+        except ObjectDoesNotExist as not_found_err:
+            errorMsg = {"message": "No configured XIS URL found"}
+            logger.error(not_found_err)
+            return Response(errorMsg, status.HTTP_404_NOT_FOUND)
+
+        except KeyError as no_element_err:
+            logger.error(no_element_err)
+            logger.error(responseDict)
+            return Response(errorMsg, status.HTTP_404_NOT_FOUND)
 
 
-@api_view(['GET', 'POST'])
-def interest_lists(request):
+class InterestListsView(APIView):
     """Handles HTTP requests for interest lists"""
-    if request.method == 'GET':
+
+    def get(self, request):
+        """Retreives interest lists"""
         errorMsg = {
             "message": "Error fetching records please check the logs."
         }
@@ -201,18 +131,17 @@ def interest_lists(request):
             serializer_class = InterestListSerializer(querySet, many=True)
         except HTTPError as http_err:
             logger.error(http_err)
-            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as err:
             logger.error(err)
-            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             return Response(serializer_class.data, status.HTTP_200_OK)
 
-    elif request.method == 'POST':
-        user = request.user
-
-        if not user.is_authenticated:
-            return handle_unauthenticated_user()
+    def post(self, request):
+        """Updates interest lists"""
 
         # Assign data from request to serializer
         serializer = InterestListSerializer(data=request.data)
@@ -230,19 +159,19 @@ def interest_lists(request):
                         status=status.HTTP_201_CREATED)
 
 
-@api_view(['GET', 'PATCH', 'DELETE'])
-def interest_list(request, list_id):
-    """This method defines an API to handle requests for a single interest
-        list"""
+class InterestListView(APIView):
+    """Handles HTTP requests for a specific interest list"""
     errorMsg = {
         "message": "error: no record for corresponding interest list id: " +
                    "please check the logs"
     }
 
-    try:
-        queryset = InterestList.objects.get(pk=list_id)
+    def get(self, request, list_id):
+        """This method gets a single interest list"""
 
-        if request.method == 'GET':
+        try:
+            queryset = InterestList.objects.get(pk=list_id)
+
             serializer_class = InterestListSerializer(queryset)
             # fetch actual courses for each id in the courses array
             interestList = serializer_class.data
@@ -258,7 +187,7 @@ def interest_list(request, list_id):
 
             if len(coursesDict) > 0:
                 # get search string
-                composite_api_url = XDSConfiguration.objects.first()\
+                composite_api_url = XDSConfiguration.objects.first() \
                     .target_xis_metadata_api
                 api_url = composite_api_url + courseQuery
 
@@ -275,17 +204,30 @@ def interest_list(request, list_id):
                 else:
                     return Response(response.json(),
                                     status=status.HTTP_503_SERVICE_UNAVAILABLE)
-        elif request.method == 'PATCH':
-            user = request.user
+        except HTTPError as http_err:
+            logger.error(http_err)
+            return Response(self.errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except ObjectDoesNotExist as not_found_err:
+            logger.error(not_found_err)
+            return Response(self.errorMsg, status.HTTP_404_NOT_FOUND)
+        except Exception as err:
+            logger.error(err)
+            return Response(self.errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return Response(serializer_class.data, status.HTTP_200_OK)
 
-            # check user is logged in
-            if not user.is_authenticated:
-                return handle_unauthenticated_user()
+    def patch(self, request, list_id):
+        """This method updates a single interest list"""
+
+        try:
+            queryset = InterestList.objects.get(pk=list_id)
 
             # check user is owner of list
             if not request.user == queryset.owner:
-                return Response({'Current user does not have access to modify '
-                                 'the list'},
+                return Response({'Current user does not have access to '
+                                'modify the list'},
                                 status.HTTP_401_UNAUTHORIZED)
             # save new experiences
             save_experiences(request.data['experiences'])
@@ -298,22 +240,31 @@ def interest_list(request, list_id):
                 return Response(serializer.errors,
                                 status=status.HTTP_400_BAD_REQUEST)
 
-            serializer.save(owner=user)
+            serializer.save(owner=request.user)
 
             return Response(serializer.data,
                             status=status.HTTP_200_OK)
-        elif request.method == 'DELETE':
-            # Assign data from request to serializer
-            user = request.user
+        except HTTPError as http_err:
+            logger.error(http_err)
+            return Response(self.errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except ObjectDoesNotExist as not_found_err:
+            logger.error(not_found_err)
+            return Response(self.errorMsg, status.HTTP_404_NOT_FOUND)
+        except Exception as err:
+            logger.error(err)
+            return Response(err, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            # check user is logged in
-            if not user.is_authenticated:
-                return handle_unauthenticated_user()
+    def delete(self, request, list_id):
+        """This method deletes a single interest list"""
+
+        try:
+            queryset = InterestList.objects.get(pk=list_id)
 
             # check user is owner of list
             if not request.user == queryset.owner:
-                return Response({'Current user does not have access to delete '
-                                 'the list'},
+                return Response({'Current user does not have access to '
+                                'delete the list'},
                                 status.HTTP_401_UNAUTHORIZED)
             # delete list
             queryset = InterestList.objects.get(pk=list_id)
@@ -321,220 +272,239 @@ def interest_list(request, list_id):
 
             return Response({"message": "List successfully deleted!"},
                             status=status.HTTP_200_OK)
-    except HTTPError as http_err:
-        logger.error(http_err)
-        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    except ObjectDoesNotExist as not_found_err:
-        logger.error(not_found_err)
-        return Response(errorMsg, status.HTTP_404_NOT_FOUND)
-    except Exception as err:
-        logger.error(err)
-        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    else:
-        return Response(serializer_class.data, status.HTTP_200_OK)
+        except HTTPError as http_err:
+            logger.error(http_err)
+            return Response(self.errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except ObjectDoesNotExist as not_found_err:
+            logger.error(not_found_err)
+            return Response(self.errorMsg, status.HTTP_404_NOT_FOUND)
+        except Exception as err:
+            logger.error(err)
+            return Response(self.errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@api_view(['POST'])
-def add_course_to_lists(request, exp_hash):
-    """This method handles request for adding a single course to multiple
-        interest lists at once"""
-    errorMsg = {
-        "message": "error: unable to add course to provided interest lists."
-    }
+class AddCourseToListsView(APIView):
+    """Add courses to multiple interest lists"""
 
-    try:
-        # check user is authenticated
+    def post(self, request, exp_hash):
+        """This method handles request for adding a single course to multiple
+            interest lists at once"""
+        errorMsg = {
+            "message": "error: unable to add course to provided "
+            + "interest lists."
+        }
+
+        try:
+            # get user
+            user = request.user
+
+            # get or add course
+            course, created = \
+                Experience.objects.get_or_create(pk=exp_hash)
+            data = request.data['lists']
+            if not isinstance(data, list):
+                data = [data]
+            course.save()
+            # check user is onwer of lists
+            for list_id in data:
+                currList = InterestList.objects.get(pk=list_id)
+
+                if user == currList.owner:
+                    currList.experiences.add(course)
+                    currList.save()
+            # add course to each list
+        except HTTPError as http_err:
+            logger.error(http_err)
+            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as err:
+            logger.error(err)
+            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return Response({"message": "course successfully added!"},
+                            status.HTTP_200_OK)
+
+
+class InterestListsOwnedView(APIView):
+    """Gets interest lists owned by the current user"""
+
+    def get(self, request):
+        """Handles HTTP requests for interest lists managed by request user"""
+        errorMsg = {
+            "message": "Error fetching records please check the logs."
+        }
+        # get user
         user = request.user
 
-        if not user.is_authenticated:
-            return handle_unauthenticated_user()
-
-        # get or add course
-        course, created = \
-            Experience.objects.get_or_create(pk=exp_hash)
-        course.save()
-        # check user is onwer of lists
-        for list_id in request.data['lists']:
-            currList = InterestList.objects.get(pk=list_id)
-
-            if user == currList.owner:
-                currList.experiences.add(course)
-                currList.save()
-        # add course to each list
-    except HTTPError as http_err:
-        logger.error(http_err)
-        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    except Exception as err:
-        logger.error(err)
-        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    else:
-        return Response({"message": "course successfully added!"},
-                        status.HTTP_200_OK)
+        try:
+            querySet = InterestList.objects.filter(owner=user)
+            serializer_class = InterestListSerializer(querySet, many=True)
+        except HTTPError as http_err:
+            logger.error(http_err)
+            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as err:
+            logger.error(err)
+            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return Response(serializer_class.data, status.HTTP_200_OK)
 
 
-@api_view(['GET'])
-def interest_lists_owned(request):
-    """Handles HTTP requests for interest lists managed by request user"""
-    errorMsg = {
-        "message": "Error fetching records please check the logs."
-    }
-    # check user is authenticated
-    user = request.user
+class InterestListsSubscriptionsView(APIView):
+    """Gets interest lists the current user follows"""
 
-    if not user.is_authenticated:
-        return handle_unauthenticated_user()
-
-    try:
-        querySet = InterestList.objects.filter(owner=user)
-        serializer_class = InterestListSerializer(querySet, many=True)
-    except HTTPError as http_err:
-        logger.error(http_err)
-        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    except Exception as err:
-        logger.error(err)
-        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    else:
-        return Response(serializer_class.data, status.HTTP_200_OK)
-
-
-@api_view(['GET'])
-def interest_lists_subscriptions(request):
-    """Handles HTTP requests for interest lists that the request user is
-        subscribed to"""
-    errorMsg = {
-        "message": "Error fetching records please check the logs."
-    }
-    # check user is authenticated
-    user = request.user
-
-    if not user.is_authenticated:
-        return handle_unauthenticated_user()
-
-    try:
-        querySet = user.subscriptions
-        serializer_class = InterestListSerializer(querySet, many=True)
-    except HTTPError as http_err:
-        logger.error(http_err)
-        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    except Exception as err:
-        logger.error(err)
-        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    else:
-        return Response(serializer_class.data, status.HTTP_200_OK)
-
-
-@api_view(['PATCH'])
-def interest_list_subscribe(request, list_id):
-    """This method handles a request for subscribing to an interest list"""
-    errorMsg = {
-        "message": "error: unable to subscribe user to list: " + str(list_id)
-    }
-
-    try:
-        # check user is authenticated
+    def get(self, request):
+        """Handles HTTP requests for interest lists that the request user is
+            subscribed to"""
+        errorMsg = {
+            "message": "Error fetching records please check the logs."
+        }
+        # get user
         user = request.user
 
-        if not user.is_authenticated:
-            return handle_unauthenticated_user()
-
-        # get interest list
-        interest_list = InterestList.objects.get(pk=list_id)
-        interest_list.subscribers.add(user)
-        interest_list.save()
-    except HTTPError as http_err:
-        logger.error(http_err)
-        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    except Exception as err:
-        logger.error(err)
-        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    else:
-        return Response({"message": "user successfully subscribed to list!"},
-                        status.HTTP_200_OK)
+        try:
+            querySet = user.subscriptions
+            serializer_class = InterestListSerializer(querySet, many=True)
+        except HTTPError as http_err:
+            logger.error(http_err)
+            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as err:
+            logger.error(err)
+            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return Response(serializer_class.data, status.HTTP_200_OK)
 
 
-@api_view(['PATCH'])
-def interest_list_unsubscribe(request, list_id):
-    """This method handles a request for unsubscribing from an interest list"""
-    errorMsg = {
-        "message": "error: unable to unsubscribe user from list: " +
-        str(list_id)
-    }
+class InterestListSubscribeView(APIView):
+    """Subscribes current user to a specific interest list"""
 
-    try:
-        # check user is authenticated
+    def patch(self, request, list_id):
+        """
+        This method handles a request for subscribing to an interest list
+        """
+        errorMsg = {
+            "message": "error: unable to subscribe user to list: "
+            + str(list_id)
+        }
+
+        try:
+            # get user
+            user = request.user
+
+            # get interest list
+            interest_list = InterestList.objects.get(pk=list_id)
+            interest_list.subscribers.add(user)
+            interest_list.save()
+        except HTTPError as http_err:
+            logger.error(http_err)
+            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as err:
+            logger.error(err)
+            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return Response({"message": "user successfully subscribed to "
+                             + "list!"},
+                            status.HTTP_200_OK)
+
+
+class InterestListUnsubscribeView(APIView):
+    """Removes a user from subscribing to a specific interest list"""
+
+    def patch(self, request, list_id):
+        """
+        This method handles a request for unsubscribing from an interest list
+        """
+        errorMsg = {
+            "message": "error: unable to unsubscribe user from list: " +
+            str(list_id)
+        }
+
+        try:
+            # get user
+            user = request.user
+
+            # get interest list
+            interest_list = InterestList.objects.get(pk=list_id)
+            interest_list.subscribers.remove(user)
+            interest_list.save()
+        except HTTPError as http_err:
+            logger.error(http_err)
+            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as err:
+            logger.error(err)
+            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return \
+                Response({"message": "user successfully unsubscribed "
+                          + "from list!"},
+                         status.HTTP_200_OK)
+
+
+class SavedFiltersOwnedView(APIView):
+    """Returns filters saved by the current user"""
+
+    def get(self, request):
+        """
+        Handles HTTP requests for saved filters managed by request user
+        """
+        errorMsg = {
+            "message": "Error fetching records please check the logs."
+        }
+        # get user
         user = request.user
 
-        if not user.is_authenticated:
-            return handle_unauthenticated_user()
-
-        # get interest list
-        interest_list = InterestList.objects.get(pk=list_id)
-        interest_list.subscribers.remove(user)
-        interest_list.save()
-    except HTTPError as http_err:
-        logger.error(http_err)
-        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    except Exception as err:
-        logger.error(err)
-        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    else:
-        return Response({"message":
-                        "user successfully unsubscribed from list!"},
-                        status.HTTP_200_OK)
+        try:
+            querySet = SavedFilter.objects.filter(owner=user)
+            serializer_class = SavedFilterSerializer(querySet, many=True)
+        except HTTPError as http_err:
+            logger.error(http_err)
+            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as err:
+            logger.error(err)
+            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return Response(serializer_class.data, status.HTTP_200_OK)
 
 
-@api_view(['GET'])
-def saved_filters_owned(request):
-    """Handles HTTP requests for saved filters managed by request user"""
-    errorMsg = {
-        "message": "Error fetching records please check the logs."
-    }
-    # check user is authenticated
-    user = request.user
-
-    if not user.is_authenticated:
-        return handle_unauthenticated_user()
-
-    try:
-        querySet = SavedFilter.objects.filter(owner=user)
-        serializer_class = SavedFilterSerializer(querySet, many=True)
-    except HTTPError as http_err:
-        logger.error(http_err)
-        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    except Exception as err:
-        logger.error(err)
-        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    else:
-        return Response(serializer_class.data, status.HTTP_200_OK)
-
-
-@api_view(['GET', 'PATCH', 'DELETE'])
-def saved_filter(request, filter_id):
-    """This method defines an API to handle requests for a single interest
-        list"""
+class SavedFilterView(APIView):
+    """Handles HTTP requests for a specific saved filter"""
     errorMsg = {
         "message": "error: no record for corresponding saved filter id: " +
                    "please check the logs"
     }
 
-    try:
-        queryset = SavedFilter.objects.get(pk=filter_id)
+    def get(self, request, filter_id):
+        """Retrieve a specific saved filter"""
 
-        if request.method == 'GET':
+        try:
+            queryset = SavedFilter.objects.get(pk=filter_id)
+
             serializer_class = SavedFilterSerializer(queryset)
 
             return Response(serializer_class.data, status.HTTP_200_OK)
-        elif request.method == 'PATCH':
-            user = request.user
 
-            # check user is logged in
-            if not user.is_authenticated:
-                return handle_unauthenticated_user()
+        except HTTPError as http_err:
+            logger.error(http_err)
+            return Response(self.errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except ObjectDoesNotExist as not_found_err:
+            logger.error(not_found_err)
+            return Response(self.errorMsg, status.HTTP_404_NOT_FOUND)
+        except Exception as err:
+            logger.error(err)
+            return Response(self.errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            # check user is owner of list
+    def patch(self, request, filter_id):
+        """Update a specific saved filter"""
+
+        try:
+            queryset = SavedFilter.objects.get(pk=filter_id)
+
+            # check user is owner of filter
             if not request.user == queryset.owner:
-                return Response({'Current user does not have access to modify '
-                                 'the saved filter'},
+                return Response({'Current user does not have access to '
+                                 'modify the saved filter'},
                                 status.HTTP_401_UNAUTHORIZED)
             # Assign data from request to serializer
             serializer = SavedFilterSerializer(queryset, data=request.data)
@@ -549,18 +519,28 @@ def saved_filter(request, filter_id):
 
             return Response(serializer.data,
                             status=status.HTTP_200_OK)
-        elif request.method == 'DELETE':
-            # Assign data from request to serializer
-            user = request.user
+        except HTTPError as http_err:
+            logger.error(http_err)
+            return Response(self.errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except ObjectDoesNotExist as not_found_err:
+            logger.error(not_found_err)
+            return Response(self.errorMsg, status.HTTP_404_NOT_FOUND)
+        except Exception as err:
+            logger.error(err)
+            return Response(self.errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            # check user is logged in
-            if not user.is_authenticated:
-                return handle_unauthenticated_user()
+    def delete(self, request, filter_id):
+        """Delete a specific saved filter"""
+
+        try:
+            queryset = SavedFilter.objects.get(pk=filter_id)
 
             # check user is owner of list
             if not request.user == queryset.owner:
-                return Response({'Current user does not have access to delete '
-                                 'the saved filter'},
+                return Response({'Current user does not have access to '
+                                 'delete the saved filter'},
                                 status.HTTP_401_UNAUTHORIZED)
             # delete filter
             queryset = SavedFilter.objects.get(pk=filter_id)
@@ -568,21 +548,25 @@ def saved_filter(request, filter_id):
 
             return Response({"message": "Filter successfully deleted!"},
                             status=status.HTTP_200_OK)
-    except HTTPError as http_err:
-        logger.error(http_err)
-        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    except ObjectDoesNotExist as not_found_err:
-        logger.error(not_found_err)
-        return Response(errorMsg, status.HTTP_404_NOT_FOUND)
-    except Exception as err:
-        logger.error(err)
-        return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except HTTPError as http_err:
+            logger.error(http_err)
+            return Response(self.errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except ObjectDoesNotExist as not_found_err:
+            logger.error(not_found_err)
+            return Response(self.errorMsg, status.HTTP_404_NOT_FOUND)
+        except Exception as err:
+            logger.error(err)
+            return Response(self.errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@api_view(['GET', 'POST'])
-def saved_filters(request):
-    """Handles HTTP requests for saved filters"""
-    if request.method == 'GET':
+class SavedFiltersView(APIView):
+    """Handles HTTP requests for multiple saved filters"""
+
+    def get(self, request):
+        """Gets saved filters"""
+
         errorMsg = {
             "message": "Error fetching records please check the logs."
         }
@@ -593,18 +577,17 @@ def saved_filters(request):
             serializer_class = SavedFilterSerializer(querySet, many=True)
         except HTTPError as http_err:
             logger.error(http_err)
-            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as err:
             logger.error(err)
-            return Response(errorMsg, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(errorMsg,
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             return Response(serializer_class.data, status.HTTP_200_OK)
 
-    elif request.method == 'POST':
-        user = request.user
-
-        if not user.is_authenticated:
-            return handle_unauthenticated_user()
+    def post(self, request):
+        """Update saved filters"""
 
         # Assign data from request to serializer
         serializer = SavedFilterSerializer(data=request.data)

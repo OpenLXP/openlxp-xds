@@ -9,7 +9,7 @@ class TestSetUp(APITestCase):
     def setUp(self):
         """Function to set up necessary data for testing"""
 
-        self.patcher = patch('core.models.email_verification')
+        self.patcher = patch('users.models.email_verification')
         self.mock_email_verification = self.patcher.start()
 
         self.patcher_2 = patch('xds_api.serializers.send_log_email_with_msg')
