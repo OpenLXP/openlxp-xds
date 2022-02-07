@@ -257,6 +257,8 @@ OPEN_ENDPOINTS = [
     "/es-api/filter-search/",
     "/es-api/more-like-this/[a-z0-9]+/",
     "/es-api/",
+    "/api/experiences/[a-z0-9]+/",
+    "/api/spotlight-courses",
 ]
 
 EMAIL_BACKEND = 'django_ses.SESBackend'
