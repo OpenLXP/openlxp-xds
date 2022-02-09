@@ -1,12 +1,12 @@
+import functools
 import json
 import logging
 import os
 
-from elasticsearch_dsl import A, Document, Q, Search, connections
-from elasticsearch_dsl.query import MoreLikeThis
-
 from configurations.models import XDSConfiguration
 from core.models import CourseSpotlight, SearchFilter, SearchSortOption
+from elasticsearch_dsl import A, Document, Q, Search, connections
+from elasticsearch_dsl.query import MoreLikeThis
 
 connections.create_connection(alias='default',
                               hosts=[os.environ.get('ES_HOST'), ], timeout=60)
@@ -75,7 +75,7 @@ def add_search_sort(search, filters):
     return result_search
 
 
-def search_by_keyword(keyword="", filters={}):
+def search_by_keyword(user, keyword="", filters={}):
     """This method takes in a keyword string + a page number and queries
         ElasticSearch for the term then returns the Response Object"""
 
@@ -86,6 +86,8 @@ def search_by_keyword(keyword="", filters={}):
 
     # setting up the search object
     s = Search(using='default', index=os.environ.get('ES_INDEX')).query(q)
+
+    s = user_organization_filtering(search=s, user=user)
 
     # add sort if it's part of the request
     s = add_search_sort(search=s, filters=filters)
@@ -114,20 +116,21 @@ def search_by_keyword(keyword="", filters={}):
     return response
 
 
-def more_like_this(doc_id):
+def more_like_this(doc_id, user):
     """This method takes in a doc ID and queries the elasticsearch index for
         courses with similar title or description"""
     likeObj = [
-                {
-                    "_index": os.environ.get('ES_INDEX'),
-                    "_id": doc_id
-                }
-             ]
+        {
+            "_index": os.environ.get('ES_INDEX'),
+            "_id": doc_id
+        }
+    ]
     s = Search(using='default', index=os.environ.get('ES_INDEX'))
 
     # We're going to match based only on two fields
     s = s.query(MoreLikeThis(like=likeObj)
                 )
+    s = user_organization_filtering(search=s, user=user)
 
     # only fetch the first 6 results
     # TODO: make the size configurable
@@ -167,13 +170,14 @@ def spotlight_courses():
     return result
 
 
-def search_by_filters(page_num, filters={}):
+def search_by_filters(page_num, user, filters={}):
     """This method takes in a page number + a dict of field names and values
         and queries ElasticSearch for the term then returns the
         Response Object"""
 
     # setting up the search object
     s = Search(using='default', index=os.environ.get('ES_INDEX'))
+    s = user_organization_filtering(search=s, user=user)
     # getting the page size for result pagination
     configuration = XDSConfiguration.objects.first()
     uiConfig = configuration.xdsuiconfiguration
@@ -220,3 +224,17 @@ def get_results(response):
     }
 
     return json.dumps(resultObj)
+
+
+def user_organization_filtering(search, user):
+    """
+    This helper method takes a serach object and a request user and returns an 
+    updated search with the organizations the user belongs to filtering the query
+    """
+    # if user logged in and assigned organizations
+    if user.is_authenticated and user.organizations.count() > 0:
+        # generate queries for CourseProviderName from orgs
+        orgs = [Q("match", Course__CourseProviderName=org.filter)
+                for org in user.organizations.all()]
+        # combine queries into a chained OR query
+        return search.query(functools.reduce(lambda a, b: a | b, orgs))

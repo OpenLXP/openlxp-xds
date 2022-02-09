@@ -7,10 +7,23 @@ from django.db import models
 from django.forms import ValidationError
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from model_utils.models import TimeStampedModel
 from openlxp_notifications.management.utils.ses_client import \
     email_verification
 from rest_framework import exceptions
 from rest_framework.permissions import DjangoModelPermissions
+
+
+class Organization(TimeStampedModel):
+    """Model to store an organization for filtering"""
+    name = models.CharField(max_length=200, unique=True, null=False, blank=False)
+    filter = models.CharField(max_length=200, unique=True, null=False, blank=False)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.filter
 
 
 class XDSUserProfileManager(BaseUserManager):
@@ -61,6 +74,7 @@ class XDSUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=200)
     last_name = models.CharField(max_length=200)
     date_joined = models.DateTimeField(default=timezone.now)
+    organizations = models.ManyToManyField(Organization)
 
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)

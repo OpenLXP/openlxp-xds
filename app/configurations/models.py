@@ -1,8 +1,14 @@
+import logging
+
+import requests
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.forms import ValidationError
 from django.urls import reverse
 from model_utils.models import TimeStampedModel
+from users.models import Organization
+
+logger = logging.getLogger('dict_config_logger')
 
 
 class XDSConfiguration(TimeStampedModel):
@@ -24,7 +30,17 @@ class XDSConfiguration(TimeStampedModel):
     def save(self, *args, **kwargs):
         if not self.pk and XDSConfiguration.objects.exists():
             raise ValidationError('XDSConfiguration model already exists')
-        return super(XDSConfiguration, self).save(*args, **kwargs)
+        super(XDSConfiguration, self).save(*args, **kwargs)
+        try:
+            api_url = self.target_xis_metadata_api.replace(
+                'metadata', 'catalogs')
+            response = requests.get(api_url)
+            responseJSON = response.json()
+            for catalog in responseJSON:
+                if not Organization.objects.filter(filter=catalog).exists():
+                    Organization.objects.create(name=catalog, filter=catalog)
+        except Exception:
+            logger.log("Error loading catalogs from XIS")
 
 
 class XDSUIConfiguration(TimeStampedModel):

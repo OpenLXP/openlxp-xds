@@ -51,7 +51,7 @@ class SearchIndexView(APIView):
                         filters[curr_filter.field_name] = \
                             request.GET.getlist(curr_filter.field_name)
 
-                response = search_by_keyword(keyword=keyword, filters=filters)
+                response = search_by_keyword(keyword=keyword, filters=filters, user=request.user)
                 results = get_results(response)
             except HTTPError as http_err:
                 logger.error(http_err)
@@ -87,7 +87,7 @@ class GetMoreLikeThisView(APIView):
         errorMsgJSON = json.dumps(errorMsg)
 
         try:
-            response = more_like_this(doc_id=doc_id)
+            response = more_like_this(doc_id=doc_id, user=request.user)
             results = get_results(response)
         except HTTPError as http_err:
             logger.error(http_err)
@@ -134,7 +134,7 @@ class FiltersView(APIView):
         errorMsgJSON = json.dumps(errorMsg)
 
         try:
-            response = search_by_filters(page_num, filters)
+            response = search_by_filters(page_num=page_num, filters=filters, user=request.user)
             results = get_results(response)
         except HTTPError as http_err:
             logger.error(http_err)
