@@ -1,4 +1,6 @@
 import json
+import os
+from unittest import TestCase
 from unittest.mock import patch
 
 from django.test import SimpleTestCase, tag
@@ -9,7 +11,9 @@ from core.models import CourseSpotlight, SearchFilter, SearchSortOption
 from es_api.utils.queries import (add_search_aggregations, add_search_filters,
                                   add_search_sort, get_page_start, get_results,
                                   more_like_this, search_by_filters,
-                                  search_by_keyword, spotlight_courses)
+                                  search_by_keyword, spotlight_courses,
+                                  user_organization_filtering)
+from users.models import Organization, XDSUser
 
 
 @tag('unit')
@@ -302,3 +306,54 @@ class UtilTests(SimpleTestCase):
             result = search_by_filters(1, {'Course.CourseTitle': 'test'})
 
             self.assertEqual(result, expected_result)
+
+
+class XDSUserTests(TestCase):
+    def test_user_org_filter_blank(self):
+        """
+        Test that user_organization_filtering returns a default Search
+        when given no parameters
+        """
+        expected_search = Search(
+            using='default', index=os.environ.get('ES_INDEX'))
+        result = user_organization_filtering()
+
+        self.assertEqual(result, expected_search)
+
+    def test_user_org_filter_custom_search(self):
+        """
+        Test that user_organization_filtering returns the same Search
+        when given no user
+        """
+        expected_search = Search(using='default',
+                                 index='custom_testing_index')
+        result = user_organization_filtering(search=expected_search)
+
+        self.assertEqual(result, expected_search)
+
+    def test_user_org_filter_custom_user(self):
+        """
+        Test that user_organization_filtering returns a filtered search
+        when given a user
+        """
+        org0 = Organization(name='testName', filter='testFilter')
+        org0.save()
+        org1 = Organization(name='otherTestName', filter='otherTestFilter')
+        org1.save()
+        user = XDSUser.objects.create_user('test2@test.com',
+                                           'test1234',
+                                           first_name='Jane',
+                                           last_name='doe')
+        user.organizations.add(org0)
+        user.organizations.add(org1)
+
+        expected_search = Search(using='default',
+                                 index=os.environ.get('ES_INDEX')).\
+            query(Q("match", Course__CourseProviderName=org0.filter) |
+                  Q("match", Course__CourseProviderName=org1.filter))
+        result = user_organization_filtering(user=user)
+
+        self.assertIn(expected_search.to_dict()['query']['bool']['should'][0],
+                      result.to_dict()['query']['bool']['should'])
+        self.assertIn(expected_search.to_dict()['query']['bool']['should'][1],
+                      result.to_dict()['query']['bool']['should'])
