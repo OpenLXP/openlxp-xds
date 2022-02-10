@@ -40,7 +40,7 @@ class XDSConfiguration(TimeStampedModel):
                 if not Organization.objects.filter(filter=catalog).exists():
                     Organization.objects.create(name=catalog, filter=catalog)
         except Exception:
-            logger.log("Error loading catalogs from XIS")
+            logger.info("Error loading catalogs from XIS")
 
 
 class XDSUIConfiguration(TimeStampedModel):

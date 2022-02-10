@@ -16,8 +16,10 @@ from rest_framework.permissions import DjangoModelPermissions
 
 class Organization(TimeStampedModel):
     """Model to store an organization for filtering"""
-    name = models.CharField(max_length=200, unique=True, null=False, blank=False)
-    filter = models.CharField(max_length=200, unique=True, null=False, blank=False)
+    name = models.CharField(max_length=200, unique=True,
+                            null=False, blank=False)
+    filter = models.CharField(
+        max_length=200, unique=True, null=False, blank=False)
 
     class Meta:
         ordering = ['name']
