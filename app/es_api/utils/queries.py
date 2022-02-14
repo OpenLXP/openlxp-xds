@@ -126,11 +126,15 @@ def more_like_this(doc_id, user=AnonymousUser()):
             "_id": doc_id
         }
     ]
+    fields = [
+                "Course.CourseShortDescription",
+                "Course.CourseTitle",
+                "Course.CourseProvider"
+            ]
     s = Search(using='default', index=os.environ.get('ES_INDEX'))
 
     # We're going to match based only on two fields
-    s = s.query(MoreLikeThis(like=likeObj)
-                )
+    s = s.query(MoreLikeThis(like=likeObj, fields=fields))
     s = user_organization_filtering(search=s, user=user)
 
     # only fetch the first 6 results
