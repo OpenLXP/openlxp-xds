@@ -162,14 +162,17 @@ class SuggestionsView(APIView):
     def get(self, request):
         # if partial not passed in or empty, return failstate
         if ('partial' not in request.GET or request.GET['partial'] == ''):
-            return Response({"message": "No partial data sent"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "No partial data sent"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            response = suggest(partial=request.GET['partial'], user=request.user)
+            response = suggest(
+                partial=request.GET['partial'], user=request.user)
             results = response.suggest.to_dict()['autocomplete_suggestion']
             # results = json.loads(get_results(response))
             # logger.info(results)
             return Response(results, status=status.HTTP_200_OK)
         except Exception as err:
             logger.error(err)
-            return Response({"message": err.args[0]}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"message": err.args[0]},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)

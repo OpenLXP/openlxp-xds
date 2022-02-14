@@ -127,10 +127,10 @@ def more_like_this(doc_id, user=AnonymousUser()):
         }
     ]
     fields = [
-                "Course.CourseShortDescription",
-                "Course.CourseTitle",
-                "Course.CourseProvider"
-            ]
+        "Course.CourseShortDescription",
+        "Course.CourseTitle",
+        "Course.CourseProvider"
+    ]
     s = Search(using='default', index=os.environ.get('ES_INDEX'))
 
     # We're going to match based only on two fields
@@ -246,7 +246,7 @@ def suggest(partial, user=AnonymousUser()):
         query_dict['contexts'] = {
             'filter': [org.filter for org in user.organizations.all()]}
     s = s.suggest('autocomplete_suggestion', partial,
-                           completion=query_dict)
+                  completion=query_dict)
 
     # adds completion type suggestion to search query
 

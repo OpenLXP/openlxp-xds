@@ -255,9 +255,10 @@ OPEN_ENDPOINTS = [
     "/api/auth/validate",
     "/api/ui-configuration/",
     "/es-api/filter-search/",
-    "/es-api/more-like-this/[a-z0-9]+/",
+    "/es-api/more-like-this/[a-zA-Z0-9]+/",
     "/es-api/",
-    "/api/experiences/[a-z0-9]+/",
+    "/es-api/suggest/",
+    "/api/experiences/[a-zA-Z0-9]+/",
     "/api/spotlight-courses",
 ]
 
