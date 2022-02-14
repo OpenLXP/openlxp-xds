@@ -7,7 +7,7 @@ from configurations.models import XDSConfiguration
 from core.models import CourseSpotlight, SearchFilter, SearchSortOption
 from django.contrib.auth.models import AnonymousUser
 from elasticsearch_dsl import A, Document, Q, Search, connections
-from elasticsearch_dsl.query import MoreLikeThis
+from elasticsearch_dsl.query import MoreLikeThis, MultiMatch
 
 connections.create_connection(alias='default',
                               hosts=[os.environ.get('ES_HOST'), ], timeout=60)
@@ -227,6 +227,41 @@ def get_results(response):
     return json.dumps(resultObj)
 
 
+def suggest(partial, user=AnonymousUser()):
+    """
+    This method receives a partial and user to make a completion suggestion
+     request to Elastic
+    """
+    # apply org filtering to get query part of search
+    query_dict = {'field': 'Course.CourseTitle', 'fuzzy': {
+        'fuzziness': 'AUTO'
+    }}
+    s = Search(using='default', index=os.environ.get('ES_INDEX'))
+    if user.is_authenticated and user.organizations.count() > 0:
+        # generate queries for CourseProviderName from orgs
+        query_dict['contexts'] = {
+            'filter': [org.filter for org in user.organizations.all()]}
+    s = s.suggest('autocomplete_suggestion', partial,
+                           completion=query_dict)
+
+    # adds completion type suggestion to search query
+
+    # s = Search(using='default', index='autocomplete_test')
+    # s = user_organization_filtering(search=s, user=user)
+    # s = s.query(MultiMatch(query=partial,
+    #                        fields=["Course.CourseTitle",
+    #                                "Course.CourseTitle._2gram",
+    #                                "Course.CourseTitle._3gram",
+    #                                "Course.CourseTitle._index_prefix"],
+    #                        type="bool_prefix"))
+
+    logger.info(s.to_dict())
+    response = s.execute()
+    logger.info(s.to_dict())
+
+    return response
+
+
 def user_organization_filtering(
         search=Search(using='default', index=os.environ.get('ES_INDEX')),
         user=AnonymousUser()):
@@ -241,5 +276,8 @@ def user_organization_filtering(
         orgs = [Q("match", Course__CourseProviderName=org.filter)
                 for org in user.organizations.all()]
         # combine queries into a chained OR query
-        return search.query(functools.reduce(lambda a, b: a | b, orgs))
+        filtered_search = search.query(
+            functools.reduce(lambda a, b: a | b, orgs))
+        setattr(filtered_search, "minimum_should_match", 1)
+        return filtered_search
     return search

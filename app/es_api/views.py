@@ -4,11 +4,14 @@ import logging
 from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseServerError)
 from requests.exceptions import HTTPError
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import SearchFilter
 from es_api.utils.queries import (get_results, more_like_this,
-                                  search_by_filters, search_by_keyword)
+                                  search_by_filters, search_by_keyword,
+                                  suggest)
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -149,3 +152,24 @@ class FiltersView(APIView):
         else:
             logger.info(results)
             return HttpResponse(results, content_type="application/json")
+
+
+class SuggestionsView(APIView):
+    """
+    This method defines an API for retrieving suggested items from Elastic
+    """
+
+    def get(self, request):
+        # if partial not passed in or empty, return failstate
+        if ('partial' not in request.GET or request.GET['partial'] == ''):
+            return Response({"message": "No partial data sent"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            response = suggest(partial=request.GET['partial'], user=request.user)
+            results = response.suggest.to_dict()['autocomplete_suggestion']
+            # results = json.loads(get_results(response))
+            # logger.info(results)
+            return Response(results, status=status.HTTP_200_OK)
+        except Exception as err:
+            logger.error(err)
+            return Response({"message": err.args[0]}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
