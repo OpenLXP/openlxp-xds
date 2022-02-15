@@ -28,6 +28,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='xdsuser',
             name='organizations',
-            field=models.ManyToManyField(to='users.Organization'),
+            field=models.ManyToManyField(to='users.Organization', null=True, blank=True),
         ),
     ]
