@@ -5,6 +5,7 @@ import os
 
 from configurations.models import XDSConfiguration
 from core.models import CourseSpotlight, SearchFilter, SearchSortOption
+from users.models import Organization
 from django.contrib.auth.models import AnonymousUser
 from elasticsearch_dsl import A, Document, Q, Search, connections
 from elasticsearch_dsl.query import MoreLikeThis, MultiMatch
@@ -236,19 +237,30 @@ def suggest(partial, user=AnonymousUser()):
     This method receives a partial and user to make a completion suggestion
      request to Elastic
     """
-    # apply org filtering to get query part of search
+    # common settings for suggest query
     query_dict = {'field': 'Course.CourseTitle', 'fuzzy': {
         'fuzziness': 'AUTO'
     }}
     s = Search(using='default', index=os.environ.get('ES_INDEX'))
+
+    # check if user is logged in and in an organization
     if user.is_authenticated and user.organizations.count() > 0:
-        # generate queries for CourseProviderName from orgs
+        # gets context from orgs user is a member of
         query_dict['contexts'] = {
             'filter': [org.filter for org in user.organizations.all()]}
+    # check if there are any organizations
+    elif Organization.objects.count() > 0:
+        # add all organizations to filter so nothing is excluded
+        query_dict['contexts'] = {
+            'filter': [org.filter for org in Organization.objects.all()]}
+    # if no organizations
+    else:
+        # throw error, a filter is required for context suggestions
+        raise Exception("No Organizations configured")
+    
+    # adds completion type suggestion to search query
     s = s.suggest('autocomplete_suggestion', partial,
                   completion=query_dict)
-
-    # adds completion type suggestion to search query
 
     # s = Search(using='default', index='autocomplete_test')
     # s = user_organization_filtering(search=s, user=user)
