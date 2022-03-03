@@ -76,7 +76,7 @@ class XDSUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=200)
     last_name = models.CharField(max_length=200)
     date_joined = models.DateTimeField(default=timezone.now)
-    organizations = models.ManyToManyField(Organization, null=True, blank=True)
+    organizations = models.ManyToManyField(Organization, blank=True)
 
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)

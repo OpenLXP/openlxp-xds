@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import XDSUser, Organization
+from .models import Organization, XDSUser
 
 
 # Register your models here.
@@ -26,6 +26,7 @@ class XDSUserAdmin(UserAdmin):
                        'groups', 'user_permissions', 'organizations',)}
          ),
     )
+    filter_horizontal = ['organizations', 'groups', 'user_permissions', ]
 
 
 @admin.register(Organization)
