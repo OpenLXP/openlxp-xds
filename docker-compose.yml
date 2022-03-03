@@ -36,8 +36,6 @@ services:
       REQUESTS_CA_BUNDLE: '/etc/ssl/certs/ca-certificates.pem'
       AWS_CA_BUNDLE: '/etc/ssl/certs/ca-certificates.pem'
       SECRET_KEY_VAL: "${SECRET_KEY_VAL}"
-      ES_HOST: "${ES_HOST}"
-      ES_INDEX: "${ES_INDEX}"
       LOG_PATH: "${LOG_PATH}"
       ENTITY_ID: "${ENTITY_ID}"
       SP_PUBLIC_CERT: "${SP_PUBLIC_CERT}"

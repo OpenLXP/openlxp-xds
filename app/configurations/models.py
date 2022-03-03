@@ -19,6 +19,15 @@ class XDSConfiguration(TimeStampedModel):
         help_text='Enter the XIS api endpoint to query metadata',
         default='http://localhost:8080/api/metadata/')
 
+    target_xse_host = models.CharField(
+        max_length=200,
+        help_text='Enter the XSE Host to search',
+        default='http://localhost:9200')
+    target_xse_index = models.CharField(
+        max_length=200,
+        help_text='Enter the XSE Index to search',
+        default='metadata')
+
     def get_absolute_url(self):
         """ URL for displaying individual model records."""
         return reverse('Configuration-detail', args=[str(self.id)])
