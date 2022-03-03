@@ -1,299 +1,278 @@
 import functools
 import json
 import logging
-import os
 
 from configurations.models import XDSConfiguration
 from core.models import CourseSpotlight, SearchFilter, SearchSortOption
+from elasticsearch_dsl import A, Document, Q
+from elasticsearch_dsl.query import MoreLikeThis
 from users.models import Organization
-from django.contrib.auth.models import AnonymousUser
-from elasticsearch_dsl import A, Document, Q, Search, connections
-from elasticsearch_dsl.query import MoreLikeThis, MultiMatch
 
-connections.create_connection(alias='default',
-                              hosts=[os.environ.get('ES_HOST'), ], timeout=60)
+from .queries_base import BaseQueries
 
 logger = logging.getLogger('dict_config_logger')
 
 
-def get_page_start(page_number, page_size):
-    """This helper method returns the starting index of a page given the page
-         number, the size, and a start point of 0"""
-    if (page_number <= 1):
-        return 0
-    else:
-        start_index = (page_number - 1) * page_size
+class XSEQueries(BaseQueries):
 
-        return start_index
+    def get_page_start(self, page_number, page_size):
+        """
+        This helper method returns the starting index of a page given the page
+        number, the size, and a start point of 0
+        """
+        if (page_number <= 1):
+            return 0
+        else:
+            start_index = (page_number - 1) * page_size
 
+            return start_index
 
-def add_search_aggregations(filter_set, search):
-    """This helper method takes in a search object and a queryset of filters
-        then creates an aggregation for each filter"""
-    for curr_filter in filter_set:
+    def add_search_aggregations(self, filter_set):
+        """This helper method takes in a queryset of filters
+            then creates an aggregation for each filter"""
+        for curr_filter in filter_set:
 
-        # this is needed because elastic search only filters on keyword fields
-        full_field_name = curr_filter.field_name + '.keyword'
-        curr_agg = A(curr_filter.filter_type, field=full_field_name)
-        search.aggs.bucket(curr_filter.display_name, curr_agg)
+            # this is needed because elastic search only filters on keyword
+            # fields
+            full_field_name = curr_filter.field_name + '.keyword'
+            curr_agg = A(curr_filter.filter_type, field=full_field_name)
+            self.search.aggs.bucket(curr_filter.display_name, curr_agg)
 
-    return
+        return
 
+    def add_search_filters(self, filters):
+        """This helper method iterates through the filters and adds them
+            to the search query"""
+        result_search = self.search
 
-def add_search_filters(search, filters):
-    """This helper method iterates through the filters and adds them
-        to the search query"""
-    result_search = search
+        for filter_name in filters:
+            if filter_name != 'page' and filter_name != 'sort':
+                # .keyword is necessary for elastic search filtering
+                field_name = filter_name + '.keyword'
+                result_search = result_search\
+                    .filter('terms', **{field_name: filters[filter_name]})
 
-    for filter_name in filters:
-        if filter_name != 'page' and filter_name != 'sort':
-            # .keyword is necessary for elastic search filtering
-            field_name = filter_name + '.keyword'
-            result_search = result_search\
-                .filter('terms', **{field_name: filters[filter_name]})
+        self.search = result_search
 
-    return result_search
+    def add_search_sort(self, filters):
+        """This helper method checks if one of the configured sort options was
+            sent with the request then adds it to the search query
+            filters = object containing all the request parameters
+            returns -> modified Elasticsearch search object"""
+        # add sort if it was sent in the request
+        result_search = self.search
 
+        if 'sort' in filters:
+            key = filters['sort']
+            sort_option = SearchSortOption.objects.filter(field_name=key,
+                                                          active=True)
 
-def add_search_sort(search, filters):
-    """This helper method checks if one of the configured sort options was
-        sent with the request then adds it to the search query
-        search = Elasticsearch Search object
-        filters = object containing all the request parameters
-        returns -> modified Elasticsearch search object"""
-    # add sort if it was sent in the request
-    result_search = search
+            # checking that the passed field name is allowed
+            if sort_option:
+                # need to add .keyword for Elasticsearch
+                result_search = result_search.sort(key + '.keyword')
 
-    if 'sort' in filters:
-        key = filters['sort']
-        sort_option = SearchSortOption.objects.filter(field_name=key,
-                                                      active=True)
+        self.search = result_search
 
-        # checking that the passed field name is allowed
-        if sort_option:
-            # need to add .keyword for Elasticsearch
-            result_search = result_search.sort(key + '.keyword')
+    def search_by_keyword(self, keyword="", filters={}):
+        """This method takes in a keyword string + a page number and queries
+            ElasticSearch for the term then returns the Response Object"""
 
-    return result_search
+        q = Q("multi_match",
+              query=keyword,
+              fields=['Course.CourseShortDescription',
+                      'Course.CourseFullDescription', 'Course.CourseTitle'])
 
+        # setting up the search object
+        self.search = self.search.query(q)
 
-def search_by_keyword(keyword="", filters={}, user=AnonymousUser()):
-    """This method takes in a keyword string + a page number and queries
-        ElasticSearch for the term then returns the Response Object"""
+        self.user_organization_filtering()
 
-    q = Q("multi_match",
-          query=keyword,
-          fields=['Course.CourseShortDescription',
-                  'Course.CourseFullDescription', 'Course.CourseTitle'])
+        # add sort if it's part of the request
+        self.add_search_sort(filters=filters)
 
-    # setting up the search object
-    s = Search(using='default', index=os.environ.get('ES_INDEX')).query(q)
+        # getting the page size for result pagination
+        configuration = XDSConfiguration.objects.first()
+        uiConfig = configuration.xdsuiconfiguration
+        search_filters = SearchFilter.objects.filter(
+            xds_ui_configuration=uiConfig, active=True)
 
-    s = user_organization_filtering(search=s, user=user)
+        # create aggregations for each filter
+        self.add_search_aggregations(filter_set=search_filters)
 
-    # add sort if it's part of the request
-    s = add_search_sort(search=s, filters=filters)
+        # add filters to the search query
+        self.add_search_filters(filters=filters)
 
-    # getting the page size for result pagination
-    configuration = XDSConfiguration.objects.first()
-    uiConfig = configuration.xdsuiconfiguration
-    search_filters = SearchFilter.objects.filter(xds_ui_configuration=uiConfig,
-                                                 active=True)
+        page_size = uiConfig.search_results_per_page
+        start_index = self.get_page_start(int(filters['page']), page_size)
+        end_index = start_index + page_size
+        self.search = self.search[start_index:end_index]
 
-    # create aggregations for each filter
-    add_search_aggregations(filter_set=search_filters, search=s)
+        # call to elasticsearch to execute the query
+        response = self.search.execute()
+        logger.info(self.search.to_dict())
 
-    # add filters to the search query
-    s = add_search_filters(search=s, filters=filters)
+        return response
 
-    page_size = uiConfig.search_results_per_page
-    start_index = get_page_start(int(filters['page']), page_size)
-    end_index = start_index + page_size
-    s = s[start_index:end_index]
+    def more_like_this(self, doc_id):
+        """This method takes in a doc ID and queries the elasticsearch index for
+            courses with similar title or description"""
+        likeObj = [
+            {
+                "_index": self.index,
+                "_id": doc_id
+            }
+        ]
+        fields = [
+            "Course.CourseShortDescription",
+            "Course.CourseTitle",
+            "Course.CourseProvider"
+        ]
 
-    # call to elasticsearch to execute the query
-    response = s.execute()
-    logger.info(s.to_dict())
+        # We're going to match based only on two fields
+        self.search = self.search.query(
+            MoreLikeThis(like=likeObj, fields=fields))
+        self.user_organization_filtering()
 
-    return response
+        # only fetch the first 6 results
+        # TODO: make the size configurable
+        self.search = self.search[0:6]
+        response = self.search.execute()
+        logger.info(response)
 
+        return response
 
-def more_like_this(doc_id, user=AnonymousUser()):
-    """This method takes in a doc ID and queries the elasticsearch index for
-        courses with similar title or description"""
-    likeObj = [
-        {
-            "_index": os.environ.get('ES_INDEX'),
-            "_id": doc_id
-        }
-    ]
-    fields = [
-        "Course.CourseShortDescription",
-        "Course.CourseTitle",
-        "Course.CourseProvider"
-    ]
-    s = Search(using='default', index=os.environ.get('ES_INDEX'))
+    def spotlight_courses(self):
+        """This method queries elasticsearch for courses with ids matching the
+            ids of stored CourseSpotlight objects that are active"""
+        course_spotlights = CourseSpotlight.objects.filter(active=True)
+        id_list = []
+        result = []
 
-    # We're going to match based only on two fields
-    s = s.query(MoreLikeThis(like=likeObj, fields=fields))
-    s = user_organization_filtering(search=s, user=user)
+        for spotlight in course_spotlights:
+            id_list.append(spotlight.course_id)
 
-    # only fetch the first 6 results
-    # TODO: make the size configurable
-    s = s[0:6]
-    response = s.execute()
-    logger.info(response)
+        docs = Document.mget(id_list,
+                             using='default',
+                             index=self.index,
+                             raise_on_error=True,
+                             missing='none',)
 
-    return response
+        for doc in docs:
+            curr_dict = doc.to_dict(include_meta=True, skip_empty=True)
+            obj_data = curr_dict["_source"]
+            meta = {}
 
+            meta["id"] = curr_dict["_id"]
+            meta["index"] = curr_dict["_index"]
+            obj_data["meta"] = meta
+            result.append(obj_data)
 
-def spotlight_courses():
-    """This method queries elasticsearch for courses with ids matching the
-        ids of stored CourseSpotlight objects that are active"""
-    course_spotlights = CourseSpotlight.objects.filter(active=True)
-    id_list = []
-    result = []
+        return result
 
-    for spotlight in course_spotlights:
-        id_list.append(spotlight.course_id)
+    def search_by_filters(self, page_num, filters={}):
+        """This method takes in a page number + a dict of field names and values
+            and queries ElasticSearch for the term then returns the
+            Response Object"""
 
-    docs = Document.mget(id_list,
-                         using='default',
-                         index=os.environ.get('ES_INDEX'),
-                         raise_on_error=True,
-                         missing='none',)
+        # setting up the search object
+        self.user_organization_filtering()
+        # getting the page size for result pagination
+        configuration = XDSConfiguration.objects.first()
+        uiConfig = configuration.xdsuiconfiguration
 
-    for doc in docs:
-        curr_dict = doc.to_dict(include_meta=True, skip_empty=True)
-        obj_data = curr_dict["_source"]
-        meta = {}
+        for field_name in filters:
+            self.search = self.search.query(
+                Q("match", **{field_name: filters[field_name]}))
 
-        meta["id"] = curr_dict["_id"]
-        meta["index"] = curr_dict["_index"]
-        obj_data["meta"] = meta
-        result.append(obj_data)
+        page_size = uiConfig.search_results_per_page
+        start_index = self.get_page_start(page_num, page_size)
+        end_index = start_index + page_size
+        self.search = self.search[start_index:end_index]
 
-    return result
+        # call to elasticsearch to execute the query
+        response = self.search.execute()
+        logger.info(self.search.to_dict())
 
+        return response
 
-def search_by_filters(page_num, filters={}, user=AnonymousUser()):
-    """This method takes in a page number + a dict of field names and values
-        and queries ElasticSearch for the term then returns the
-        Response Object"""
-
-    # setting up the search object
-    s = Search(using='default', index=os.environ.get('ES_INDEX'))
-    s = user_organization_filtering(search=s, user=user)
-    # getting the page size for result pagination
-    configuration = XDSConfiguration.objects.first()
-    uiConfig = configuration.xdsuiconfiguration
-
-    for field_name in filters:
-        s = s.query(Q("match", **{field_name: filters[field_name]}))
-
-    page_size = uiConfig.search_results_per_page
-    start_index = get_page_start(page_num, page_size)
-    end_index = start_index + page_size
-    s = s[start_index:end_index]
-
-    # call to elasticsearch to execute the query
-    response = s.execute()
-    logger.info(s.to_dict())
-
-    return response
-
-
-def get_results(response):
-    """This helper method consumes the response of an ElasticSearch Query and
+    def get_results(self, response):
+        """
+        This helper method consumes the response of an ElasticSearch Query and
         adds the hits to an array then returns a dictionary representing the
-        results"""
-    hit_arr = []
-    agg_dict = response.aggregations.to_dict()
+        results
+        """
+        hit_arr = []
+        agg_dict = response.aggregations.to_dict()
 
-    for hit in response:
-        hit_dict = hit.to_dict()
+        for hit in response:
+            hit_dict = hit.to_dict()
 
-        # adding the meta data to the dictionary
-        hit_dict['meta'] = hit.meta.to_dict()
-        hit_arr.append(hit_dict)
+            # adding the meta data to the dictionary
+            hit_dict['meta'] = hit.meta.to_dict()
+            hit_arr.append(hit_dict)
 
-    for key in agg_dict:
-        search_filter = SearchFilter.objects.filter(display_name=key,
-                                                    active=True).first()
-        filter_obj = agg_dict[key]
-        filter_obj['field_name'] = search_filter.field_name
+        for key in agg_dict:
+            search_filter = SearchFilter.objects.filter(display_name=key,
+                                                        active=True).first()
+            filter_obj = agg_dict[key]
+            filter_obj['field_name'] = search_filter.field_name
 
-    resultObj = {
-        "hits": hit_arr,
-        "total": response.hits.total.value,
-        "aggregations": agg_dict
-    }
+        resultObj = {
+            "hits": hit_arr,
+            "total": response.hits.total.value,
+            "aggregations": agg_dict
+        }
 
-    return json.dumps(resultObj)
+        return json.dumps(resultObj)
 
+    def suggest(self, partial):
+        """
+        This method receives a partial to make a completion suggestion
+        request to Elastic
+        """
+        # common settings for suggest query
+        query_dict = {'field': 'autocomplete', 'fuzzy': {
+            'fuzziness': 'AUTO'
+        }}
 
-def suggest(partial, user=AnonymousUser()):
-    """
-    This method receives a partial and user to make a completion suggestion
-     request to Elastic
-    """
-    # common settings for suggest query
-    query_dict = {'field': 'Course.CourseTitle', 'fuzzy': {
-        'fuzziness': 'AUTO'
-    }}
-    s = Search(using='default', index=os.environ.get('ES_INDEX'))
+        # check if user is logged in and in an organization
+        if self.user.is_authenticated and self.user.organizations.count() > 0:
+            # gets context from orgs user is a member of
+            query_dict['contexts'] = {
+                'filter': [org.filter for org in
+                           self.user.organizations.all()]}
+        # check if there are any organizations
+        elif Organization.objects.count() > 0:
+            # add all organizations to filter so nothing is excluded
+            query_dict['contexts'] = {
+                'filter': [org.filter for org in Organization.objects.all()]}
+        # if no organizations
+        else:
+            # throw error, a filter is required for context suggestions
+            raise Exception("No Organizations configured")
 
-    # check if user is logged in and in an organization
-    if user.is_authenticated and user.organizations.count() > 0:
-        # gets context from orgs user is a member of
-        query_dict['contexts'] = {
-            'filter': [org.filter for org in user.organizations.all()]}
-    # check if there are any organizations
-    elif Organization.objects.count() > 0:
-        # add all organizations to filter so nothing is excluded
-        query_dict['contexts'] = {
-            'filter': [org.filter for org in Organization.objects.all()]}
-    # if no organizations
-    else:
-        # throw error, a filter is required for context suggestions
-        raise Exception("No Organizations configured")
-    
-    # adds completion type suggestion to search query
-    s = s.suggest('autocomplete_suggestion', partial,
-                  completion=query_dict)
+        # adds completion type suggestion to search query
+        self.search = self.search.suggest('autocomplete_suggestion', partial,
+                                          completion=query_dict)
 
-    # s = Search(using='default', index='autocomplete_test')
-    # s = user_organization_filtering(search=s, user=user)
-    # s = s.query(MultiMatch(query=partial,
-    #                        fields=["Course.CourseTitle",
-    #                                "Course.CourseTitle._2gram",
-    #                                "Course.CourseTitle._3gram",
-    #                                "Course.CourseTitle._index_prefix"],
-    #                        type="bool_prefix"))
+        response = self.search.execute()
 
-    logger.info(s.to_dict())
-    response = s.execute()
-    logger.info(s.to_dict())
+        return response
 
-    return response
-
-
-def user_organization_filtering(
-        search=Search(using='default', index=os.environ.get('ES_INDEX')),
-        user=AnonymousUser()):
-    """
-    This helper method takes a serach object and a request user and returns an
-     updated search with the organizations the user belongs to filtering the
-     query
-    """
-    # if user logged in and assigned organizations
-    if user.is_authenticated and user.organizations.count() > 0:
-        # generate queries for CourseProviderName from orgs
-        orgs = [Q("match", Course__CourseProviderName=org.filter)
-                for org in user.organizations.all()]
-        # combine queries into a chained OR query
-        filtered_search = search.query(
-            functools.reduce(lambda a, b: a | b, orgs))
-        setattr(filtered_search, "minimum_should_match", 1)
-        return filtered_search
-    return search
+    def user_organization_filtering(self):
+        """
+        This helper method returns an updated search with the organizations
+        the user belongs to filtering the query
+        """
+        # if user logged in and assigned organizations
+        if self.user.is_authenticated and self.user.organizations.count() > 0:
+            # generate queries for CourseProviderName from orgs
+            orgs = [Q("match", filter=org.filter)
+                    for org in self.user.organizations.all()]
+            # combine queries into a chained OR query
+            filtered_search = self.search.query(
+                functools.reduce(lambda a, b: a | b, orgs))
+            setattr(filtered_search, "minimum_should_match", 1)
+            self.search = filtered_search
+            return

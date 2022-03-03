@@ -1,6 +1,8 @@
 import json
 import logging
 
+from configurations.models import XDSConfiguration
+from core.models import SearchFilter
 from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseServerError)
 from requests.exceptions import HTTPError
@@ -8,10 +10,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.models import SearchFilter
-from es_api.utils.queries import (get_results, more_like_this,
-                                  search_by_filters, search_by_keyword,
-                                  suggest)
+from es_api.utils.queries import XSEQueries
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -54,9 +53,13 @@ class SearchIndexView(APIView):
                         filters[curr_filter.field_name] = \
                             request.GET.getlist(curr_filter.field_name)
 
-                response = search_by_keyword(
-                    keyword=keyword, filters=filters, user=request.user)
-                results = get_results(response)
+                queries = XSEQueries(
+                    XDSConfiguration.objects.first().target_xse_host,
+                    XDSConfiguration.objects.first().target_xse_index,
+                    user=request.user)
+                response = queries.search_by_keyword(
+                    keyword=keyword, filters=filters)
+                results = queries.get_results(response)
             except HTTPError as http_err:
                 logger.error(http_err)
                 return HttpResponseServerError(errorMsgJSON,
@@ -91,8 +94,12 @@ class GetMoreLikeThisView(APIView):
         errorMsgJSON = json.dumps(errorMsg)
 
         try:
-            response = more_like_this(doc_id=doc_id, user=request.user)
-            results = get_results(response)
+            queries = XSEQueries(
+                XDSConfiguration.objects.first().target_xse_host,
+                XDSConfiguration.objects.first().target_xse_index,
+                user=request.user)
+            response = queries.more_like_this(doc_id=doc_id)
+            results = queries.get_results(response)
         except HTTPError as http_err:
             logger.error(http_err)
             return HttpResponseServerError(errorMsgJSON,
@@ -132,15 +139,19 @@ class FiltersView(APIView):
                 request.GET['CourseInstance.CourseLevel']
 
         errorMsg = {
-            "message": "error executing ElasticSearch query; Please contact " +
-            "an administrator"
+            "message": "error executing ElasticSearch query; " +
+            "Please contact an administrator"
         }
         errorMsgJSON = json.dumps(errorMsg)
 
         try:
-            response = search_by_filters(
-                page_num=page_num, filters=filters, user=request.user)
-            results = get_results(response)
+            queries = XSEQueries(
+                XDSConfiguration.objects.first().target_xse_host,
+                XDSConfiguration.objects.first().target_xse_index,
+                user=request.user)
+            response = queries.search_by_filters(
+                page_num=page_num, filters=filters)
+            results = queries.get_results(response)
         except HTTPError as http_err:
             logger.error(http_err)
             return HttpResponseServerError(errorMsgJSON,
@@ -166,11 +177,14 @@ class SuggestionsView(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            response = suggest(
-                partial=request.GET['partial'], user=request.user)
+            queries = XSEQueries(
+                XDSConfiguration.objects.first().target_xse_host,
+                XDSConfiguration.objects.first().target_xse_index)
+            response = queries.suggest(
+                partial=request.GET['partial'])
+
             results = response.suggest.to_dict()['autocomplete_suggestion']
-            # results = json.loads(get_results(response))
-            # logger.info(results)
+
             return Response(results, status=status.HTTP_200_OK)
         except Exception as err:
             logger.error(err)
