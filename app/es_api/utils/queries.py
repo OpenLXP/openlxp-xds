@@ -81,7 +81,8 @@ class XSEQueries(BaseQueries):
         q = Q("multi_match",
               query=keyword,
               fields=['Course.CourseShortDescription',
-                      'Course.CourseFullDescription', 'Course.CourseTitle'])
+                      'Course.CourseFullDescription', 'Course.CourseTitle',
+                      'Course.CourseCode'])
 
         # setting up the search object
         self.search = self.search.query(q)
