@@ -1,15 +1,14 @@
 import json
-from unittest.mock import patch
-
-from django.test import SimpleTestCase, tag
-from elasticsearch_dsl import Q, Search
+from unittest import TestCase
+from unittest.mock import Mock, patch
 
 from configurations.models import XDSConfiguration, XDSUIConfiguration
 from core.models import CourseSpotlight, SearchFilter, SearchSortOption
-from es_api.utils.queries import (add_search_aggregations, add_search_filters,
-                                  add_search_sort, get_page_start, get_results,
-                                  more_like_this, search_by_filters,
-                                  search_by_keyword, spotlight_courses)
+from django.test import SimpleTestCase, tag
+from elasticsearch_dsl import Q, Search
+from es_api.utils.queries import XSEQueries
+from es_api.utils.queries_base import BaseQueries
+from users.models import Organization, XDSUser
 
 
 @tag('unit')
@@ -36,7 +35,8 @@ class UtilTests(SimpleTestCase):
                 to_dict.return_value = {
                     "key": "value"
                 }
-                result_json = get_results(response_obj)
+                query = XSEQueries('test', 'test')
+                result_json = query.get_results(response_obj)
                 result_dict = json.loads(result_json)
                 self.assertEqual(result_dict.get("total"), 1)
                 self.assertEqual(len(result_dict.get("hits")), 0)
@@ -52,7 +52,9 @@ class UtilTests(SimpleTestCase):
             es_execute.return_value = {
                 "test": "test"
             }
-            result = more_like_this(1)
+            query = XSEQueries('test', 'test')
+
+            result = query.more_like_this(1)
             self.assertEqual(result, resultVal)
 
     def test_search_by_keyword_error(self):
@@ -71,8 +73,9 @@ class UtilTests(SimpleTestCase):
             es_execute.return_value = {
                 "test": "test"
             }
+            query = XSEQueries('test', 'test')
 
-            self.assertRaises(ValueError, search_by_keyword, "test",
+            self.assertRaises(ValueError, query.search_by_keyword, "test",
                               {"page": "hello"})
 
     def test_get_page_start_positive(self):
@@ -80,8 +83,9 @@ class UtilTests(SimpleTestCase):
             called with correct values"""
         expected_result = 40
         expected_result2 = 1
-        actual_result = get_page_start(6, 8)
-        actual_result2 = get_page_start(2, 1)
+        query = XSEQueries('test', 'test')
+        actual_result = query.get_page_start(6, 8)
+        actual_result2 = query.get_page_start(2, 1)
 
         self.assertEqual(expected_result, actual_result)
         self.assertEqual(expected_result2, actual_result2)
@@ -91,8 +95,9 @@ class UtilTests(SimpleTestCase):
             number <= 1"""
         expected_result = 0
         expected_result2 = 0
-        actual_result = get_page_start(-4, 10)
-        actual_result2 = get_page_start(1, 33)
+        query = XSEQueries('test', 'test')
+        actual_result = query.get_page_start(-4, 10)
+        actual_result2 = query.get_page_start(1, 33)
 
         self.assertEqual(expected_result, actual_result)
         self.assertEqual(expected_result2, actual_result2)
@@ -102,12 +107,14 @@ class UtilTests(SimpleTestCase):
             object then no filter gets added to the search object"""
         q = Q("bool", should=[Q("match", Test="test")],
               minimum_should_match=1)
-        s = Search(using='default', index='something').query(q)
         filters = {
             "page": 1
         }
         hasFilter = False
-        result = add_search_filters(s, filters)
+        query = XSEQueries('test', 'test')
+        query.search = query.search.query(q)
+        query.add_search_filters(filters)
+        result = query.search
         result_dict = result.to_dict()
 
         if "filter" in result_dict['query']['bool']:
@@ -120,7 +127,8 @@ class UtilTests(SimpleTestCase):
             then the search object contains every filter passed in"""
         q = Q("bool", should=[Q("match", Test="test")],
               minimum_should_match=1)
-        s = Search(using='default', index='something').query(q)
+        query = XSEQueries('test', 'test')
+        query.search = query.search.query(q)
         filters = {
             "page": 1,
             "color": ["red", "blue"],
@@ -128,7 +136,8 @@ class UtilTests(SimpleTestCase):
             "type": "shirt"
         }
         hasFilter = False
-        result = add_search_filters(s, filters)
+        query.add_search_filters(filters)
+        result = query.search
         result_dict = result.to_dict()
 
         if "filter" in result_dict['query']['bool']:
@@ -148,13 +157,14 @@ class UtilTests(SimpleTestCase):
             filter object, no aggregations are added to the search object"""
         q = Q("bool", should=[Q("match", Test="test")],
               minimum_should_match=1)
-        s = Search(using='default', index='something').query(q)
+        query = XSEQueries('test', 'test')
+        query.search = query.search.query(q)
         filters = []
         hasAggs = False
 
-        add_search_aggregations(filters, s)
+        query.add_search_aggregations(filters)
 
-        result_dict = s.to_dict()
+        result_dict = query.search.to_dict()
 
         if 'aggs' in result_dict:
             hasAggs = True
@@ -166,7 +176,8 @@ class UtilTests(SimpleTestCase):
             filter object then aggregations are added to the search object"""
         q = Q("bool", should=[Q("match", Test="test")],
               minimum_should_match=1)
-        s = Search(using='default', index='something').query(q)
+        query = XSEQueries('test', 'test')
+        query.search = query.search.query(q)
         config = XDSConfiguration("test")
         uiConfig = XDSUIConfiguration(10, config)
         filterObj = SearchFilter(display_name='type',
@@ -178,9 +189,9 @@ class UtilTests(SimpleTestCase):
         filters = [filterObj, filterObj2, ]
         hasAggs = False
 
-        add_search_aggregations(filters, s)
+        query.add_search_aggregations(filters)
 
-        result_dict = s.to_dict()
+        result_dict = query.search.to_dict()
 
         if 'aggs' in result_dict:
             hasAggs = True
@@ -200,7 +211,8 @@ class UtilTests(SimpleTestCase):
             then the search object does not have a sort attribute"""
         q = Q("bool", should=[Q("match", Test="test")],
               minimum_should_match=1)
-        s = Search(using='default', index='something').query(q)
+        query = XSEQueries('test', 'test')
+        query.search = query.search.query(q)
 
         with patch('es_api.utils.queries.SearchSortOption.objects') as \
                 sortOpts:
@@ -208,7 +220,8 @@ class UtilTests(SimpleTestCase):
             filters = {"test": "Test"}
             hasSort = False
 
-            result = add_search_sort(search=s, filters=filters)
+            query.add_search_sort(filters=filters)
+            result = query.search
             result_dict = result.to_dict()
 
             if 'sort' in result_dict:
@@ -221,7 +234,8 @@ class UtilTests(SimpleTestCase):
             then the search object does have a sort attribute"""
         q = Q("bool", should=[Q("match", Test="test")],
               minimum_should_match=1)
-        s = Search(using='default', index='something').query(q)
+        query = XSEQueries('test', 'test')
+        query.search = query.search.query(q)
 
         with patch('es_api.utils.queries.SearchSortOption.objects') as \
                 sortOpts:
@@ -233,7 +247,8 @@ class UtilTests(SimpleTestCase):
             filters = {"sort": "test-field"}
             hasSort = False
 
-            result = add_search_sort(search=s, filters=filters)
+            query.add_search_sort(filters=filters)
+            result = query.search
             result_dict = result.to_dict()
 
             if 'sort' in result_dict:
@@ -268,7 +283,8 @@ class UtilTests(SimpleTestCase):
             instance_1 = mget.return_value
             mget.return_value = [instance_1, instance_1]
             instance_1.to_dict.side_effect = [doc_1, doc_2]
-            result = spotlight_courses()
+            query = XSEQueries('test', 'test')
+            result = query.spotlight_courses()
 
             self.assertEqual(len(result), 2)
             self.assertTrue('meta' in result[0])
@@ -282,7 +298,8 @@ class UtilTests(SimpleTestCase):
                 mget:
             spotlightObjs.filter.return_value = []
             mget.return_value = []
-            result = spotlight_courses()
+            query = XSEQueries('test', 'test')
+            result = query.spotlight_courses()
 
             self.assertEqual(len(result), 0)
 
@@ -299,6 +316,172 @@ class UtilTests(SimpleTestCase):
                 "test": "test"
             }
             es_execute.return_value = expected_result
-            result = search_by_filters(1, {'Course.CourseTitle': 'test'})
+            query = XSEQueries('test', 'test')
+            result = query.search_by_filters(1, {'Course.CourseTitle': 'test'})
 
             self.assertEqual(result, expected_result)
+
+
+class XDSUserTests(TestCase):
+    def test_user_org_filter_blank(self):
+        """
+        Test that user_organization_filtering returns a default Search
+        when given no parameters
+        """
+        query = XSEQueries('test', 'test')
+        expected_search = Search(using='default', index='test')
+        query.user_organization_filtering()
+        result = query.search
+
+        self.assertEqual(result, expected_search)
+
+    def test_user_org_filter_custom_search(self):
+        """
+        Test that user_organization_filtering returns the same Search
+        when given no user
+        """
+        query = XSEQueries('test', 'test')
+        expected_search = Search(using='default',
+                                 index='custom_testing_index')
+        query.search = expected_search
+        query.user_organization_filtering()
+        result = query.search
+
+        self.assertEqual(result, expected_search)
+
+    def test_user_org_filter_custom_user(self):
+        """
+        Test that user_organization_filtering returns a filtered search
+        when given a user
+        """
+        org0 = Organization(name='testName', filter='testFilter')
+        org0.save()
+        org1 = Organization(name='otherTestName', filter='otherTestFilter')
+        org1.save()
+        user = XDSUser.objects.create_user('test2@test.com',
+                                           'test1234',
+                                           first_name='Jane',
+                                           last_name='doe')
+        user.organizations.add(org0)
+        user.organizations.add(org1)
+
+        query = XSEQueries('test', 'test', user=user)
+
+        expected_search = Search(using='default',
+                                 index='test').\
+            query(Q("match", filter=org0.filter) |
+                  Q("match", filter=org1.filter))
+        query.user_organization_filtering()
+        result = query.search
+
+        self.assertIn(expected_search.to_dict()['query']['bool']['should'][0],
+                      result.to_dict()['query']['bool']['should'])
+        self.assertIn(expected_search.to_dict()['query']['bool']['should'][1],
+                      result.to_dict()['query']['bool']['should'])
+
+    def test_filter_options_blank(self):
+        """
+        Test that filter_options returns nothing when ES has no data
+        """
+        query = BaseQueries('test', 'test')
+        expected_resp = []
+
+        es = Mock()
+        exe = Mock()
+        query.search = es
+        es_return = {
+            'filter_terms': {
+                'buckets': []
+            }
+        }
+        es.execute.return_value = exe
+        exe.aggs = es_return
+        response = query.filter_options()
+
+        self.assertEqual(response, expected_resp)
+
+    def test_filter_options(self):
+        """
+        Test that filter_options returns keys when ES has data
+        """
+        query = BaseQueries('test', 'test')
+        es = Mock()
+        exe = Mock()
+        query.search = es
+        expected_resp = ['test0', 'test1', 'test2', 'test3']
+        es_return = {
+            'filter_terms': {
+                'buckets': [
+                    {'key': 'test0'},
+                    {'key': 'test1'},
+                    {'key': 'test2'},
+                    {'key': 'test3'},
+                ]
+            }
+        }
+        es.execute.return_value = exe
+        exe.aggs = es_return
+        response = query.filter_options()
+        self.assertEqual(response, expected_resp)
+
+    def test_suggest_no_orgs(self):
+        """Test that calling suggest with no orgs raises an error"""
+        query = XSEQueries('test', 'test')
+
+        self.assertRaises(Exception, query.suggest, 'test')
+
+    def test_suggest_with_orgs(self):
+        """Test that calling suggest with orgs filters the query"""
+        query = XSEQueries('test', 'test')
+
+        Organization.objects.all().delete()
+
+        org0 = Organization(name='testNameWithOrgs',
+                            filter='testFilterWithOrgs')
+        org0.save()
+        org1 = Organization(name='otherTestNameWithOrgs',
+                            filter='otherTestFilterWithOrgs')
+        org1.save()
+
+        es = Mock()
+        query.search = es
+
+        query.suggest('test')
+
+        print(es.suggest.call_args[1])
+
+        self.assertIn(
+            org0.filter,
+            es.suggest.call_args[1]['completion']['contexts']['filter'])
+        self.assertIn(
+            org1.filter,
+            es.suggest.call_args[1]['completion']['contexts']['filter'])
+        self.assertEqual(
+            len(es.suggest.call_args[1]['completion']['contexts']['filter']),
+            2)
+
+    def test_suggest_with_auth(self):
+        """Test that calling suggest with no orgs raises an error"""
+        Organization.objects.all().delete()
+
+        org0 = Organization(name='testNameWithAuth',
+                            filter='testFilterWithAuth')
+        org0.save()
+        user = XDSUser.objects.create_user('testing@test.com',
+                                           'test1234',
+                                           first_name='Jane',
+                                           last_name='doe')
+        user.organizations.add(org0)
+        query = XSEQueries('test', 'test', user=user)
+
+        es = Mock()
+        query.search = es
+
+        query.suggest('test')
+
+        self.assertIn(
+            org0.filter,
+            es.suggest.call_args[1]['completion']['contexts']['filter'])
+        self.assertEqual(
+            len(es.suggest.call_args[1]['completion']['contexts']['filter']),
+            1)

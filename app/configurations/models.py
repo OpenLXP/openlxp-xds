@@ -1,8 +1,14 @@
+import logging
+
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.forms import ValidationError
 from django.urls import reverse
+from es_api.utils.queries_base import BaseQueries
 from model_utils.models import TimeStampedModel
+from users.models import Organization
+
+logger = logging.getLogger('dict_config_logger')
 
 
 class XDSConfiguration(TimeStampedModel):
@@ -12,6 +18,15 @@ class XDSConfiguration(TimeStampedModel):
         max_length=200,
         help_text='Enter the XIS api endpoint to query metadata',
         default='http://localhost:8080/api/metadata/')
+
+    target_xse_host = models.CharField(
+        max_length=200,
+        help_text='Enter the XSE Host to search',
+        default='http://localhost:9200')
+    target_xse_index = models.CharField(
+        max_length=200,
+        help_text='Enter the XSE Index to search',
+        default='metadata')
 
     def get_absolute_url(self):
         """ URL for displaying individual model records."""
@@ -24,7 +39,15 @@ class XDSConfiguration(TimeStampedModel):
     def save(self, *args, **kwargs):
         if not self.pk and XDSConfiguration.objects.exists():
             raise ValidationError('XDSConfiguration model already exists')
-        return super(XDSConfiguration, self).save(*args, **kwargs)
+        super(XDSConfiguration, self).save(*args, **kwargs)
+        try:
+            queries = BaseQueries(self.target_xse_host, self.target_xse_index)
+            responseJSON = queries.filter_options()
+            for catalog in responseJSON:
+                if not Organization.objects.filter(filter=catalog).exists():
+                    Organization.objects.create(name=catalog, filter=catalog)
+        except Exception:
+            logger.info("Error loading catalogs from XSE")
 
 
 class XDSUIConfiguration(TimeStampedModel):

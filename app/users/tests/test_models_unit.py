@@ -1,8 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.test import tag
-
-from users.models import (LowercaseValidator, NumberValidator, SymbolValidator,
-                          UppercaseValidator, XDSUser)
+from users.models import (LowercaseValidator, NumberValidator, Organization,
+                          SymbolValidator, UppercaseValidator, XDSUser)
 
 from .test_setup import TestSetUp
 
@@ -140,3 +139,34 @@ class XDSUserTests(TestSetUp):
         self.assertFalse(xdsuser.is_staff)
         self.assertTrue(xdsuser.is_active)
         self.assertFalse(xdsuser.is_superuser)
+
+
+@tag('unit')
+class OrganizationTests(TestSetUp):
+    def test_create_organization(self):
+        """
+        Test to make sure organizations are correctly created
+        """
+        org0_filter = 'testFilter'
+        org0 = Organization(name='testName', filter=org0_filter)
+        org0.save()
+        org1_filter = 'otherTestFilter'
+        org1 = Organization(name='otherTestName', filter=org1_filter)
+        org1.save()
+
+        self.assertEqual(Organization.objects.count(), 2)
+        self.assertEqual(Organization.objects.get(name=org0.name).filter,
+                         org0_filter)
+        self.assertEqual(Organization.objects.get(name=org1.name).filter,
+                         org1_filter)
+
+    def test_str_organization(self):
+        """
+        Test to make sure casting organizations to string is the filter
+        """
+        org0_filter = 'testFilter'
+        org0 = Organization(name='testName', filter=org0_filter)
+        org0.save()
+
+        self.assertEqual(str(Organization.objects.get(name=org0.name)),
+                         org0_filter)
