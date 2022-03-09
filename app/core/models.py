@@ -1,11 +1,10 @@
+from configurations.models import XDSUIConfiguration
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.forms import ValidationError
 from django.urls import reverse
 from model_utils.models import TimeStampedModel
-
-from configurations.models import XDSUIConfiguration
 
 
 class SearchFilter(TimeStampedModel):
@@ -158,14 +157,22 @@ class InterestList(TimeStampedModel):
                               on_delete=models.CASCADE,
                               related_name="interest_lists")
     description = \
-        models.CharField(max_length=200,
-                         help_text='Enter a description for the list')
+        models.TextField(help_text='Enter a description for the list')
     subscribers = models.ManyToManyField(settings.AUTH_USER_MODEL,
                                          related_name="subscriptions")
     experiences = models.ManyToManyField(Experience,
                                          blank=True)
     name = models.CharField(max_length=200,
                             help_text="Enter the name of the list")
+    public = models.BooleanField(
+        help_text="Make list avaliable to other users", default=False)
+
+    def save(self, *args, **kwargs):
+        # If item is not public
+        if not self.public and self.id is not None:
+            # Remove any subscribers
+            self.subscribers.clear()
+        return super(InterestList, self).save(*args, **kwargs)
 
 
 class SavedFilter(TimeStampedModel):
