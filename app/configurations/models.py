@@ -1,12 +1,15 @@
 import logging
 
+from django.contrib.auth.models import Group
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.forms import ValidationError
 from django.urls import reverse
 from es_api.utils.queries_base import BaseQueries
 from model_utils.models import TimeStampedModel
-from users.models import Organization
+from users.models import Organization, XDSUser
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -27,6 +30,13 @@ class XDSConfiguration(TimeStampedModel):
         max_length=200,
         help_text='Enter the XSE Index to search',
         default='metadata')
+    default_user_group = models.ForeignKey(
+        Group,
+        on_delete=models.SET_NULL,
+        help_text='Select the group to assign new users to',
+        blank=True,
+        null=True
+    )
 
     def get_absolute_url(self):
         """ URL for displaying individual model records."""
@@ -48,6 +58,17 @@ class XDSConfiguration(TimeStampedModel):
                     Organization.objects.create(name=catalog, filter=catalog)
         except Exception:
             logger.info("Error loading catalogs from XSE")
+
+
+@receiver(post_save, sender=XDSUser)
+def add_default_group(sender, instance, created, **kwargs):
+    if created:
+        if(len(XDSConfiguration.objects.all()) > 0 and
+           XDSConfiguration.objects.first().default_user_group is not None):
+            base_permission_group = XDSConfiguration.objects.first()\
+                .default_user_group
+            instance.groups.add(base_permission_group)
+            instance.save()
 
 
 class XDSUIConfiguration(TimeStampedModel):
