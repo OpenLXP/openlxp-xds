@@ -89,7 +89,8 @@ class IsLoggedInView(APIView):
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-        return Response({'message': 'valid'}, status=status.HTTP_200_OK)
+        return Response({"user": XDSUserSerializer(request.user)},
+                        status=status.HTTP_200_OK)
 
 
 class LogoutView(APIView):
