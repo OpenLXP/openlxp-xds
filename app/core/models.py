@@ -165,7 +165,7 @@ class InterestList(TimeStampedModel):
     name = models.CharField(max_length=200,
                             help_text="Enter the name of the list")
     public = models.BooleanField(
-        help_text="Make list avaliable to other users", default=False)
+        help_text="Make list searchable to other users", default=False)
 
     def save(self, *args, **kwargs):
         # If item is not public
