@@ -9,7 +9,7 @@
 `XML Security Headers` : Download and install XML Security Headers for your operating system (`libxml2-dev` and `libxmlsec1-dev` in some linux distros).
 
 
-## Enviroment Variables
+## Environment Variables
 
 The list of required variables is below
 
@@ -158,7 +158,7 @@ Add an email list to send conformance alerts. When the email gets added, an emai
 
     For Experience Management Service and Experience discovery services, choose Message as a log type. 
 
-    `HTML File` : Upload the HTML file here, this HTML file helps to beutify the email body.
+    `HTML File` : Upload the HTML file here, this HTML file helps to beautify the email body.
 
     Please take the reference HTML file from the below path.
 
@@ -175,13 +175,30 @@ Add an email list to send conformance alerts. When the email gets added, an emai
         <a href="mailto: {unsubscribe:}">
 
 
+# Troubleshooting
+
+A good basic troubleshooting step is to use `docker-compose down` and then `docker-compose up --build` to rebuild the app image; however, this will delete everything in the database.
+
+## XMLSEC
+
+If the build fails when pip tries to install xmlsec, the issue is usually missing libraries.
+
+The xmlsec package includes instructions for installing the libraries on common platforms in the [documentation](https://github.com/mehcode/python-xmlsec/blob/master/README.rst#install)
+
+## Line Endings
+
+If the container builds but crashes or logs an error of unrecognized commands, the issue is usually incorrect line endings.
+
+Most IDEs/Text Editors allow changing the line endings, but the dos2unix utility can also be used to change the line endings of `start-app.sh` and `start-server.sh` to LF.
+
+
 # Update
 
-To update an existing installation, pull the latest changes using git
+To update an existing installation: 
 
-Then restart the application using `docker-compose restart`
+1. Pull the latest changes using git
 
-Occasionally some updates may require the application be rebuilt using `docker-compose up --build`, but this can also rebuild the database resulting in data loss
+2. Restart the application using `docker-compose restart`
 
 # Testing
 
@@ -204,43 +221,3 @@ Information on the settings for the authentication module can be found on the [O
 
 The setting `OPEN_ENDPOINTS` can be defined in the django settings file.
 It is a list of strings (regex notation may be used) for URLs that should not check for authentication or authorization.
-
-
-# Notification
-
-`Add email configuration` : To create customized email notifications content.
-    
-    `Subject`:  Add the subject line for the email. The default subject line is "OpenLXP Conformance Alerts."
-
-    `Email Content`: Add the email content here. The  Email Content is an optional field. 	
-        Note: When the log type is Message, Message goes in this field. 
-
-    `Signature`: Add Signature here.
-
-    `Email Us`: Add contact us email address here.
-
-    `FAQ URL` : Add FAQ URL here.
-
-    `Unsubscribe Email ID`: Add email ID to which Unsubscriber will send the emails.
-
-    `Logs Type`: Choose how logs will get sent to the Owners/Managers. Logs can be sent in two ways Attachment or Message.
-
-    For Experience Index Agents, and Experience Index Services, choose Attachment as a log type.
-
-    For Experience Management Service and Experience discovery services, choose Message as a log type. 
-
-    `HTML File` : Upload the HTML file here, this HTML file helps to beutify the email body.
-
-    Please take the reference HTML file from the below path.
-
-    https://github.com/OpenLXP/openlxp-notifications/blob/main/Email_Body.html
-
-    In the above reference HTML file, feel free to add your HTML design for the email body.
-
-        Note: Do not change the variables below as they display specific components in the email body.
-
-        <p>{paragraph:}</p>
-        {signature:}
-        <a href="mailto: {email_us:}">
-        <a href="{faq_url:}" >
-        <a href="mailto: {unsubscribe:}">
