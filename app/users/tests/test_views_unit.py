@@ -3,8 +3,8 @@ import json
 from django.test import tag
 from django.urls import reverse
 from rest_framework import status
-
 from users.models import XDSUser
+from users.serializers import XDSUserSerializer
 
 from .test_setup import TestSetUp
 
@@ -158,15 +158,17 @@ class ValidateTests(TestSetUp):
         """Test that the validate endpoint verifies an active session"""
         url_validate = reverse('users:validate')
 
-        validate_json = b'{"message":"valid"}'
-
         self.client.login(username=self.user_1_email,
                           password=self.user_1_password)
+
+        validate_dict = {"user": XDSUserSerializer(self.user_1).data}
 
         validate_response = self.client.get(url_validate)
 
         self.assertEqual(validate_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(validate_response.content, validate_json)
+        self.assertDictEqual(
+            json.loads(validate_response.content.decode('utf-8')),
+            validate_dict)
 
     def test_no_session_validate(self):
         """Test that the validate endpoint errors when no active session"""
