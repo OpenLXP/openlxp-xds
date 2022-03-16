@@ -7,9 +7,12 @@ from .models import (CourseInformationMapping, XDSConfiguration,
 # Register your models here.
 @admin.register(XDSConfiguration)
 class XDSConfigurationAdmin(admin.ModelAdmin):
-    list_display = ('target_xis_metadata_api', 'target_xse_host',
-                    'target_xse_index', 'created', 'modified',)
+    list_display = ('default_user_group', 'target_xis_metadata_api',
+                    'target_xse_host', 'target_xse_index', 'created',
+                    'modified',)
     fieldsets = (
+        ('XDS Settings', {'fields':
+                          ('default_user_group',)}),
         ('XIS Settings', {'fields':
                           ('target_xis_metadata_api',)}),
         ('XSE Settings', {'fields':

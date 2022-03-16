@@ -1,12 +1,13 @@
 import json
 from unittest.mock import patch
 
+from configurations.models import (CourseInformationMapping, XDSConfiguration,
+                                   XDSUIConfiguration)
+from django.contrib.auth.models import Group
 from django.test import tag
 from django.urls import reverse
 from rest_framework import status
-
-from configurations.models import (CourseInformationMapping, XDSConfiguration,
-                                   XDSUIConfiguration)
+from users.models import Organization, XDSUser
 
 from .test_setup import TestSetUp
 
@@ -79,3 +80,28 @@ class ModelTests(TestSetUp):
                          course_description)
         self.assertEqual(courseInformation.course_url, course_url)
         self.assertEqual(str(courseInformation), str(courseInformation.id))
+
+    def test_default_user_group(self):
+        """Test that default_user_group is used when defined"""
+        group = Group.objects.create(name="test")
+        XDSConfiguration.objects.update(default_user_group=group)
+        username = "testUser@test.com"
+        password = "pass123"
+        f_name = "Basic"
+        l_name = "User"
+        xdsuser = XDSUser.objects.create_user(
+            username, password, first_name=f_name, last_name=l_name)
+
+        self.assertIn(group, xdsuser.groups.all())
+        self.assertEqual(len(xdsuser.groups.all()), 1)
+
+    def test_create_organizations(self):
+        """Test that Organizations are created when updating the config"""
+        orgs = ["ABC", "XYZ", "LMN"]
+        with patch("configurations.models.BaseQueries") as bq:
+            bq().filter_options.return_value = orgs
+            XDSConfiguration.objects.first().save()
+
+            for o in Organization.objects.all():
+                self.assertIn(o.name, orgs)
+            self.assertEqual(len(Organization.objects.all()), len(orgs))

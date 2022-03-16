@@ -1,9 +1,8 @@
 from unittest.mock import patch
 
-from rest_framework.test import APITestCase
-
 from configurations.models import XDSConfiguration
 from core.models import Experience, InterestList, SavedFilter
+from rest_framework.test import APITestCase
 from users.models import XDSUser
 
 
@@ -73,13 +72,16 @@ class TestSetUp(APITestCase):
                                                   last_name='doe')
         self.list_1 = InterestList(owner=self.user_1,
                                    name="list 1",
-                                   description='list 1')
+                                   description='list 1',
+                                   public=True)
         self.list_2 = InterestList(owner=self.user_2,
                                    name="list 2",
-                                   description='list 2')
+                                   description='list 2',
+                                   public=True)
         self.list_3 = InterestList(owner=self.user_2,
                                    name="list 3",
-                                   description='list 3')
+                                   description='list 3',
+                                   public=True)
         self.filter_1 = SavedFilter(owner=self.user_1,
                                     name="Devops",
                                     query="randomQuery")
