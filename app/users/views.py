@@ -17,7 +17,7 @@ class RegisterView(generics.GenericAPIView):
         POST request that takes in: email, password, first_name, and last_name
         """
         # grab the data before its serialized
-        data = json.loads(request.body)
+        data = request.data
         username = data.get('email')
         password = data.get('password')
 
