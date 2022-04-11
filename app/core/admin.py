@@ -41,8 +41,8 @@ class ExperienceAdmin(admin.ModelAdmin):
 
 @admin.register(InterestList)
 class InterestListAdmin(admin.ModelAdmin):
-    list_display = ('owner', 'name', 'created', 'modified',)
-    fields = ['owner', 'name', 'description', 'experiences']
+    list_display = ('owner', 'name', 'public', 'created', 'modified',)
+    fields = ['owner', 'public', 'name', 'description', 'experiences']
 
 
 @admin.register(SavedFilter)

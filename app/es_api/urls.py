@@ -11,4 +11,5 @@ urlpatterns = [
          name='get-more-like-this'),
     path('filter-search/', views.FiltersView.as_view(), name='filters'),
     path('', views.SearchIndexView.as_view(), name='search-index'),
+    path('suggest/', views.SuggestionsView.as_view(), name='suggest'),
 ]

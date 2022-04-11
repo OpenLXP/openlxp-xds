@@ -2,6 +2,8 @@ import json
 import logging
 
 import requests
+from configurations.models import XDSConfiguration
+from core.models import CourseSpotlight, Experience, InterestList, SavedFilter
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
 from requests.exceptions import HTTPError
@@ -9,8 +11,6 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from configurations.models import XDSConfiguration
-from core.models import CourseSpotlight, Experience, InterestList, SavedFilter
 from xds_api.serializers import InterestListSerializer, SavedFilterSerializer
 from xds_api.utils.xds_utils import (get_request,
                                      get_spotlight_courses_api_url,
@@ -124,8 +124,9 @@ class InterestListsView(APIView):
         errorMsg = {
             "message": "Error fetching records please check the logs."
         }
-        # initially fetch all active records
-        querySet = InterestList.objects.all()
+        # initially fetch all public records not owned by the current user
+        querySet = InterestList.objects.filter(
+            public=True).exclude(owner=request.user)
 
         try:
             serializer_class = InterestListSerializer(querySet, many=True)
@@ -171,6 +172,13 @@ class InterestListView(APIView):
 
         try:
             queryset = InterestList.objects.get(pk=list_id)
+
+            # check if current user can view this list
+            if(not(queryset.public or queryset.owner == request.user or
+                   request.user in queryset.subscribers.all())):
+                return Response({"message": "The current user can not access"
+                                 + " this Interest List"},
+                                status=status.HTTP_401_UNAUTHORIZED)
 
             serializer_class = InterestListSerializer(queryset)
             # fetch actual courses for each id in the courses array
@@ -392,7 +400,7 @@ class InterestListSubscribeView(APIView):
             user = request.user
 
             # get interest list
-            interest_list = InterestList.objects.get(pk=list_id)
+            interest_list = InterestList.objects.get(pk=list_id, public=True)
             interest_list.subscribers.add(user)
             interest_list.save()
         except HTTPError as http_err:

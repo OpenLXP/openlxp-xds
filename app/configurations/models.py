@@ -1,8 +1,17 @@
+import logging
+
+from django.contrib.auth.models import Group
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.forms import ValidationError
 from django.urls import reverse
+from es_api.utils.queries_base import BaseQueries
 from model_utils.models import TimeStampedModel
+from users.models import Organization, XDSUser
+
+logger = logging.getLogger('dict_config_logger')
 
 
 class XDSConfiguration(TimeStampedModel):
@@ -12,6 +21,22 @@ class XDSConfiguration(TimeStampedModel):
         max_length=200,
         help_text='Enter the XIS api endpoint to query metadata',
         default='http://localhost:8080/api/metadata/')
+
+    target_xse_host = models.CharField(
+        max_length=200,
+        help_text='Enter the XSE Host to search',
+        default='http://localhost:9200')
+    target_xse_index = models.CharField(
+        max_length=200,
+        help_text='Enter the XSE Index to search',
+        default='metadata')
+    default_user_group = models.ForeignKey(
+        Group,
+        on_delete=models.SET_NULL,
+        help_text='Select the group to assign new users to',
+        blank=True,
+        null=True
+    )
 
     def get_absolute_url(self):
         """ URL for displaying individual model records."""
@@ -24,7 +49,33 @@ class XDSConfiguration(TimeStampedModel):
     def save(self, *args, **kwargs):
         if not self.pk and XDSConfiguration.objects.exists():
             raise ValidationError('XDSConfiguration model already exists')
-        return super(XDSConfiguration, self).save(*args, **kwargs)
+        super(XDSConfiguration, self).save(*args, **kwargs)
+        try:
+            queries = BaseQueries(self.target_xse_host, self.target_xse_index)
+            responseJSON = queries.filter_options()
+            for catalog in responseJSON:
+                if not Organization.objects.filter(filter=catalog).exists():
+                    Organization.objects.create(name=catalog, filter=catalog)
+        except Exception:
+            logger.info("Error loading catalogs from XSE")
+
+
+@receiver(post_save, sender=XDSUser)
+def add_default_group(sender, instance, created, **kwargs):
+    """
+    Adds new users to a default group specified in XDSConfiguration
+    Note: not applied to users created through admin panel, as they manually
+    select groups for the new user
+    """
+    if created:
+        # if default_user_group from XDSConfig is defined
+        if(len(XDSConfiguration.objects.all()) > 0 and
+           XDSConfiguration.objects.first().default_user_group is not None):
+            base_permission_group = XDSConfiguration.objects.first()\
+                .default_user_group
+            # add the new user to that group
+            instance.groups.add(base_permission_group)
+            instance.save()
 
 
 class XDSUIConfiguration(TimeStampedModel):

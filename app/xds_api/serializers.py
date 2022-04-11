@@ -1,12 +1,11 @@
 import logging
 
-from openlxp_notifications.management.commands.conformance_alerts import \
-    send_log_email_with_msg
-from rest_framework import serializers
-
 from configurations.models import CourseInformationMapping
 from core.models import (CourseDetailHighlight, Experience, InterestList,
                          SavedFilter, SearchSortOption)
+from openlxp_notifications.management.commands.conformance_alerts import \
+    send_log_email_with_msg
+from rest_framework import serializers
 from users.serializers import XDSUserSerializer
 
 logger = logging.getLogger('dict_config_logger')
@@ -79,15 +78,18 @@ class InterestListSerializer(serializers.ModelSerializer):
         name = validated_data.get("name")
         description = validated_data.get("description")
         owner = validated_data.get("owner")
+        public = validated_data.get("public", False)
         return InterestList.objects.create(name=name,
                                            description=description,
-                                           owner=owner)
+                                           owner=owner,
+                                           public=public)
 
     def update(self, instance, validated_data):
         instance.owner = validated_data.get('owner', instance.owner)
         instance.description = validated_data.get('description',
                                                   instance.description)
         instance.name = validated_data.get('name', instance.name)
+        instance.public = validated_data.get('public', instance.public)
         experiences = validated_data.get('experiences')
         # for each experience in the experience list, we add the experience to
         # the current interest list
