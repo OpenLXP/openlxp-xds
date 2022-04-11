@@ -51,7 +51,7 @@ class LoginView(generics.GenericAPIView):
         session id cookie on success
         """
         # read login info
-        data = json.loads(request.body)
+        data = request.data
         username = data.get("username")
         password = data.get("password")
 
