@@ -4,6 +4,7 @@ import logging
 
 from configurations.models import XDSConfiguration
 from core.models import CourseSpotlight, SearchFilter, SearchSortOption
+from django.core.exceptions import ObjectDoesNotExist
 from elasticsearch_dsl import A, Document, Q
 from elasticsearch_dsl.query import MoreLikeThis
 from users.models import Organization
@@ -251,7 +252,7 @@ class XSEQueries(BaseQueries):
         # if no organizations
         else:
             # throw error, a filter is required for context suggestions
-            raise Exception("No Organizations configured")
+            raise ObjectDoesNotExist("No Organizations configured")
 
         # adds completion type suggestion to search query
         self.search = self.search.suggest('autocomplete_suggestion', partial,
