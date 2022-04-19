@@ -1,5 +1,3 @@
-import json
-
 from django.contrib.auth import authenticate, login, logout
 from rest_framework import generics, status
 from rest_framework.response import Response
