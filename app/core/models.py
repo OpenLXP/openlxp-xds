@@ -97,7 +97,7 @@ class CourseDetailHighlight(TimeStampedModel):
                             help_text="Order in which highlight show on the "
                                       "course detail page (2 items per row)",
                             validators=[MinValueValidator(1,
-                                                          "rank shoud be at "
+                                                          "rank should be at "
                                                           "least 1")])
 
     def get_absolute_url(self):
@@ -115,11 +115,7 @@ class CourseDetailHighlight(TimeStampedModel):
         # only 8 highlights can be active at any given time
         if num_active_highlights >= 8:
             # if it's a new record and set to active
-            if not self.pk and self.active is True:
-                raise ValidationError('Max of 8 active highlight fields has '
-                                      'been reached.')
-            # updating old record to active
-            elif self.active is False:
+            if not self.pk:
                 raise ValidationError('Max of 8 active highlight fields has '
                                       'been reached.')
             else:
@@ -165,7 +161,7 @@ class InterestList(TimeStampedModel):
     name = models.CharField(max_length=200,
                             help_text="Enter the name of the list")
     public = models.BooleanField(
-        help_text="Make list avaliable to other users", default=False)
+        help_text="Make list searchable to other users", default=False)
 
     def save(self, *args, **kwargs):
         # If item is not public

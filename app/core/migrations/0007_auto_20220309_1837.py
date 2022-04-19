@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='interestlist',
             name='public',
-            field=models.BooleanField(default=False, help_text='Make list avaliable to other users'),
+            field=models.BooleanField(default=False, help_text='Make list searchable to other users'),
         ),
         migrations.AlterField(
             model_name='interestlist',

@@ -19,8 +19,8 @@ class SearchIndexView(APIView):
     """This method defines an API for sending keyword queries to ElasticSearch
             without using a model"""
 
-    def get(self, request):
-        results = []
+    def get_request_attributes(self, request):
+        """helper method to get attributes"""
         keyword = ''
         filters = {
             'page': '1'
@@ -34,6 +34,13 @@ class SearchIndexView(APIView):
 
         if (request.GET.get('sort')) and (request.GET.get('sort') != ''):
             filters['sort'] = request.GET['sort']
+
+        return keyword, filters
+
+    def get(self, request):
+        results = []
+
+        keyword, filters = self.get_request_attributes(request)
 
         if keyword != '':
             errorMsg = {
