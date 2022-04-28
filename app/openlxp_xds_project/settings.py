@@ -182,6 +182,8 @@ LOGGING = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+# CSRF_COOKIE_DOMAIN = '.deloitteopenlxp.com'
+# CSRF_TRUSTED_ORIGINS = ['.deloitteopenlxp.com', ]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -189,10 +191,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 AUTH_USER_MODEL = 'users.XDSUser'
 
 # openlxp_authentication settings openlxp_authentication documentation:
-# https://github.com/OpenLXP/openlxp-authentication#readme social_django
-# documentation: https://python-social-auth.readthedocs.io/en/latest/index
-# .html
-SOCIAL_AUTH_STRATEGY = 'openlxp_authentication.models.SAMLDBStrategy'
+# https://github.com/OpenLXP/openlxp-authentication#readme
+# social_django documentation:
+# https://python-social-auth.readthedocs.io/en/latest/index.html
+# SOCIAL_AUTH_STRATEGY = 'openlxp_authentication.models.SAMLDBStrategy'
 JSONFIELD_ENABLED = True
 USER_MODEL = 'users.XDSUser'
 SESSION_EXPIRATION = True
