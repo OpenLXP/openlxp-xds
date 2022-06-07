@@ -2,11 +2,12 @@ import functools
 import json
 import logging
 
-from configurations.models import XDSConfiguration
-from core.models import CourseSpotlight, SearchFilter, SearchSortOption
 from django.core.exceptions import ObjectDoesNotExist
 from elasticsearch_dsl import A, Document, Q
 from elasticsearch_dsl.query import MoreLikeThis
+
+from configurations.models import XDSConfiguration
+from core.models import CourseSpotlight, SearchFilter, SearchSortOption
 from users.models import Organization
 
 from .queries_base import BaseQueries
@@ -272,6 +273,18 @@ class XSEQueries(BaseQueries):
             # generate queries for CourseProviderName from orgs
             orgs = [Q("match", filter=org.filter)
                     for org in self.user.organizations.all()]
+            # combine queries into a chained OR query
+            filtered_search = self.search.query(
+                functools.reduce(lambda a, b: a | b, orgs))
+            setattr(filtered_search, "minimum_should_match", 1)
+            self.search = filtered_search
+            return
+        # if user not logged in but organizations exist
+        if not self.user.is_authenticated and\
+                Organization.objects.all().count() > 0:
+            # generate queries for CourseProviderName from orgs
+            orgs = [Q("match", filter=org.filter)
+                    for org in Organization.objects.all()]
             # combine queries into a chained OR query
             filtered_search = self.search.query(
                 functools.reduce(lambda a, b: a | b, orgs))
