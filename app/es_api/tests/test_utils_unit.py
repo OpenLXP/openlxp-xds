@@ -1,18 +1,18 @@
 import json
-from unittest import TestCase
 from unittest.mock import Mock, patch
+
+from django.test import TestCase, tag
+from elasticsearch_dsl import Q, Search
 
 from configurations.models import XDSConfiguration, XDSUIConfiguration
 from core.models import CourseSpotlight, SearchFilter, SearchSortOption
-from django.test import SimpleTestCase, tag
-from elasticsearch_dsl import Q, Search
 from es_api.utils.queries import XSEQueries
 from es_api.utils.queries_base import BaseQueries
 from users.models import Organization, XDSUser
 
 
 @tag('unit')
-class UtilTests(SimpleTestCase):
+class UtilTests(TestCase):
 
     def test_get_results(self):
         """Test that calling get results on a Response Object returns a \

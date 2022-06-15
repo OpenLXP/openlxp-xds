@@ -67,15 +67,14 @@ def add_default_group(sender, instance, created, **kwargs):
     Note: not applied to users created through admin panel, as they manually
     select groups for the new user
     """
-    if created:
-        # if default_user_group from XDSConfig is defined
-        if(len(XDSConfiguration.objects.all()) > 0 and
-           XDSConfiguration.objects.first().default_user_group is not None):
-            base_permission_group = XDSConfiguration.objects.first()\
-                .default_user_group
-            # add the new user to that group
-            instance.groups.add(base_permission_group)
-            instance.save()
+    # if new and default_user_group from XDSConfig is defined
+    if created and len(XDSConfiguration.objects.all()) > 0 and\
+            XDSConfiguration.objects.first().default_user_group is not None:
+        base_permission_group = XDSConfiguration.objects.first()\
+            .default_user_group
+        # add the new user to that group
+        instance.groups.add(base_permission_group)
+        instance.save()
 
 
 class XDSUIConfiguration(TimeStampedModel):
