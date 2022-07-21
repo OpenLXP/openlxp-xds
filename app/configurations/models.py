@@ -68,9 +68,9 @@ def add_default_group(sender, instance, created, **kwargs):
     select groups for the new user
     """
     # if new and default_user_group from XDSConfig is defined
-    if created and len(XDSConfiguration.objects.all()) > 0 and\
+    if created and len(XDSConfiguration.objects.all()) > 0 and \
             XDSConfiguration.objects.first().default_user_group is not None:
-        base_permission_group = XDSConfiguration.objects.first()\
+        base_permission_group = XDSConfiguration.objects.first() \
             .default_user_group
         # add the new user to that group
         instance.groups.add(base_permission_group)
@@ -111,16 +111,71 @@ class CourseInformationMapping(TimeStampedModel):
     """ Model to map course information"""
 
     course_title = models.CharField(max_length=200,
-                                    help_text="Enter the title of the course"
-                                              "found in the elasticsearch")
+                                    default="Course.CourseTitle",
+                                    help_text="Enter the mapping for the "
+                                              "title of the course found in "
+                                              "the elasticsearch")
     course_description = models.CharField(max_length=200,
-                                          help_text="Enter the description of"
+                                          default="Course."
+                                                  "CourseShortDescription",
+                                          help_text="Enter the mapping for the"
+                                                    " description of"
                                                     " the course found in the"
                                                     " elasticsearch")
     course_url = models.CharField(max_length=200,
-                                  help_text="Enter the url of the course found"
+                                  default="Course.CourseURL",
+                                  help_text="Enter the mapping for the "
+                                            "url of the course found"
                                             " in the elasticsearch")
 
+    course_code = models.CharField(max_length=200,
+                                   default="Course.CourseCode",
+                                   help_text="Enter the mapping for the "
+                                             "code of the course "
+                                             "found in the elasticsearch")
+
+    course_startDate = models.CharField(max_length=200,
+                                        default="Course_Instance.StartDate",
+                                        help_text="Enter the mapping for the "
+                                                  "start date of"
+                                                  " the course found in the"
+                                                  " elasticsearch")
+    course_endDate = models.CharField(max_length=200,
+                                      default="Course_Instance.EndDate",
+                                      help_text="Enter the mapping for the "
+                                                "end date of"
+                                                " the course found in the"
+                                                " elasticsearch")
+
+    course_provider = models.CharField(max_length=200,
+                                       default="Course.CourseProviderName",
+                                       help_text="Enter the mapping for the "
+                                                 "provider of"
+                                                 " the course found in the"
+                                                 " elasticsearch")
+
+    course_instructor = models.CharField(max_length=200,
+                                         default="Course_Instance.Instructor",
+                                         help_text="Enter the mapping for the "
+                                                   "instructor of"
+                                                   " the course found in the"
+                                                   " elasticsearch")
+
+    course_deliveryMode = models.CharField(max_length=200,
+                                           default="Course_Instance."
+                                                   "DeliveryMode",
+                                           help_text="Enter the mapping for "
+                                                     "the delivery mode of"
+                                                     " the course found in the"
+                                                     " elasticsearch")
+
+    course_thumbnail = models.CharField(max_length=200,
+                                        default="Technical_Information."
+                                                "Thumbnail",
+                                        help_text="Enter the mapping for the "
+                                                  "thumbnail of"
+                                                  " the course found in the"
+                                                  " elasticsearch")
     xds_ui_configuration = models \
         .OneToOneField(XDSUIConfiguration,
                        on_delete=models.CASCADE,

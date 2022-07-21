@@ -68,16 +68,33 @@ class ModelTests(TestSetUp):
         course_title = 'Course.TestTitle'
         course_description = 'Course.TestDescription'
         course_url = 'Course.TestUrl'
+        course_code = 'Course.TestCode'
+        course_startDate = 'Course.TestStartDate'
+        course_endDate = 'Course.TestEndDate'
+        course_provider = 'Course.TestProvider'
+        course_instructor = 'Course.TestInstructor'
+        course_deliveryMode = 'Course.TestDeliveryMode'
+        course_thumbnail = 'Course.TestThumbnail'
 
         courseInformation = CourseInformationMapping(
             xds_ui_configuration=uiConfig,
             course_title=course_title,
             course_description=course_description,
-            course_url=course_url)
+            course_url=course_url,
+            course_code=course_code,
+            course_startDate=course_startDate,
+            course_endDate=course_endDate,
+            course_provider=course_provider,
+            course_instructor=course_instructor,
+            course_deliveryMode=course_deliveryMode,
+            course_thumbnail=course_thumbnail)
 
         self.assertEqual(courseInformation.course_title, course_title)
         self.assertEqual(courseInformation.course_description,
                          course_description)
+        self.assertEqual(courseInformation.course_code, course_code)
+        self.assertEqual(courseInformation.course_instructor,
+                         course_instructor)
         self.assertEqual(courseInformation.course_url, course_url)
         self.assertEqual(str(courseInformation), str(courseInformation.id))
 
