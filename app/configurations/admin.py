@@ -11,12 +11,9 @@ class XDSConfigurationAdmin(admin.ModelAdmin):
                     'target_xse_host', 'target_xse_index', 'created',
                     'modified',)
     fieldsets = (
-        ('XDS Settings', {'fields':
-                          ('default_user_group',)}),
-        ('XIS Settings', {'fields':
-                          ('target_xis_metadata_api',)}),
-        ('XSE Settings', {'fields':
-                          ('target_xse_host', 'target_xse_index',)}))
+        ('XDS Settings', {'fields': ('default_user_group',)}),
+        ('XIS Settings', {'fields': ('target_xis_metadata_api',)}),
+        ('XSE Settings', {'fields': ('target_xse_host', 'target_xse_index',)}))
 
 
 @admin.register(XDSUIConfiguration)
@@ -30,7 +27,13 @@ class XDSUIConfigurationAdmin(admin.ModelAdmin):
 @admin.register(CourseInformationMapping)
 class CourseInformationMappingAdmin(admin.ModelAdmin):
     list_display = ('course_title', 'course_description',
-                    'course_url', 'xds_ui_configuration')
+                    'course_url', 'course_code', 'course_startDate',
+                    'course_endDate', 'course_provider',
+                    'course_instructor', 'course_deliveryMode',
+                    'course_thumbnail', 'xds_ui_configuration')
 
     fields = ['course_title', 'course_description',
-              'course_url', 'xds_ui_configuration']
+              'course_url', 'course_code', 'course_startDate',
+              'course_endDate', 'course_provider',
+              'course_instructor', 'course_deliveryMode',
+              'course_thumbnail', 'xds_ui_configuration']
