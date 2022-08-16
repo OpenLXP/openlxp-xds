@@ -209,7 +209,8 @@ class InterestListView(APIView):
                 while(response.status_code//10 == 20):
                     responseJSON += response.json()['results']
 
-                    if 'next' in response.json() and response.json()['next'] is not None:
+                    if 'next' in response.json() and\
+                            response.json()['next'] is not None:
                         response = get_request(response.json()['next'])
                     else:
                         break
