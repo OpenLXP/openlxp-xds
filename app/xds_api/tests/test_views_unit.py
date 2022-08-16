@@ -149,7 +149,10 @@ class InterestListsTests(TestSetUp):
             mock_response = get_request.return_value
             mock_response.status_code = 200
             mock_response.json.return_value = [{
-                "test": "value",
+                "results":
+                {
+                    "test": "value",
+                }
             }]
 
             # re-assign the mock to the get request
