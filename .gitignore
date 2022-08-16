@@ -216,3 +216,4 @@ dmypy.json
 .idea/
 .vscode/
 %SystemDrive%
+.DS_STORE
