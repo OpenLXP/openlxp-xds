@@ -27,9 +27,11 @@ class UtilTests(TestCase):
             }
             response_obj.hits.total.value = 1
             with patch('elasticsearch_dsl.response.hit.to_dict') as to_dict, \
-                patch('es_api.utils.queries.SearchFilter.objects') as sfObj, \
-                    patch('elasticsearch_dsl.response.aggregations.to_dict')\
-                    as agg:
+                    patch(
+                        'es_api.utils.queries.'
+                        'SearchFilter.objects') as sfObj, \
+                    patch('elasticsearch_dsl.response.aggregations.'
+                          'to_dict') as agg:
                 agg.return_value = {}
                 sfObj.return_value = []
                 to_dict.return_value = {
@@ -45,7 +47,9 @@ class UtilTests(TestCase):
     def test_more_like_this(self):
         """"Test that calling more_like_this returns whatever response elastic\
               search returns"""
-        with patch('elasticsearch_dsl.Search.execute') as es_execute:
+        with patch('elasticsearch_dsl.Search.execute') as es_execute, \
+                patch('es_api.utils.queries.'
+                      'CourseInformationMapping.objects'):
             resultVal = {
                 "test": "test"
             }
@@ -60,9 +64,12 @@ class UtilTests(TestCase):
     def test_search_by_keyword_error(self):
         """Test that calling search_by_keyword with a invalid page # \
              (e.g. string) value will throw an error"""
-        with patch('es_api.utils.queries.XDSConfiguration.objects') as xdsCfg,\
-            patch('elasticsearch_dsl.Search.execute') as es_execute,\
-                patch('es_api.utils.queries.SearchFilter.objects') as sfObj:
+        with patch('es_api.utils.queries.'
+                   'XDSConfiguration.objects') as xdsCfg, \
+                patch('elasticsearch_dsl.Search.execute') as es_execute, \
+                patch('es_api.utils.queries.SearchFilter.objects') as sfObj, \
+                patch('es_api.utils.queries.'
+                      'CourseInformationMapping.objects'):
             configObj = XDSConfiguration(target_xis_metadata_api="dsds")
             uiConfigObj = XDSUIConfiguration(search_results_per_page=10,
                                              xds_configuration=configObj)
@@ -305,7 +312,8 @@ class UtilTests(TestCase):
 
     def test_search_by_filters(self):
         """Test that calling search_by_filters returns an JSON object"""
-        with patch('es_api.utils.queries.XDSConfiguration.objects') as xdsCfg,\
+        with patch('es_api.utils.queries.'
+                   'XDSConfiguration.objects') as xdsCfg, \
                 patch('elasticsearch_dsl.Search.execute') as es_execute:
             configObj = XDSConfiguration(target_xis_metadata_api="dsds")
             uiConfigObj = XDSUIConfiguration(search_results_per_page=10,
@@ -368,7 +376,7 @@ class XDSUserTests(TestCase):
         query = XSEQueries('test', 'test', user=user)
 
         expected_search = Search(using='default',
-                                 index='test').\
+                                 index='test'). \
             query(Q("match", filter=org0.filter) |
                   Q("match", filter=org1.filter))
         query.user_organization_filtering()

@@ -216,3 +216,6 @@ dmypy.json
 .idea/
 .vscode/
 %SystemDrive%
+
+# MacOS stuff
+.DS_Store
