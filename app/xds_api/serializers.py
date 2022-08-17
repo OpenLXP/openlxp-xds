@@ -54,7 +54,7 @@ class CourseDetailHighlightSerializer(serializers.ModelSerializer):
 class CourseInformationMappingSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseInformationMapping
-        fields = ['course_title', 'course_description', 'course_url']
+        exclude = ['xds_ui_configuration']
 
 
 class ExperienceSerializer(serializers.ModelSerializer):

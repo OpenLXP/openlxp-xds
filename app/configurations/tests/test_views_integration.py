@@ -89,12 +89,27 @@ class ModelTests(TestCase):
         course_title = 'Course.TestTitle'
         course_description = 'Course.TestDescription'
         course_url = 'Course.TestUrl'
+        course_code = 'Course.TestCode'
+        course_startDate = 'Course.TestStartDate'
+        course_endDate = 'Course.TestEndDate'
+        course_provider = 'Course.TestProvider'
+        course_instructor = 'Course.TestInstructor'
+        course_deliveryMode = 'Course.TestDeliveryMode'
+        course_thumbnail = 'Course.TestThumbnail'
+
         with self.assertRaises(IntegrityError):
             for x in range(2):
                 course_information = CourseInformationMapping(
                     course_title=course_title,
                     course_description=course_description,
                     course_url=course_url,
+                    course_code=course_code,
+                    course_startDate=course_startDate,
+                    course_endDate=course_endDate,
+                    course_provider=course_provider,
+                    course_instructor=course_instructor,
+                    course_deliveryMode=course_deliveryMode,
+                    course_thumbnail=course_thumbnail,
                     xds_ui_configuration=ui_config)
                 # Attempting to save the data
                 course_information.save()
