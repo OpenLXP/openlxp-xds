@@ -83,8 +83,11 @@ class XSEQueries(BaseQueries):
         course_mapping = CourseInformationMapping.objects.first()
         fields = [
             course_mapping.course_title, course_mapping.course_description,
-            'P2881_Course_Profile.Provider', 'P2881_Core.Keywords',
-            'Course.CourseCode'
+            course_mapping.course_code, course_mapping.course_provider,
+            course_mapping.course_instructor,
+            course_mapping.course_deliveryMode,
+            'Course.CourseTitle', 'Course.ShortDescription',
+            'Course.CourseCode', 'Course.CourseProviderName'
         ]
 
         q = Q("multi_match",
