@@ -82,19 +82,23 @@ class GetExperiencesView(APIView):
             # make API call
             response = get_request(api_url)
             logger.info(api_url)
+            responseJSON = []
             # expected response is a list of 1 element
-            responseDict = response.json()
-            responseJSON = json.dumps(responseDict[0])
-            logger.info(responseJSON)
+            if(response.status_code//10 == 20):
+                responseJSON += response.json()['results']
 
-            if response.status_code == 200:
+                if responseJSON == []:
+                    return Response({"message": "Key not found"},
+                                    status.HTTP_404_NOT_FOUND)
+
+                logger.info(responseJSON)
                 formattedResponse = json.dumps(
-                    metadata_to_target(responseJSON))
+                    metadata_to_target(responseJSON[0]))
 
                 return HttpResponse(formattedResponse,
                                     content_type="application/json")
             else:
-                return HttpResponse(responseJSON,
+                return HttpResponse(response.json()['results'],
                                     content_type="application/json")
 
         except requests.exceptions.RequestException as e:
@@ -112,7 +116,7 @@ class GetExperiencesView(APIView):
 
         except KeyError as no_element_err:
             logger.error(no_element_err)
-            logger.error(responseDict)
+            logger.error(response)
             return Response(errorMsg, status.HTTP_404_NOT_FOUND)
 
 
@@ -201,7 +205,15 @@ class InterestListView(APIView):
 
                 # make API call
                 response = get_request(api_url)
-                responseJSON = json.dumps(response.json())
+                responseJSON = []
+                while(response.status_code//10 == 20):
+                    responseJSON += response.json()['results']
+
+                    if 'next' in response.json() and\
+                            response.json()['next'] is not None:
+                        response = get_request(response.json()['next'])
+                    else:
+                        break
 
                 if response.status_code == 200:
                     formattedResponse = metadata_to_target(responseJSON)
