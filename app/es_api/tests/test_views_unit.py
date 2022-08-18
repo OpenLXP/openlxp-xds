@@ -76,32 +76,40 @@ class ViewTests(APITestCase):
         Test that the /es-api/filter-search? endpoint returns code
         200 when successful
         """
-        url = "%s?Course.CourseTitle=hi" % (reverse('es_api:filters')) + \
-            "&Course.CourseProviderName=test&CourseInstance.CourseLevel=3"
-        with patch('es_api.views.XSEQueries') as query, \
-                patch('es_api.views.XDSConfiguration.objects'):
-            result_json = json.dumps({"test": "value"})
-            query.get_results.return_value = result_json
-            response = self.client.get(url)
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+        with patch('es_api.utils.queries.'
+                   'CourseInformationMapping.objects') as course_mapping:
+            course_mapping.course_title = "Course.CourseTitle"
+            course_mapping.course_provider = "Course.CourseProviderName"
+
+            url = "%s?Course.CourseTitle=hi" % (reverse('es_api:filters')) + \
+                  "&Course.CourseProviderName=" \
+                  "test&CourseInstance.CourseLevel=3"
+            with patch('es_api.views.XSEQueries') as query, \
+                    patch('es_api.views.XDSConfiguration.objects'):
+                result_json = json.dumps({"test": "value"})
+                query.get_results.return_value = result_json
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_filters_exception(self):
         """
         Test that the /es-api/filter-search? endpoint returns a server error
         when an exception is raised
         """
-        errorMsg = "error executing ElasticSearch query; Please contact " + \
-            "an administrator"
-        url = "%s?Course.CourseTitle=hi" % (reverse('es_api:filters'))
-        with patch('es_api.views.XSEQueries.search_by_filters') \
-                as searchByFilters:
-            searchByFilters.side_effect = [HTTPError]
-            response = self.client.get(url)
-            responseDict = json.loads(response.content)
-            # print(responseDict)
-            self.assertEqual(response.status_code,
-                             status.HTTP_500_INTERNAL_SERVER_ERROR)
-            self.assertEqual(responseDict['message'], errorMsg)
+        with patch('es_api.utils.queries.'
+                   'CourseInformationMapping.objects'):
+            errorMsg = "error executing ElasticSearch query; " \
+                       "Please contact " + \
+                       "an administrator"
+            url = "%s?Course.CourseTitle=hi" % (reverse('es_api:filters'))
+            with patch('es_api.views.XSEQueries.search_by_filters') \
+                    as searchByFilters:
+                searchByFilters.side_effect = [HTTPError]
+                response = self.client.get(url)
+                responseDict = json.loads(response.content)
+                self.assertEqual(response.status_code,
+                                 status.HTTP_500_INTERNAL_SERVER_ERROR)
+                self.assertEqual(responseDict['message'], errorMsg)
 
     def test_suggestions(self):
         """
