@@ -92,10 +92,10 @@ class GetExperiencesView(APIView):
             logger.info(api_url)
             responseJSON = []
             # expected response is a list of 1 element
-            if(response.status_code//10 == 20):
+            if response.status_code//10 == 20:
                 responseJSON += response.json()['results']
 
-                if responseJSON == []:
+                if not responseJSON:
                     return Response({"message": "Key not found"},
                                     status.HTTP_404_NOT_FOUND)
 
@@ -132,7 +132,7 @@ class InterestListsView(APIView):
     """Handles HTTP requests for interest lists"""
 
     def get(self, request):
-        """Retreives interest lists"""
+        """Retrieves interest lists"""
         errorMsg = {
             "message": "Error fetching records please check the logs."
         }
@@ -214,7 +214,7 @@ class InterestListView(APIView):
                 # make API call
                 response = get_request(api_url)
                 responseJSON = []
-                while(response.status_code//10 == 20):
+                while response.status_code//10 == 20:
                     responseJSON += response.json()['results']
 
                     if 'next' in response.json() and\
