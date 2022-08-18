@@ -38,7 +38,15 @@ class GetSpotlightCoursesView(APIView):
                 logger.info(api_url)
                 # make API call
                 response = get_request(api_url)
-                responseJSON = json.dumps(response.json())
+                responseJSON = []
+                while response.status_code // 10 == 20:
+                    responseJSON += response.json()['results']
+
+                    if 'next' in response.json() and \
+                            response.json()['next'] is not None:
+                        response = get_request(response.json()['next'])
+                    else:
+                        break
 
                 if response.status_code == 200:
                     formattedResponse = json.dumps(
