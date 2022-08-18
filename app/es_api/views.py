@@ -1,8 +1,6 @@
 import json
 import logging
 
-from configurations.models import XDSConfiguration
-from core.models import SearchFilter
 from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseServerError)
 from requests.exceptions import HTTPError
@@ -10,6 +8,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from configurations.models import CourseInformationMapping, XDSConfiguration
+from core.models import SearchFilter
 from es_api.utils.queries import XSEQueries
 
 logger = logging.getLogger('dict_config_logger')
@@ -124,6 +124,8 @@ class FiltersView(APIView):
     """This method defines an API for performing a filter search"""
 
     def get(self, request):
+        course_mapping = CourseInformationMapping.objects.first()
+
         results = []
         filters = {}
         page_num = 1
@@ -131,14 +133,15 @@ class FiltersView(APIView):
         if (request.GET.get('p')) and (request.GET.get('p') != ''):
             page_num = int(request.GET['p'])
 
-        if (request.GET.get('Course.CourseTitle') and
-                request.GET.get('Course.CourseTitle') != ''):
-            filters['Course.CourseTitle'] = request.GET['Course.CourseTitle']
+        if (request.GET.get(course_mapping.course_title) and
+                request.GET.get(course_mapping.course_title) != ''):
+            filters[course_mapping.course_title] = \
+                request.GET[course_mapping.course_title]
 
-        if (request.GET.get('Course.CourseProviderName') and
-                request.GET.get('Course.CourseProviderName') != ''):
-            filters['Course.CourseProviderName'] = \
-                request.GET['Course.CourseProviderName']
+        if (request.GET.get(course_mapping.course_provider) and
+                request.GET.get(course_mapping.course_provider) != ''):
+            filters[course_mapping.course_provider] = \
+                request.GET[course_mapping.course_provider]
 
         if (request.GET.get('CourseInstance.CourseLevel') and
                 request.GET.get('CourseInstance.CourseLevel') != ''):

@@ -138,7 +138,7 @@ class XSEQueries(BaseQueries):
         course_mapping = CourseInformationMapping.objects.first()
         fields = [
             course_mapping.course_title, course_mapping.course_description,
-            'P2881_Course_Profile.Provider'
+            course_mapping.course_provider
         ]
 
         # We're going to match based only on two fields

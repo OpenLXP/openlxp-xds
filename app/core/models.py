@@ -1,10 +1,11 @@
-from configurations.models import XDSUIConfiguration
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.forms import ValidationError
 from django.urls import reverse
 from model_utils.models import TimeStampedModel
+
+from configurations.models import XDSUIConfiguration
 
 
 class SearchFilter(TimeStampedModel):
