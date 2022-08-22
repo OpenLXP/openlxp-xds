@@ -61,7 +61,7 @@ def format_metadata(exp_record):
 def metadata_to_target(metadata_JSON):
     """This method takes in a JSON representation of a record and transforms it
         into the search engine format"""
-    if isinstance(metadata_JSON, list):
+    if isinstance(metadata_JSON, list) or isinstance(metadata_JSON, dict):
         metadata_dict = metadata_JSON
     else:
         metadata_dict = json.loads(metadata_JSON)
