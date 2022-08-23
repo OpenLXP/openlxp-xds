@@ -1,12 +1,12 @@
 import logging
 
-from openlxp_notifications.management.commands.conformance_alerts import \
-    send_log_email_with_msg
 from rest_framework import serializers
 
 from configurations.models import CourseInformationMapping
 from core.models import (CourseDetailHighlight, Experience, InterestList,
                          SavedFilter, SearchSortOption)
+from openlxp_notifications.management.commands.conformance_alerts import \
+    send_log_email_with_msg
 from users.serializers import XDSUserSerializer
 
 logger = logging.getLogger('dict_config_logger')
@@ -106,15 +106,24 @@ class InterestListSerializer(serializers.ModelSerializer):
             if exp not in experiences:
                 instance.experiences.remove(exp)
 
+        logger.info(course_added_count)
         #  writing content to file
-        msg = ("Count of New Courses added: " + str(course_added_count))
+        msg = ("This email serves as a notification from the Enterprise Course Catalog.<br>" +
+               f"A total of \"{course_added_count}\" course(s) have been added to your subscribed list, \"{instance.name}\".<br>" +
+               "To view these new courses within Enterprise Course Catalog, please navigate to this link below:<br>" +
+               f"<a href=\"https://xds.deloitteopenlxp.com/lists/{instance.id}\">https://xds.deloitteopenlxp.com/lists/{instance.id}</a>")
+
+        # logger.info(msg)
 
         list_subscribers = []
-        for each_subscriber in instance.subscribers.all():
-            list_subscribers.append(each_subscriber.email)
+        if course_added_count > 0:
+            for each_subscriber in instance.subscribers.all():
+                logger.info(f"send to {each_subscriber.email}")
+                send_log_email_with_msg(
+                    [each_subscriber.email, ], f"Hi {each_subscriber.first_name},<br>{msg}")
+                # logger.info(list_subscribers.append(each_subscriber.email))
 
         instance.save()
-        send_log_email_with_msg(list_subscribers, msg)
         return instance
 
 
