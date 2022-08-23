@@ -108,7 +108,7 @@ class InterestListSerializer(serializers.ModelSerializer):
 
         logger.info(course_added_count)
         #  writing content to file
-        msg = ("This email serves as a notification from the Enterprise Course Catalog.<br>" +
+        msg = ("This email serves as a notification from the Enterprise Course Catalog.<br><br>" +
                f"A total of \"{course_added_count}\" course(s) have been added to your subscribed list, \"{instance.name}\".<br>" +
                "To view these new courses within Enterprise Course Catalog, please navigate to this link below:<br>" +
                f"<a href=\"https://xds.deloitteopenlxp.com/lists/{instance.id}\">https://xds.deloitteopenlxp.com/lists/{instance.id}</a>")
@@ -120,7 +120,7 @@ class InterestListSerializer(serializers.ModelSerializer):
             for each_subscriber in instance.subscribers.all():
                 logger.info(f"send to {each_subscriber.email}")
                 send_log_email_with_msg(
-                    [each_subscriber.email, ], f"Hi {each_subscriber.first_name},<br>{msg}")
+                    [each_subscriber.email, ], f"Hi {each_subscriber.first_name},<br><br>{msg}")
                 # logger.info(list_subscribers.append(each_subscriber.email))
 
         instance.save()
