@@ -105,8 +105,8 @@ class GetMoreLikeThisView(APIView):
                 XDSConfiguration.objects.first().target_xse_host,
                 XDSConfiguration.objects.first().target_xse_index,
                 user=request.user)
-            response = queries.more_like_this(doc_id=doc_id)
-            results = queries.get_results(response)
+            results = queries.more_like_this(doc_id=doc_id)
+            # results = queries.get_results(response)
         except HTTPError as http_err:
             logger.error(http_err)
             return HttpResponseServerError(errorMsgJSON,

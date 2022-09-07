@@ -33,7 +33,6 @@ class XSEQueries(BaseQueries):
         """This helper method takes in a queryset of filters
             then creates an aggregation for each filter"""
         for curr_filter in filter_set:
-
             # this is needed because elastic search only filters on keyword
             # fields
             full_field_name = curr_filter.field_name + '.keyword'
@@ -51,7 +50,7 @@ class XSEQueries(BaseQueries):
             if filter_name != 'page' and filter_name != 'sort':
                 # .keyword is necessary for elastic search filtering
                 field_name = filter_name + '.keyword'
-                result_search = result_search\
+                result_search = result_search \
                     .filter('terms', **{field_name: filters[filter_name]})
 
         self.search = result_search
@@ -128,31 +127,74 @@ class XSEQueries(BaseQueries):
     def more_like_this(self, doc_id):
         """This method takes in a doc ID and queries the elasticsearch index for
             courses with similar title or description"""
-        likeObj = [
-            {
-                "_index": self.index,
-                "_id": doc_id
-            }
-        ]
+        # likeObj = [
+        #     {
+        #         "_index": self.index,
+        #         "_id": doc_id
+        #     }
+        # ]
+        #
+        # course_mapping = CourseInformationMapping.objects.first()
+        # fields = [
+        #     course_mapping.course_title, course_mapping.course_description,
+        #     course_mapping.course_provider
+        # ]
+        #
+        # # We're going to match based only on two fields
+        # # self.search = self.search.query(
+        # #     MoreLikeThis(like=likeObj, fields=fields))
+        # mkh = [Q("match", metadata_key_hash=mkh)
+        #        for mkh in [
+        #            'c6349767ebcc1c026828acd3dca1eef4ee97a051ecedbd691148dd58eab42e3c8951ae435bdb664c40ef08e3635f144fc4a84ae0f41448d1f89ef0055acb75f7',
+        #            '55b79f07aaf0116430cf21ef55d785d4f99047fb6ab5325d3ae50a9fd693e5f6d2a21f9e8819cbf8cad08246615e338b9695d1525b23cb0afee66c317a1e10a5',
+        #            '3ab3a9ea67c5b2286660d079733e1e0fa2f26cfe76b3dc7c32dec20831f14ed80a2a2496e458f74ca020c0e6d2e0cca5655862b8254f747315de7dfc2e648413',
+        #            '7bd45f82cbe5d9810d3faa00270938b75b1770165f77d130ade81365f2591894c82e403e11caa740985ebe2560929bfca9e2629682b62798d43edbbd5e79b569',
+        #            '38627867975674d198e8bcd5adf38bd9bb1c811e6b82e02689facd7ec5c1fedec0545a6d1d58930cc35e498e401a942e20f6006851959962a359f753c416c450']]
+        # self.user_organization_filtering()
+        # # combine queries into a chained OR query
+        # filtered_search = self.search.query(
+        #     functools.reduce(lambda a, b: a | b, mkh))
+        # setattr(filtered_search, "minimum_should_match", 1)
+        # self.search = filtered_search
+        #
+        # # only fetch the first 6 results
+        # # self.search = self.search[0:6]
+        # # response = self.search.execute()
+        # response = self.search
+        # logger.info(response)
+        #
+        # return response
 
-        course_mapping = CourseInformationMapping.objects.first()
-        fields = [
-            course_mapping.course_title, course_mapping.course_description,
-            course_mapping.course_provider
-        ]
+        id_list = [
+            'c6349767ebcc1c026828acd3dca1eef4ee97a051ecedbd691148dd58eab42e3c8951ae435bdb664c40ef08e3635f144fc4a84ae0f41448d1f89ef0055acb75f7',
+            '55b79f07aaf0116430cf21ef55d785d4f99047fb6ab5325d3ae50a9fd693e5f6d2a21f9e8819cbf8cad08246615e338b9695d1525b23cb0afee66c317a1e10a5',
+            '3ab3a9ea67c5b2286660d079733e1e0fa2f26cfe76b3dc7c32dec20831f14ed80a2a2496e458f74ca020c0e6d2e0cca5655862b8254f747315de7dfc2e648413',
+            '7bd45f82cbe5d9810d3faa00270938b75b1770165f77d130ade81365f2591894c82e403e11caa740985ebe2560929bfca9e2629682b62798d43edbbd5e79b569',
+            '38627867975674d198e8bcd5adf38bd9bb1c811e6b82e02689facd7ec5c1fedec0545a6d1d58930cc35e498e401a942e20f6006851959962a359f753c416c450']
 
-        # We're going to match based only on two fields
-        self.search = self.search.query(
-            MoreLikeThis(like=likeObj, fields=fields))
-        self.user_organization_filtering()
+        # id_list = []
+        result = []
 
-        # only fetch the first 6 results
-        # TODO: make the size configurable
-        self.search = self.search[0:6]
-        response = self.search.execute()
-        logger.info(response)
+        # for spotlight in course_spotlights:
+        #     id_list.append(spotlight.course_id)
 
-        return response
+        docs = Document.mget(id_list,
+                             using='default',
+                             index=self.index,
+                             raise_on_error=True,
+                             missing='none', )
+
+        for doc in docs:
+            curr_dict = doc.to_dict(include_meta=True, skip_empty=True)
+            obj_data = curr_dict["_source"]
+            meta = {}
+
+            meta["id"] = curr_dict["_id"]
+            meta["index"] = curr_dict["_index"]
+            obj_data["meta"] = meta
+            result.append(obj_data)
+
+        return result
 
     def spotlight_courses(self):
         """This method queries elasticsearch for courses with ids matching the
@@ -168,7 +210,7 @@ class XSEQueries(BaseQueries):
                              using='default',
                              index=self.index,
                              raise_on_error=True,
-                             missing='none',)
+                             missing='none', )
 
         for doc in docs:
             curr_dict = doc.to_dict(include_meta=True, skip_empty=True)
@@ -289,7 +331,7 @@ class XSEQueries(BaseQueries):
             self.search = filtered_search
             return
         # if user not logged in but organizations exist
-        if not self.user.is_authenticated and\
+        if not self.user.is_authenticated and \
                 Organization.objects.all().count() > 0:
             # generate queries for CourseProviderName from orgs
             orgs = [Q("match", filter=org.filter)
