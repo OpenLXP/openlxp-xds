@@ -45,7 +45,7 @@ class SearchIndexView(APIView):
         if keyword != '':
             errorMsg = {
                 "message": "error executing ElasticSearch query; " +
-                "Please contact an administrator"
+                           "Please contact an administrator"
             }
             errorMsgJSON = json.dumps(errorMsg)
 
@@ -96,7 +96,7 @@ class GetMoreLikeThisView(APIView):
 
         errorMsg = {
             "message": "error executing ElasticSearch query; " +
-            "please check the logs"
+                       "please check the logs"
         }
         errorMsgJSON = json.dumps(errorMsg)
 
@@ -106,8 +106,12 @@ class GetMoreLikeThisView(APIView):
                 XDSConfiguration.objects.first().target_xse_index,
                 user=request.user)
             results = queries.more_like_this(doc_id=doc_id)
-            results = json.dumps(results)
-            results = results
+            result = {'hits': results,
+                      'total': 1146,
+                      'aggregations': {}
+                      }
+            results = json.dumps(result)
+
             # results = queries.get_results(response)
         except HTTPError as http_err:
             logger.error(http_err)
@@ -152,7 +156,7 @@ class FiltersView(APIView):
 
         errorMsg = {
             "message": "error executing ElasticSearch query; " +
-            "Please contact an administrator"
+                       "Please contact an administrator"
         }
         errorMsgJSON = json.dumps(errorMsg)
 
