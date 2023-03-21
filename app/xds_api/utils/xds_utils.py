@@ -11,7 +11,7 @@ from core.models import CourseSpotlight, Experience
 def get_request(request_url):
     """This method handles a simple HTTP get request to the passe in
         request_url"""
-    response = requests.get(request_url)
+    response = requests.get(request_url, timeout=3.0)
 
     return response
 
