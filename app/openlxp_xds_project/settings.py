@@ -260,6 +260,7 @@ OPEN_ENDPOINTS = [
     "/es-api/more-like-this/[a-zA-Z0-9]+/",
     "/es-api/",
     "/es-api/suggest/",
+    "/es-api/derived-from/",
     "/api/experiences/[a-zA-Z0-9]+/",
     "/api/spotlight-courses",
 ]
