@@ -87,6 +87,66 @@ class SearchIndexView(APIView):
                                           content_type="application/json")
 
 
+class SearchDerivedView(APIView):
+    """This method defines an API for querying to ElasticSearch
+            for derived experiences"""
+
+    def get_request_attributes(self, request):
+        """helper method to get attributes"""
+        reference = ''
+        filters = {
+            'page': '1'
+        }
+
+        if request.GET.get('reference'):
+            reference = request.GET['reference']
+
+        if (request.GET.get('p')) and (request.GET.get('p') != ''):
+            filters['page'] = request.GET['p']
+
+        return reference, filters
+
+    def get(self, request):
+        results = []
+
+        reference, filters = self.get_request_attributes(request)
+
+        if reference != '':
+            errorMsg = {
+                "message": "error executing ElasticSearch query; " +
+                "Please contact an administrator"
+            }
+            errorMsgJSON = json.dumps(errorMsg)
+
+            try:
+                queries = XSEQueries(
+                    XDSConfiguration.objects.first().target_xse_host,
+                    XDSConfiguration.objects.first().target_xse_index,
+                    user=request.user)
+                response = queries.search_for_derived(
+                    reference=reference, filters=filters)
+                results = queries.get_results(response)
+            except HTTPError as http_err:
+                logger.error(http_err)
+                return HttpResponseServerError(errorMsgJSON,
+                                               content_type="application/json")
+            except Exception as err:
+                logger.error(err)
+                return HttpResponseServerError(errorMsgJSON,
+                                               content_type="application/json")
+            else:
+                logger.info(results)
+                return HttpResponse(results, content_type="application/json")
+        else:
+            error = {
+                "message": "Request is missing 'reference' query " +
+                "parameter"
+            }
+            errorJson = json.dumps(error)
+            return HttpResponseBadRequest(errorJson,
+                                          content_type="application/json")
+
+
 class GetMoreLikeThisView(APIView):
     """This method defines an API for fetching results using the
             more_like_this feature from elasticsearch. """

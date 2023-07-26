@@ -125,6 +125,36 @@ class XSEQueries(BaseQueries):
 
         return response
 
+    def search_for_derived(self, reference="", filters={}):
+        """This method takes in a reference string and queries
+            ElasticSearch for the items derived from it then returns the
+            Response Object"""
+
+        course_mapping = CourseInformationMapping.objects.first()
+
+        q = Q("match",
+              **{course_mapping.course_derived_from: reference})
+
+        # setting up the search object
+        self.search = self.search.query(q)
+
+        self.user_organization_filtering()
+
+        # getting the page size for result pagination
+        configuration = XDSConfiguration.objects.first()
+        uiConfig = configuration.xdsuiconfiguration
+
+        page_size = uiConfig.search_results_per_page
+        start_index = self.get_page_start(int(filters['page']), page_size)
+        end_index = start_index + page_size
+        self.search = self.search[start_index:end_index]
+
+        # call to elasticsearch to execute the query
+        response = self.search.execute()
+        logger.info(self.search.to_dict())
+
+        return response
+
     def more_like_this(self, doc_id):
         """This method takes in a doc ID and queries the elasticsearch index for
             courses with similar title or description"""
