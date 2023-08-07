@@ -177,6 +177,14 @@ class CourseInformationMapping(TimeStampedModel):
                                                   "thumbnail of"
                                                   " the course found in the"
                                                   " elasticsearch")
+
+    course_derived_from = models.CharField(max_length=200,
+                                           default="P2881_Core.DerivedFrom",
+                                           help_text="Enter the mapping for "
+                                           "the reference to the "
+                                           "course derived from found in the"
+                                           " elasticsearch")
+
     xds_ui_configuration = models \
         .OneToOneField(XDSUIConfiguration,
                        on_delete=models.CASCADE,
