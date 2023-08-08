@@ -8,6 +8,7 @@ from requests.exceptions import HTTPError
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from core.management.utils.xds_internal import bleach_data_to_json
 
 from configurations.models import XDSConfiguration
 from core.models import CourseSpotlight, Experience, InterestList, SavedFilter
@@ -156,8 +157,11 @@ class InterestListsView(APIView):
     def post(self, request):
         """Updates interest lists"""
 
+        # bleaching/cleaning HTML tags from request data
+        bleach_data = bleach_data_to_json(request.data)
+
         # Assign data from request to serializer
-        serializer = InterestListSerializer(data=request.data)
+        serializer = InterestListSerializer(data=bleach_data)
 
         if not serializer.is_valid():
             # If not received send error and bad request status
@@ -617,8 +621,12 @@ class SavedFiltersView(APIView):
     def post(self, request):
         """Update saved filters"""
 
+        (request.data)._mutable = True
+        # bleaching/cleaning HTML tags from request data
+        data = bleach_data_to_json(request.data)
+
         # Assign data from request to serializer
-        serializer = SavedFilterSerializer(data=request.data)
+        serializer = SavedFilterSerializer(data=data)
 
         if not serializer.is_valid():
             # If not received send error and bad request status
