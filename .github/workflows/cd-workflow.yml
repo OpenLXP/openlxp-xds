@@ -64,7 +64,7 @@ jobs:
             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         
   build:
-    # requires dependency from step above
+    # require dependency from step above
     needs: code-test
     name: Build Docker Image
     runs-on: ubuntu-latest
