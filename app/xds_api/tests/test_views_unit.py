@@ -1,5 +1,5 @@
 import json
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
@@ -125,6 +125,20 @@ class InterestListsTests(TestSetUp):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response_dict["name"], self.list_3.name)
 
+    def test_get_interest_list_authenticated_without_permission(self):
+        """
+        Test that an authenticated user can't get another user's interest list.
+        """
+        list_id = self.list_4.pk
+        url = reverse('xds_api:interest-list', args=(list_id,))
+
+        # login user
+        self.client.login(email=self.auth_email, password=self.auth_password)
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_get_interest_list_with_courses_authenticated(self):
         """
         Test that an authenticated user can get an interest list by id,
@@ -235,6 +249,20 @@ class InterestListsTests(TestSetUp):
         response = self.client.patch(url, {'name': 'new name'})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_edit_interest_list_authenticated_no_list(self):
+        """
+        Test that an authenticated user cannot edit an interest list that
+        does not exist.
+        """
+        list_id = 99
+        url = reverse('xds_api:interest-list', args=(list_id,))
+
+        # login user
+        self.client.login(email=self.auth_email, password=self.auth_password)
+
+        response = self.client.patch(url, {'name': 'new name'})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_edit_interest_list_authenticated_owner(self):
         """
         Test that an authenticated user can edit an interest list that
@@ -317,6 +345,20 @@ class InterestListsTests(TestSetUp):
 
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_delete_interest_list_authenticated_no_list(self):
+        """
+        Test that an authenticated user cannot delete an interest list
+        that does not exist.
+        """
+        list_id = 99
+        url = reverse('xds_api:interest-list', args=(list_id,))
+
+        # login user
+        self.client.login(email=self.auth_email, password=self.auth_password)
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_delete_interest_list_authenticated_owner(self):
         """
@@ -682,7 +724,7 @@ class SpotlightCoursesTests(TestSetUp):
                 patch('xds_api.views.'
                       'get_spotlight_courses_api_url') as get_api_url:
             get_api_url.return_value = "www.test.com"
-            http_resp = get_request.return_value
+            http_resp = Mock()
             get_request.return_value = http_resp
             http_resp.json.return_value = [{
                 "test": "value"
