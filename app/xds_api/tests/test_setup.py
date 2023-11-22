@@ -83,10 +83,6 @@ class TestSetUp(APITestCase):
                                    name="list 3",
                                    description='list 3',
                                    public=True)
-        self.list_4 = InterestList(owner=self.user_2,
-                                   name="list 4",
-                                   description='private list',
-                                   public=False)
         self.filter_1 = SavedFilter(owner=self.user_1,
                                     name="Devops",
                                     query="randomQuery")
@@ -97,7 +93,6 @@ class TestSetUp(APITestCase):
         self.list_1.save()
         self.list_2.save()
         self.list_3.save()
-        self.list_4.save()
         self.filter_1.save()
         self.filter_2.save()
         self.course_1 = Experience('1234')

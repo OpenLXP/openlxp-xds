@@ -10,7 +10,7 @@ from requests.exceptions import HTTPError, RequestException
 from rest_framework import status
 
 from configurations.models import XDSConfiguration
-from core.models import CourseSpotlight, SavedFilter
+from core.models import CourseSpotlight, InterestList, SavedFilter
 
 from .test_setup import TestSetUp
 
@@ -129,7 +129,14 @@ class InterestListsTests(TestSetUp):
         """
         Test that an authenticated user can't get another user's interest list.
         """
-        list_id = self.list_4.pk
+        list_4 = InterestList(
+            owner=self.user_2,
+            name="list 4",
+            description="private list",
+            public=False,
+        )
+        list_4.save()
+        list_id = list_4.pk
         url = reverse('xds_api:interest-list', args=(list_id,))
 
         # login user
