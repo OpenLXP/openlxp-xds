@@ -25,7 +25,7 @@ class ViewTests(APITestCase):
         Test that the /es-api/ endpoint succeeds when a valid
         keyword is provided
         """
-        url = "%s?keyword=hello" % (reverse('es_api:search-index'))
+        url = "%s?keyword=hello&p=1&sort=1" % (reverse('es_api:search-index'))
         with patch('es_api.views.XSEQueries') as query, \
                 patch('es_api.views.SearchFilter.objects') as sfObj, \
                 patch('es_api.views.XDSConfiguration.objects'):
@@ -83,7 +83,7 @@ class ViewTests(APITestCase):
 
             url = "%s?Course.CourseTitle=hi" % (reverse('es_api:filters')) + \
                   "&Course.CourseProviderName=" \
-                  "test&CourseInstance.CourseLevel=3"
+                  "test&CourseInstance.CourseLevel=3&p=1"
             with patch('es_api.views.XSEQueries') as query, \
                     patch('es_api.views.XDSConfiguration.objects'):
                 result_json = json.dumps({"test": "value"})
@@ -141,6 +141,18 @@ class ViewTests(APITestCase):
         self.assertEqual(response.status_code,
                          status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def test_suggestions_missing(self):
+        """
+        Test that the /es-api/suggest? endpoint returns a bad request
+        when an missing partial info
+        """
+        url = "%s?partial=" % (reverse('es_api:suggest'))
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code,
+                         status.HTTP_400_BAD_REQUEST)
+
 
 @tag('unit')
 class SearchDerivedTests(APITestCase):
@@ -158,7 +170,7 @@ class SearchDerivedTests(APITestCase):
         Test that the /es-api/ endpoint succeeds when a valid
         reference is provided
         """
-        url = "%s?reference=hello" % (reverse('es_api:search-derived'))
+        url = "%s?reference=hello&p=1" % (reverse('es_api:search-derived'))
         with patch('es_api.views.XSEQueries') as query, \
                 patch('es_api.views.SearchFilter.objects') as sf1Obj, \
                 patch('es_api.views.XDSConfiguration.objects'):
