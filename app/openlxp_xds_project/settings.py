@@ -34,6 +34,8 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    "admin_interface",
+    "colorfield",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -266,3 +268,5 @@ OPEN_ENDPOINTS = [
 ]
 
 EMAIL_BACKEND = 'django_ses.SESBackend'
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
