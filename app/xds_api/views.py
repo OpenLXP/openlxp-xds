@@ -190,8 +190,8 @@ class InterestListView(APIView):
             queryset = InterestList.objects.get(pk=list_id)
 
             # check if current user can view this list
-            if(not(queryset.public or queryset.owner == request.user or
-                   request.user in queryset.subscribers.all())):
+            if (not (queryset.public or queryset.owner == request.user or
+                     request.user in queryset.subscribers.all())):
                 return Response({"message": "The current user can not access"
                                  + " this Interest List"},
                                 status=status.HTTP_401_UNAUTHORIZED)
