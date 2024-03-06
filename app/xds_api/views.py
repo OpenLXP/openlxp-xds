@@ -621,9 +621,9 @@ class SavedFiltersView(APIView):
     def post(self, request):
         """Update saved filters"""
 
-        (request.data)._mutable = True
+        data_filter = request.data
         # bleaching/cleaning HTML tags from request data
-        data = bleach_data_to_json(request.data)
+        data = bleach_data_to_json(data_filter)
 
         # Assign data from request to serializer
         serializer = SavedFilterSerializer(data=data)
