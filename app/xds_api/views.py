@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import json
 import logging
 
@@ -621,12 +622,13 @@ class SavedFiltersView(APIView):
     def post(self, request):
         """Update saved filters"""
 
-        data_filter = request.data
+        data = OrderedDict()
+        data.update(request.data)
         # bleaching/cleaning HTML tags from request data
-        data = bleach_data_to_json(data_filter)
+        data_bleach = bleach_data_to_json(data)
 
         # Assign data from request to serializer
-        serializer = SavedFilterSerializer(data=data)
+        serializer = SavedFilterSerializer(data=data_bleach)
 
         if not serializer.is_valid():
             # If not received send error and bad request status
