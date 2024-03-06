@@ -1,9 +1,10 @@
 # Dockerfile
 
-FROM python:3.7-buster
+FROM python:3.9-buster
 
 # install nginx
-RUN apt-get update && apt-get install nginx vim libxml2-dev libxmlsec1-dev -y --no-install-recommends
+RUN apt-get update && apt-get install nginx vim libxml2-dev libxmlsec1-dev -y --no-install-recommends && \
+    apt-get clean
 COPY nginx.default /etc/nginx/sites-available/default
 RUN ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log
