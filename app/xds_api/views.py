@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import json
 import logging
 
@@ -8,6 +9,7 @@ from requests.exceptions import HTTPError
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from core.management.utils.xds_internal import bleach_data_to_json
 
 from configurations.models import XDSConfiguration
 from core.models import CourseSpotlight, Experience, InterestList, SavedFilter
@@ -156,8 +158,11 @@ class InterestListsView(APIView):
     def post(self, request):
         """Updates interest lists"""
 
+        # bleaching/cleaning HTML tags from request data
+        bleach_data = bleach_data_to_json(request.data)
+
         # Assign data from request to serializer
-        serializer = InterestListSerializer(data=request.data)
+        serializer = InterestListSerializer(data=bleach_data)
 
         if not serializer.is_valid():
             # If not received send error and bad request status
@@ -186,8 +191,8 @@ class InterestListView(APIView):
             queryset = InterestList.objects.get(pk=list_id)
 
             # check if current user can view this list
-            if(not(queryset.public or queryset.owner == request.user or
-                   request.user in queryset.subscribers.all())):
+            if (not (queryset.public or queryset.owner == request.user or
+                     request.user in queryset.subscribers.all())):
                 return Response({"message": "The current user can not access"
                                  + " this Interest List"},
                                 status=status.HTTP_401_UNAUTHORIZED)
@@ -617,8 +622,13 @@ class SavedFiltersView(APIView):
     def post(self, request):
         """Update saved filters"""
 
+        data = OrderedDict()
+        data.update(request.data)
+        # bleaching/cleaning HTML tags from request data
+        data_bleach = bleach_data_to_json(data)
+
         # Assign data from request to serializer
-        serializer = SavedFilterSerializer(data=request.data)
+        serializer = SavedFilterSerializer(data=data_bleach)
 
         if not serializer.is_valid():
             # If not received send error and bad request status
