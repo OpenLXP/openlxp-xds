@@ -33,6 +33,7 @@ class CourseInformationMappingAdmin(admin.ModelAdmin):
                     'course_thumbnail', 'course_derived_from',
                     'xds_ui_configuration')
 
+
     fields = ['course_title', 'course_description',
               'course_url', 'course_code', 'course_startDate',
               'course_endDate', 'course_provider',
