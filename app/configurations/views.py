@@ -1,8 +1,9 @@
-from openlxp_authentication.models import SAMLConfiguration
-from openlxp_authentication.serializers import SAMLConfigurationSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from social_django.utils import load_strategy
+
+from openlxp_authentication.models import SAMLConfiguration
+from openlxp_authentication.serializers import SAMLConfigurationSerializer
 
 from .models import XDSConfiguration, XDSUIConfiguration
 from .serializers import (XDSConfigurationSerializer,
@@ -37,5 +38,5 @@ class XDSUIConfigurationView(APIView):
                                         objects.all(), many=True
                                         ).data]
 
-        return Response(dict(**serializer.data,
-                             **{"single_sign_on_options": serialized_ssos}))
+        return Response({**serializer.data,
+                         **{"single_sign_on_options": serialized_ssos}})

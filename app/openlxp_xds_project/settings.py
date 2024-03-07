@@ -34,6 +34,8 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    "admin_interface",
+    "colorfield",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -260,8 +262,11 @@ OPEN_ENDPOINTS = [
     "/es-api/more-like-this/[a-zA-Z0-9]+/",
     "/es-api/",
     "/es-api/suggest/",
+    "/es-api/derived-from/",
     "/api/experiences/[a-zA-Z0-9]+/",
     "/api/spotlight-courses",
 ]
 
 EMAIL_BACKEND = 'django_ses.SESBackend'
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880

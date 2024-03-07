@@ -1,16 +1,18 @@
+from collections import OrderedDict
 import json
 import logging
 
 import requests
-from configurations.models import XDSConfiguration
-from core.models import CourseSpotlight, Experience, InterestList, SavedFilter
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
 from requests.exceptions import HTTPError
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from core.management.utils.xds_internal import bleach_data_to_json
 
+from configurations.models import XDSConfiguration
+from core.models import CourseSpotlight, Experience, InterestList, SavedFilter
 from xds_api.serializers import InterestListSerializer, SavedFilterSerializer
 from xds_api.utils.xds_utils import (get_request,
                                      get_spotlight_courses_api_url,
@@ -38,7 +40,15 @@ class GetSpotlightCoursesView(APIView):
                 logger.info(api_url)
                 # make API call
                 response = get_request(api_url)
-                responseJSON = json.dumps(response.json())
+                responseJSON = []
+                while response.status_code // 10 == 20:
+                    responseJSON += response.json()['results']
+
+                    if 'next' in response.json() and \
+                            response.json()['next'] is not None:
+                        response = get_request(response.json()['next'])
+                    else:
+                        break
 
                 if response.status_code == 200:
                     formattedResponse = json.dumps(
@@ -82,19 +92,23 @@ class GetExperiencesView(APIView):
             # make API call
             response = get_request(api_url)
             logger.info(api_url)
+            responseJSON = []
             # expected response is a list of 1 element
-            responseDict = response.json()
-            responseJSON = json.dumps(responseDict[0])
-            logger.info(responseJSON)
+            if response.status_code//10 == 20:
+                responseJSON += response.json()['results']
 
-            if response.status_code == 200:
+                if not responseJSON:
+                    return Response({"message": "Key not found"},
+                                    status.HTTP_404_NOT_FOUND)
+
+                logger.info(responseJSON)
                 formattedResponse = json.dumps(
-                    metadata_to_target(responseJSON))
+                    metadata_to_target(responseJSON[0]))
 
                 return HttpResponse(formattedResponse,
                                     content_type="application/json")
             else:
-                return HttpResponse(responseJSON,
+                return HttpResponse(response.json()['results'],
                                     content_type="application/json")
 
         except requests.exceptions.RequestException as e:
@@ -112,7 +126,7 @@ class GetExperiencesView(APIView):
 
         except KeyError as no_element_err:
             logger.error(no_element_err)
-            logger.error(responseDict)
+            logger.error(response)
             return Response(errorMsg, status.HTTP_404_NOT_FOUND)
 
 
@@ -120,7 +134,7 @@ class InterestListsView(APIView):
     """Handles HTTP requests for interest lists"""
 
     def get(self, request):
-        """Retreives interest lists"""
+        """Retrieves interest lists"""
         errorMsg = {
             "message": "Error fetching records please check the logs."
         }
@@ -144,8 +158,11 @@ class InterestListsView(APIView):
     def post(self, request):
         """Updates interest lists"""
 
+        # bleaching/cleaning HTML tags from request data
+        bleach_data = bleach_data_to_json(request.data)
+
         # Assign data from request to serializer
-        serializer = InterestListSerializer(data=request.data)
+        serializer = InterestListSerializer(data=bleach_data)
 
         if not serializer.is_valid():
             # If not received send error and bad request status
@@ -174,8 +191,8 @@ class InterestListView(APIView):
             queryset = InterestList.objects.get(pk=list_id)
 
             # check if current user can view this list
-            if(not(queryset.public or queryset.owner == request.user or
-                   request.user in queryset.subscribers.all())):
+            if (not (queryset.public or queryset.owner == request.user or
+                     request.user in queryset.subscribers.all())):
                 return Response({"message": "The current user can not access"
                                  + " this Interest List"},
                                 status=status.HTTP_401_UNAUTHORIZED)
@@ -201,7 +218,15 @@ class InterestListView(APIView):
 
                 # make API call
                 response = get_request(api_url)
-                responseJSON = json.dumps(response.json())
+                responseJSON = []
+                while response.status_code//10 == 20:
+                    responseJSON += response.json()['results']
+
+                    if 'next' in response.json() and\
+                            response.json()['next'] is not None:
+                        response = get_request(response.json()['next'])
+                    else:
+                        break
 
                 if response.status_code == 200:
                     formattedResponse = metadata_to_target(responseJSON)
@@ -597,8 +622,13 @@ class SavedFiltersView(APIView):
     def post(self, request):
         """Update saved filters"""
 
+        data = OrderedDict()
+        data.update(request.data)
+        # bleaching/cleaning HTML tags from request data
+        data_bleach = bleach_data_to_json(data)
+
         # Assign data from request to serializer
-        serializer = SavedFilterSerializer(data=request.data)
+        serializer = SavedFilterSerializer(data=data_bleach)
 
         if not serializer.is_valid():
             # If not received send error and bad request status

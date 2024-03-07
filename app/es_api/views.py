@@ -1,8 +1,6 @@
 import json
 import logging
 
-from configurations.models import XDSConfiguration
-from core.models import SearchFilter
 from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseServerError)
 from requests.exceptions import HTTPError
@@ -10,6 +8,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from configurations.models import CourseInformationMapping, XDSConfiguration
+from core.models import SearchFilter
 from es_api.utils.queries import XSEQueries
 
 logger = logging.getLogger('dict_config_logger')
@@ -87,6 +87,66 @@ class SearchIndexView(APIView):
                                           content_type="application/json")
 
 
+class SearchDerivedView(APIView):
+    """This method defines an API for querying to ElasticSearch
+            for derived experiences"""
+
+    def get_request_attributes(self, request):
+        """helper method to get attributes"""
+        reference = ''
+        filters = {
+            'page': '1'
+        }
+
+        if request.GET.get('reference'):
+            reference = request.GET['reference']
+
+        if (request.GET.get('p')) and (request.GET.get('p') != ''):
+            filters['page'] = request.GET['p']
+
+        return reference, filters
+
+    def get(self, request):
+        results = []
+
+        reference, filters = self.get_request_attributes(request)
+
+        if reference != '':
+            errorMsg = {
+                "message": "error executing ElasticSearch query; " +
+                "Please contact an administrator"
+            }
+            errorMsgJSON = json.dumps(errorMsg)
+
+            try:
+                queries = XSEQueries(
+                    XDSConfiguration.objects.first().target_xse_host,
+                    XDSConfiguration.objects.first().target_xse_index,
+                    user=request.user)
+                response = queries.search_for_derived(
+                    reference=reference, filters=filters)
+                results = queries.get_results(response)
+            except HTTPError as http_err:
+                logger.error(http_err)
+                return HttpResponseServerError(errorMsgJSON,
+                                               content_type="application/json")
+            except Exception as err:
+                logger.error(err)
+                return HttpResponseServerError(errorMsgJSON,
+                                               content_type="application/json")
+            else:
+                logger.info(results)
+                return HttpResponse(results, content_type="application/json")
+        else:
+            error = {
+                "message": "Request is missing 'reference' query " +
+                "parameter"
+            }
+            errorJson = json.dumps(error)
+            return HttpResponseBadRequest(errorJson,
+                                          content_type="application/json")
+
+
 class GetMoreLikeThisView(APIView):
     """This method defines an API for fetching results using the
             more_like_this feature from elasticsearch. """
@@ -124,6 +184,8 @@ class FiltersView(APIView):
     """This method defines an API for performing a filter search"""
 
     def get(self, request):
+        course_mapping = CourseInformationMapping.objects.first()
+
         results = []
         filters = {}
         page_num = 1
@@ -131,14 +193,15 @@ class FiltersView(APIView):
         if (request.GET.get('p')) and (request.GET.get('p') != ''):
             page_num = int(request.GET['p'])
 
-        if (request.GET.get('Course.CourseTitle') and
-                request.GET.get('Course.CourseTitle') != ''):
-            filters['Course.CourseTitle'] = request.GET['Course.CourseTitle']
+        if (request.GET.get(course_mapping.course_title) and
+                request.GET.get(course_mapping.course_title) != ''):
+            filters[course_mapping.course_title] = \
+                request.GET[course_mapping.course_title]
 
-        if (request.GET.get('Course.CourseProviderName') and
-                request.GET.get('Course.CourseProviderName') != ''):
-            filters['Course.CourseProviderName'] = \
-                request.GET['Course.CourseProviderName']
+        if (request.GET.get(course_mapping.course_provider) and
+                request.GET.get(course_mapping.course_provider) != ''):
+            filters[course_mapping.course_provider] = \
+                request.GET[course_mapping.course_provider]
 
         if (request.GET.get('CourseInstance.CourseLevel') and
                 request.GET.get('CourseInstance.CourseLevel') != ''):

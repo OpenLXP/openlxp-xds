@@ -11,7 +11,7 @@ from core.models import CourseSpotlight, Experience
 def get_request(request_url):
     """This method handles a simple HTTP get request to the passe in
         request_url"""
-    response = requests.get(request_url)
+    response = requests.get(request_url, timeout=3.0)
 
     return response
 
@@ -61,7 +61,10 @@ def format_metadata(exp_record):
 def metadata_to_target(metadata_JSON):
     """This method takes in a JSON representation of a record and transforms it
         into the search engine format"""
-    metadata_dict = json.loads(metadata_JSON)
+    if isinstance(metadata_JSON, list) or isinstance(metadata_JSON, dict):
+        metadata_dict = metadata_JSON
+    else:
+        metadata_dict = json.loads(metadata_JSON)
     result = None
 
     if isinstance(metadata_dict, list):

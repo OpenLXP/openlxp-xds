@@ -7,8 +7,9 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms import ValidationError
 from django.urls import reverse
-from es_api.utils.queries_base import BaseQueries
 from model_utils.models import TimeStampedModel
+
+from es_api.utils.queries_base import BaseQueries
 from users.models import Organization, XDSUser
 
 logger = logging.getLogger('dict_config_logger')
@@ -176,6 +177,14 @@ class CourseInformationMapping(TimeStampedModel):
                                                   "thumbnail of"
                                                   " the course found in the"
                                                   " elasticsearch")
+
+    course_derived_from = models.CharField(max_length=200,
+                                           default="P2881_Core.DerivedFrom",
+                                           help_text="Enter the mapping for "
+                                           "the reference to the "
+                                           "course derived from found in the"
+                                           " elasticsearch")
+
     xds_ui_configuration = models \
         .OneToOneField(XDSUIConfiguration,
                        on_delete=models.CASCADE,
