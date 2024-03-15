@@ -9,4 +9,5 @@ from .models import InterestList
 def interest_list_notify(sender, instance, action, reverse, pk_set, **kwargs):
     if action == 'post_add' and not reverse:
         notify.send(instance, recipient=instance.subscribers.all(),
-                    verb='experiences added', added=pk_set)
+                    verb='experiences added', added=pk_set,
+                    list_name=instance.name)
