@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+import datetime
 import mimetypes
 import os
 import sys
@@ -53,6 +54,7 @@ INSTALLED_APPS = [
     'es_api',
     'users',
     'configurations',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -268,5 +270,13 @@ OPEN_ENDPOINTS = [
 ]
 
 EMAIL_BACKEND = 'django_ses.SESBackend'
+
+# Django-notifications package settings
+DJANGO_NOTIFICATIONS_CONFIG = {
+    'USE_JSONFIELD': True,
+}
+
+# when notifications should be automatically deleted, should be days or greater
+NOTIFICATIONS_EXPIRE_AFTER = datetime.timedelta(days=30)
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
