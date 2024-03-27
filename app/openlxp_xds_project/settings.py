@@ -271,6 +271,7 @@ OPEN_ENDPOINTS = [
 
 EMAIL_BACKEND = 'django_ses.SESBackend'
 
+
 # Django-notifications package settings
 DJANGO_NOTIFICATIONS_CONFIG = {
     'USE_JSONFIELD': True,
