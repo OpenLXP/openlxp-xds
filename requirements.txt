@@ -1,7 +1,7 @@
 bleach~=6.0.0
 
 # mysql-connector-python >= 8.0.28, <=8.0.29
-mysql-connector-python==8.0.32
+mysql-connector-python==8.0.33
 
 django-mysql>=3.10.0,<3.11.0
 
