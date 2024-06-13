@@ -1,7 +1,5 @@
 import logging
 
-from openlxp_notifications.management.commands.conformance_alerts import \
-    send_log_email_with_msg
 from rest_framework import serializers
 
 from configurations.models import CourseInformationMapping
@@ -114,7 +112,6 @@ class InterestListSerializer(serializers.ModelSerializer):
             list_subscribers.append(each_subscriber.email)
 
         instance.save()
-        send_log_email_with_msg(list_subscribers, msg)
         return instance
 
 
