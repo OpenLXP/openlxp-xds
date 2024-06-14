@@ -42,7 +42,7 @@ martor>=1.5.8,<1.6.0
 
 openlxp-authentication >=1.1.2, <1.2
 
-openlxp-notification>=1.4.0, <1.50
+openlxp-notification>=1.4.0, <1.5.0
  
 Pillow>=10.2.0
  
