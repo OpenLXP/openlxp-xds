@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from openlxp_notifications.models import email
 from rest_framework.test import APITestCase
 
 
@@ -9,11 +10,11 @@ class TestSetUp(APITestCase):
     def setUp(self):
         """Function to set up necessary data for testing"""
 
-        self.patcher = patch('users.models.email_verification')
-        self.mock_email_verification = self.patcher.start()
+        self.patcher = patch('core.signals.trigger_update')
+        self.mock_send_email = self.patcher.start()
 
-        self.patcher_2 = patch('xds_api.serializers.send_log_email_with_msg')
-        self.mock_send_email = self.patcher_2.start()
+        self.email_not = email(reference='Subscribed_list_update')
+        self.email_not.save()
 
         self.email = "test@test.com"
         self.password = "test1234"
@@ -39,5 +40,4 @@ class TestSetUp(APITestCase):
 
     def tearDown(self):
         self.patcher.stop()
-        self.patcher_2.stop()
         return super().tearDown()
