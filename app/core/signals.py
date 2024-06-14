@@ -2,10 +2,10 @@ from django.conf import settings
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 from notifications.signals import notify
-from openlxp_notifications.management.commands. \
-                                        trigger_subscribed_list_update import \
-                                        trigger_update
+from openlxp_notifications.management.commands.trigger_subscribed_list_update import \
+    trigger_update
 from openlxp_notifications.models import email
+
 from .models import InterestList
 
 

@@ -1,12 +1,11 @@
-# from unittest.mock import patch
+from unittest.mock import patch
 
+from openlxp_notifications.models import email
 from rest_framework.test import APITestCase
 
 from configurations.models import XDSConfiguration
 from core.models import Experience, InterestList, SavedFilter
 from users.models import XDSUser
-
-from openlxp_notifications.models import email
 
 
 class TestSetUp(APITestCase):
@@ -17,6 +16,9 @@ class TestSetUp(APITestCase):
 
         # self.patcher = patch('users.models.email_verification')
         # self.mock_email_verification = self.patcher.start()
+
+        self.patcher = patch('core.signals.trigger_update')
+        self.mock_send_email = self.patcher.start()
 
         self.email_not = email(reference='Subscribed_list_update')
         self.email_not.save()
@@ -107,5 +109,5 @@ class TestSetUp(APITestCase):
         return super().setUp()
 
     def tearDown(self):
-        # self.patcher.stop()
+        self.patcher.stop()
         return super().tearDown()
