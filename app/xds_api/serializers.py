@@ -105,7 +105,7 @@ class InterestListSerializer(serializers.ModelSerializer):
                 instance.experiences.remove(exp)
 
         #  writing content to file
-        msg = ("Count of New Courses added: " + str(course_added_count))
+        # msg = ("Count of New Courses added: " + str(course_added_count))
 
         list_subscribers = []
         for each_subscriber in instance.subscribers.all():

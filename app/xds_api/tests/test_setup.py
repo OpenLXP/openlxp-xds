@@ -1,10 +1,12 @@
-from unittest.mock import patch
+# from unittest.mock import patch
 
 from rest_framework.test import APITestCase
 
 from configurations.models import XDSConfiguration
 from core.models import Experience, InterestList, SavedFilter
 from users.models import XDSUser
+
+from openlxp_notifications.models import email
 
 
 class TestSetUp(APITestCase):
@@ -16,8 +18,8 @@ class TestSetUp(APITestCase):
         # self.patcher = patch('users.models.email_verification')
         # self.mock_email_verification = self.patcher.start()
 
-        # self.patcher_2 = patch('xds_api.serializers.send_log_email_with_msg')
-        # self.mock_send_email = self.patcher_2.start()
+        self.email_not = email(reference='Subscribed_list_update')
+        self.email_not.save()
 
         # create user, save user, login using client
         self.auth_email = "test_auth@test.com"
@@ -105,6 +107,5 @@ class TestSetUp(APITestCase):
         return super().setUp()
 
     def tearDown(self):
-        self.patcher.stop()
-        self.patcher_2.stop()
+        # self.patcher.stop()
         return super().tearDown()
