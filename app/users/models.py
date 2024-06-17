@@ -11,9 +11,6 @@ from model_utils.models import TimeStampedModel
 from rest_framework import exceptions
 from rest_framework.permissions import DjangoModelPermissions
 
-from openlxp_notifications.management.utils.ses_client import \
-    email_verification
-
 
 class Organization(TimeStampedModel):
     """Model to store an organization for filtering"""
@@ -91,7 +88,6 @@ class XDSUser(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def save(self, *args, **kwargs):
-        email_verification(self.email)
         return super(XDSUser, self).save(*args, **kwargs)
 
 
