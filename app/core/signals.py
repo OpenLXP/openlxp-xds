@@ -27,7 +27,7 @@ def interest_list_notify(sender, instance, action, reverse, pk_set, **kwargs):
         list_name = instance.name
 
         if settings.LOGIN_REDIRECT_URL:
-            list_url = (settings.LOGIN_REDIRECT_URL + "/"
+            list_url = (settings.LOGIN_REDIRECT_URL + "/lists/"
                         + str(instance.id))
         else:
             list_url = "ECC -> Subscribed Lists: " + instance.name
