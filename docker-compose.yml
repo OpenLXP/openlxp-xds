@@ -43,6 +43,11 @@ services:
       BAD_HOST: "${BAD_HOST}"
       OVERIDE_HOST: "${OVERIDE_HOST}"
       LOGIN_REDIRECT_URL: "${LOGIN_REDIRECT_URL}"
+      P1PS_DOMAIN: "${P1PS_DOMAIN}"
+      TEAM_TOKEN: "${TEAM_TOKEN}"
+      TEAM_ID: "${TEAM_ID}"
+      COOKIE_NAME: "${COOKIE_NAME}"
+      COOKIE_VALUE: "${COOKIE_VALUE}"
     volumes:
       - ./app:/opt/app/openlxp-xds
     depends_on:

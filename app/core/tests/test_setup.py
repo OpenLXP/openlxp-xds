@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from openlxp_notifications.models import email
+from openlxp_P1_notification.models import email
 from rest_framework.test import APITestCase
 
 

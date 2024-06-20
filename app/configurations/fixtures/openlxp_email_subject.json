@@ -1,6 +1,6 @@
 [
 {
-    "model": "openlxp_notifications.subject",
+    "model": "openlxp_P1_notification.subject",
     "pk": 1,
     "fields": {
         "subject": "ECC New Resource Alert!"

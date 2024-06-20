@@ -1,12 +1,12 @@
 import logging
+
 from django.conf import settings
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 from notifications.signals import notify
-from openlxp_notifications.management.commands. \
-    trigger_subscribed_list_update import \
+from openlxp_P1_notification.management.commands.trigger_subscribed_list_update import \
     trigger_update
-from openlxp_notifications.models import email
+from openlxp_P1_notification.models import email
 
 from .models import InterestList
 
@@ -23,7 +23,8 @@ def interest_list_notify(sender, instance, action, reverse, pk_set, **kwargs):
 
         recipient_list = list(instance.subscribers.values_list(
             "email", "first_name", 'last_name'))
-        owner = instance.owner
+        owner = str(instance.owner)
+
         list_name = instance.name
 
         if settings.LOGIN_REDIRECT_URL:
