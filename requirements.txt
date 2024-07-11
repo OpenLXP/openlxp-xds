@@ -8,7 +8,8 @@ mysql-connector-python == 8.0.28
 
 django-mysql==4.4.0
 
-Django>=3.2.3,<4.0
+# Django>=3.2.3,<4.0
+Django<=4.2, <5.0
 
 django-admin-interface>=0.28.3
 
@@ -30,7 +31,8 @@ django-ses~=3.5.0
 
 django_elasticsearch_dsl_drf>=0.22.2,<0.23.0
 
-djangorestframework>=3.13.0,<3.16.0
+# djangorestframework>=3.13.0,<3.16.0
+djangorestframework>=3.15.2,<3.16.0
 
 elasticsearch>=7.16.3,<7.17.0
 
@@ -40,7 +42,7 @@ gunicorn>=22.0.0, <22.1.0
 
 martor>=1.5.8,<1.6.0
 
-openlxp-authentication >=1.1.2, <1.2
+openlxp-authentication >=1.1.4, <1.2
 
 openlxp-notification>=1.4.0, <1.5.0
  
