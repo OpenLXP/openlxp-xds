@@ -101,7 +101,9 @@ class TestSetUp(APITestCase):
         self.list_1.experiences.add(self.course_1)
         self.list_2.experiences.add(self.course_1)
 
-        self.config = XDSConfiguration(target_xis_metadata_api="test").save()
+        self.config = XDSConfiguration(target_xis_metadata_api="test")
+        self.config.save()
+
 
         return super().setUp()
 
