@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from openlxp_notifications.models import email
+from openlxp_P1_notification.models import email
 from rest_framework.test import APITestCase
 
 from configurations.models import XDSConfiguration
@@ -101,7 +101,8 @@ class TestSetUp(APITestCase):
         self.list_1.experiences.add(self.course_1)
         self.list_2.experiences.add(self.course_1)
 
-        self.config = XDSConfiguration(target_xis_metadata_api="test").save()
+        self.config = XDSConfiguration(target_xis_metadata_api="test")
+        self.config.save()
 
         return super().setUp()
 

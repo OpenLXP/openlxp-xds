@@ -20,11 +20,12 @@ class ConfigurationTests(TestSetUp):
         """Test that making a GET request to the api gives us a JSON of the
             stored XDSUIConfiguration model"""
         url = reverse('configurations:xds-ui-configuration')
+        xds_ui_cfg = XDSUIConfiguration()
+        xds_ui_cfg.search_results_per_page = 10
+        xds_ui_cfg.xds_configuration = self.config
+        xds_ui_cfg.save()
         with patch('configurations.views.XDSUIConfiguration.objects') \
                 as xds_ui_Obj:
-            xds_config = XDSConfiguration(target_xis_metadata_api="test")
-            xds_ui_cfg = XDSUIConfiguration(search_results_per_page=10,
-                                            xds_configuration=xds_config)
             xds_ui_Obj.return_value = xds_ui_Obj
             xds_ui_Obj.first.return_value = xds_ui_cfg
 
