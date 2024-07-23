@@ -4,11 +4,7 @@ boto3~=1.16.54
 
 coverage>=5.5,<6.0
 
-mysql-connector-python == 8.0.28
-
-django-mysql==4.4.0
-
-Django>=3.2.3,<4.0
+django_elasticsearch_dsl_drf>=0.22.2,<0.23.0
 
 django-admin-interface>=0.28.3
 
@@ -18,19 +14,17 @@ django-cors-headers>=3.7.0,<3.8.0
 
 django-elasticsearch-dsl>=7.2.2,<7.3.0
 
-isort==5.11.5
-
-martor>=1.5.8,<1.6.0
-
 django-model-utils>=4.1.1,<4.2.0
+
+django-mysql==4.4.0
 
 django-notifications-hq>=1.8.3, <2.0
 
 django-ses~=3.5.0
 
-django_elasticsearch_dsl_drf>=0.22.2,<0.23.0
+Django>=4.2,<5.0
 
-djangorestframework>=3.13.0,<3.16.0
+djangorestframework>=3.15.2,<3.16.0
 
 elasticsearch>=7.16.3,<7.17.0
 
@@ -38,14 +32,20 @@ flake8>=3.8.4,<3.9.0
 
 gunicorn>=22.0.0, <22.1.0
 
+isort==5.11.5
+
 martor>=1.5.8,<1.6.0
+
+martor>=1.5.8,<1.6.0
+
+mysql-connector-python == 8.0.28
 
 openlxp-authentication >=1.1.2, <1.2
 
 openlxp-notification>=1.4.0, <1.5.0
- 
+
 Pillow>=10.2.0
- 
+
 python-slugify>=8.0.1
- 
+
 text-unidecode>=1.3
