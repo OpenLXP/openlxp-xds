@@ -29,7 +29,4 @@ urlpatterns = [
     # url('', include('social_django.urls', namespace='social')),
     re_path('api-auth/', include('rest_framework.urls',
                               namespace='rest_framework')),
-    url('', include('openlxp_authentication.urls')),
-    url('^inbox/notifications/',
-        include(notifications.urls, namespace='notifications')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
