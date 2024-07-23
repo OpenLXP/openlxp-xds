@@ -104,7 +104,6 @@ class TestSetUp(APITestCase):
         self.config = XDSConfiguration(target_xis_metadata_api="test")
         self.config.save()
 
-
         return super().setUp()
 
     def tearDown(self):
