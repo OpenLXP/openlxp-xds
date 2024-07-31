@@ -1,15 +1,14 @@
 import json
 
+from configurations.models import (CourseInformationMapping, XDSConfiguration,
+                                   XDSUIConfiguration)
+from core.models import SearchSortOption
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase, tag
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-
-from configurations.models import (CourseInformationMapping, XDSConfiguration,
-                                   XDSUIConfiguration)
-from core.models import SearchSortOption
 
 
 @tag('integration')
