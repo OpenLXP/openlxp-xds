@@ -190,7 +190,10 @@ LOGGING = {
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 CSRF_COOKIE_DOMAIN = '.deloitteopenlxp.com'
-CSRF_TRUSTED_ORIGINS = ['.deloitteopenlxp.com', ]
+CSRF_TRUSTED_ORIGINS = ['https://dev-xds-admin.deloitteopenlxp.com', ]
+# CSRF_COOKIE_DOMAIN = 'http://localhost'
+# CSRF_TRUSTED_ORIGINS = ['https://localhost', ]
+
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
