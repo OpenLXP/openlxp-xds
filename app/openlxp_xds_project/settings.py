@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
-    'openlxp_notifications',
+    'openlxp_P1_notification',
     'social_django',
     'openlxp_authentication',
     'xds_api',
@@ -61,6 +61,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'openlxp_P1_notification.middleware.TemplateMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -100,7 +101,10 @@ DATABASES = {
         'PASSWORD': os.environ.get('DB_PASSWORD'),
         'HOST': os.environ.get('DB_HOST'),
         'PORT': 3306,
-    }
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+        }
+    },
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

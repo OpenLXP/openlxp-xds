@@ -1,18 +1,17 @@
-from collections import OrderedDict
 import json
 import logging
+from collections import OrderedDict
 
 import requests
+from configurations.models import XDSConfiguration
+from core.management.utils.xds_internal import bleach_data_to_json
+from core.models import CourseSpotlight, Experience, InterestList, SavedFilter
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError
 from requests.exceptions import HTTPError
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from core.management.utils.xds_internal import bleach_data_to_json
-
-from configurations.models import XDSConfiguration
-from core.models import CourseSpotlight, Experience, InterestList, SavedFilter
 from xds_api.serializers import InterestListSerializer, SavedFilterSerializer
 from xds_api.utils.xds_utils import (get_request,
                                      get_spotlight_courses_api_url,

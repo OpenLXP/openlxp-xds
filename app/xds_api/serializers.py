@@ -1,12 +1,9 @@
 import logging
 
-from openlxp_notifications.management.commands.conformance_alerts import \
-    send_log_email_with_msg
-from rest_framework import serializers
-
 from configurations.models import CourseInformationMapping
 from core.models import (CourseDetailHighlight, Experience, InterestList,
                          SavedFilter, SearchSortOption)
+from rest_framework import serializers
 from users.serializers import XDSUserSerializer
 
 logger = logging.getLogger('dict_config_logger')
@@ -55,7 +52,12 @@ class CourseDetailHighlightSerializer(serializers.ModelSerializer):
 class CourseInformationMappingSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseInformationMapping
-        exclude = ['xds_ui_configuration']
+
+        fields = ['course_title', 'course_description', 'course_url',
+                  'course_code', 'course_startDate', 'course_endDate',
+                  'course_provider', 'course_instructor',
+                  'course_deliveryMode', 'course_thumbnail',
+                  'course_derived_from']
 
 
 class ExperienceSerializer(serializers.ModelSerializer):
@@ -107,14 +109,13 @@ class InterestListSerializer(serializers.ModelSerializer):
                 instance.experiences.remove(exp)
 
         #  writing content to file
-        msg = ("Count of New Courses added: " + str(course_added_count))
+        # msg = ("Count of New Courses added: " + str(course_added_count))
 
         list_subscribers = []
         for each_subscriber in instance.subscribers.all():
             list_subscribers.append(each_subscriber.email)
 
         instance.save()
-        send_log_email_with_msg(list_subscribers, msg)
         return instance
 
 

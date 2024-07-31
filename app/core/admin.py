@@ -1,8 +1,7 @@
-from django.contrib import admin
-
 from core.models import (CourseDetailHighlight, CourseSpotlight, Experience,
                          InterestList, SavedFilter, SearchFilter,
                          SearchSortOption)
+from django.contrib import admin
 
 
 @admin.register(SearchFilter)
