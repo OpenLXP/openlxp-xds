@@ -1,14 +1,12 @@
 import json
 from unittest.mock import patch
 
+from configurations.models import (CourseInformationMapping, XDSConfiguration,
+                                   XDSUIConfiguration)
 from django.contrib.auth.models import Group
 from django.test import tag
 from django.urls import reverse
 from rest_framework import status
-
-from configurations.models import (CourseInformationMapping, XDSConfiguration,
-                                   XDSUIConfiguration)
-
 from users.models import Organization, XDSUser
 
 from .test_setup import TestSetUp
