@@ -21,7 +21,7 @@ services:
     ports:
       - "8100:8020"
     command: >
-      sh -c ". /opt/app/start-app.sh"
+      sh -c ". /tmp/app/start-app.sh"
     environment:
       DB_NAME: "${DB_NAME}"
       DB_USER: "${DB_USER}"
@@ -49,7 +49,7 @@ services:
       COOKIE_NAME: "${COOKIE_NAME}"
       COOKIE_VALUE: "${COOKIE_VALUE}"
     volumes:
-      - ./app:/opt/app/openlxp-xds
+      - ./app:/tmp/app/openlxp-xds
     depends_on:
       - db
     networks:
