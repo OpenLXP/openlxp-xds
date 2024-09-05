@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # start-server.sh
-
+pwd
+ls -al
+cd /tmp/app/openlxp-xds/app
+pwd
 python manage.py waitdb 
 python manage.py migrate 
 python manage.py createcachetable 

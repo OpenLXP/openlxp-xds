@@ -44,7 +44,7 @@ services:
       TEAM_ID: "${TEAM_ID}"
       TEAM_TOKEN: "${TEAM_TOKEN}"
     volumes:
-      - ./app:/tmp/app/openlxp-xds
+      - shared-app-data:/tmp/app/openlxp-xds
     depends_on:
       - db
     networks:
@@ -53,10 +53,11 @@ services:
   nginx:
     image: nginx:latest
     ports:
-      - "8001:8020"
+      - "8101:8020"
     volumes:
       - ./nginx.default:/etc/nginx/conf.d/default.conf
-      - ./app:/tmp/app/openlxp-xds
+      # - ./app:/tmp/app/openlxp-xds
+      - shared-app-data:/tmp/app/openlxp-xds
     restart: always
     depends_on:
       - app
@@ -66,3 +67,6 @@ services:
 networks:
   openlxp:
     external: true
+
+volumes:
+  shared-app-data: 
