@@ -33,7 +33,6 @@ git clone https://github.com/OpenLXP/openlxp-xds.git
 ## 2. Set up your environment variables
 - Create a `.env` file in the root directory
 - The following environment variables are required:
-// link to AWS docs for descirptions if possible
 
 | Environment Variable      | Description |
 | ------------------------- | ----------- |
@@ -64,7 +63,7 @@ git clone https://github.com/OpenLXP/openlxp-xds.git
     docker network create openlxp
     ```
 
-3. Run the command below to deploy XDS from `docker-compose.yaml` 
+2. Run the command below to deploy XDS from `docker-compose.yaml` 
     ```
     docker-compose up -d --build
     ```
