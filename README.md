@@ -69,11 +69,6 @@ git clone https://github.com/OpenLXP/openlxp-xds.git
     docker-compose up -d --build
     ```
 
-5. Once the server is up, go to the admin page:
-    
-    http://localhost:8100/admin (replace localhost with server IP)
-
-
 ## 5. Configuration for XDS
 
 1. Navigate over to `http://localhost:8100/admin/` in your browser and login to the Django Admin page with the admin credentials set in your `.env` (`DJANGO_SUPERUSER_EMAIL` & `DJANGO_SUPERUSER_PASSWORD`)
