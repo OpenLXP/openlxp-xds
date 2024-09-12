@@ -67,7 +67,7 @@ git clone https://github.com/OpenLXP/openlxp-xds.git
     docker-compose up -d --build
     ```
 
-## 5. Configuration for XDS
+## 4. Configuration for XDS
 1. Navigate over to `http://localhost:8100/admin/` in your browser and login to the Django Admin page with the admin credentials set in your `.env` (`DJANGO_SUPERUSER_EMAIL` & `DJANGO_SUPERUSER_PASSWORD`)
 
 2. <u>CONFIGURATIONS</u>
@@ -175,7 +175,7 @@ git clone https://github.com/OpenLXP/openlxp-xds.git
 
                 - `Template`: Select a 'template' from the drop down options set up previously.
 
-## 6. Removing Deployment
+## 5. Removing Deployment
 To destroy the created resources, simply run the docker-compose command below in your terminal:
 ```
 docker-compose down
