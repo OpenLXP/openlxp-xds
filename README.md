@@ -25,7 +25,7 @@ Or copy it into one of these folders to install it system-wide:
 
 
 ## 1. Clone the project
-Clone the ironbank repository
+Clone the Github repository
 ```
 git clone https://github.com/OpenLXP/openlxp-xds.git
 ```  
@@ -56,20 +56,18 @@ git clone https://github.com/OpenLXP/openlxp-xds.git
 | SP_PUBLIC_CERT            | The Public Key to use when this application communicates with Identity Providers to use Single Sign On |
 
 
-## 4. Deployment
-1. Create the openlxp docker network
-    Open a terminal and run the following command in the root directory of the project.
+## 3. Deployment
+1. Create the OpenlXP docker network. Open a terminal and run the following command in the root directory of the project.
     ```
     docker network create openlxp
     ```
 
-2. Run the command below to deploy XDS from `docker-compose.yaml` 
+2. Run the command below to deploy XDS along with its resources
     ```
     docker-compose up -d --build
     ```
 
 ## 5. Configuration for XDS
-
 1. Navigate over to `http://localhost:8100/admin/` in your browser and login to the Django Admin page with the admin credentials set in your `.env` (`DJANGO_SUPERUSER_EMAIL` & `DJANGO_SUPERUSER_PASSWORD`)
 
 2. <u>CONFIGURATIONS</u>
@@ -136,16 +134,22 @@ git clone https://github.com/OpenLXP/openlxp-xds.git
     - Saml configurations: Configure Security Assertion Markup Language (SAML)
         1. Click on `Saml configurations` > `Add Saml configuration`
             - Enter configurations below:
+
                 - `Name`: The name that will be used to identify the IdP in the URL.
+
                 - `Entity id`: The unique name provided by the IdP.
+
                 - `Url`: The connection URL to connect to the IdP at.
+
                 - `Cert`: The public cert used to connect to the IdP.
+
                 - `Attribute mapping`: The JSON formatted mapping to convert attributes provided by the IdP, to a User in this system.
 
 5. <u>OPENLXP_NOTIFICATIONS</u>
     - Templates: Create customized email template content. (default template - edlm-subscribed-list-update)
         1. Click on `Templates` > `Add template`
             - Enter the configurations below:
+
                 - `Template Type`:  Add a reference name for the Template.
                 - `message`: Add the email content here.
         
@@ -161,17 +165,21 @@ git clone https://github.com/OpenLXP/openlxp-xds.git
 
     - Emails: Set up the configurations for email notifications. (default email configuration for XDS - Subscribed_list_update)
         1. click on `Emails` > `Add email`
+
             - Enter the configurations below:
                 - `Sender`:  Add the sender email address from where notification alerts originate.
+
                 - `Reference`:  Add a reference name for the Email configuration.
+
                 - `Subject`: Select a 'subject' from the drop down options set up previously.
+
                 - `Template`: Select a 'template' from the drop down options set up previously.
 
 ## 6. Removing Deployment
-To destroy the created resources, simply run the command below in your terminal:
-    
-    
-    docker compose down
+To destroy the created resources, simply run the docker-compose command below in your terminal:
+```
+docker-compose down
+```
 
 ## Troubleshooting
 - If the container builds but crashes or logs an error of unrecognized commands, the issue is usually incorrect line endings. Most IDEs/Text Editors allow changing the line endings, but the dos2unix utility can also be used to change the line endings of `start-app.sh` and `start-server.sh` to LF.
@@ -183,15 +191,6 @@ To destroy the created resources, simply run the command below in your terminal:
     - If the build fails when pip tries to install xmlsec, the issue is usually missing libraries.
 
     - The xmlsec package includes instructions for installing the libraries on common platforms in the [documentation](https://github.com/mehcode/python-xmlsec/blob/master/README.rst#install)
-
-
-## Update
-
-To update an existing installation: 
-
-1. Pull the latest changes using git
-
-2. Restart the application using `docker-compose restart`
 
 ## Testing
 
