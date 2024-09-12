@@ -57,7 +57,7 @@ git clone https://github.com/OpenLXP/openlxp-xds.git
 
 
 ## 3. Deployment
-1. Create the OpenlXP docker network. Open a terminal and run the following command in the root directory of the project.
+1. Create the OpenLXP docker network. Open a terminal and run the following command in the root directory of the project.
     ```
     docker network create openlxp
     ```
