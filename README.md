@@ -213,3 +213,7 @@ Information on the settings for the authentication module can be found on the [O
 
 The setting `OPEN_ENDPOINTS` can be defined in the django settings file.
 It is a list of strings (regex notation may be used) for URLs that should not check for authentication or authorization.
+
+## License
+
+ This project uses the [MIT](http://www.apache.org/licenses/LICENSE-2.0) license.
