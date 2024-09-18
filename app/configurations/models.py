@@ -185,10 +185,11 @@ class CourseInformationMapping(TimeStampedModel):
                                            " elasticsearch")
 
     course_competency = models.CharField(max_length=200,
-                                           default="Course.CourseLearningOutcome",
-                                           help_text="Enter the mapping for "
-                                           "the reference to the "
-                                           "competency taught")
+                                         default=
+                                         "Course.CourseLearningOutcome",
+                                         help_text="Enter the mapping for "
+                                         "the reference to the "
+                                         "competency taught")
 
     xds_ui_configuration = models \
         .OneToOneField(XDSUIConfiguration,
