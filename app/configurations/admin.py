@@ -21,7 +21,7 @@ class XDSUIConfigurationAdmin(admin.ModelAdmin):
     list_display = ('search_results_per_page', 'xds_configuration',
                     'created', 'modified',)
     fields = [('search_results_per_page', 'xds_configuration',
-               'course_img_fallback')]
+               'course_img_fallback', 'ui_logo')]
 
 
 @admin.register(CourseInformationMapping)

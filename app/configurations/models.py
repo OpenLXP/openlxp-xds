@@ -7,8 +7,9 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms import ValidationError
 from django.urls import reverse
-from es_api.utils.queries_base import BaseQueries
 from model_utils.models import TimeStampedModel
+
+from es_api.utils.queries_base import BaseQueries
 from users.models import Organization, XDSUser
 
 logger = logging.getLogger('dict_config_logger')
@@ -92,6 +93,7 @@ class XDSUIConfiguration(TimeStampedModel):
     course_img_fallback = models.ImageField(upload_to='images/',
                                             null=True,
                                             blank=True)
+    ui_logo = models.ImageField(upload_to='images/')
 
     def get_absolute_url(self):
         """ URL for displaying individual model records."""
