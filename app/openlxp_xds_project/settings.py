@@ -271,6 +271,7 @@ OPEN_ENDPOINTS = [
     "/es-api/",
     "/es-api/suggest/",
     "/es-api/derived-from/",
+    "/es-api/teaches/",
     "/api/experiences/[a-zA-Z0-9]+/",
     "/api/spotlight-courses",
 ]
