@@ -93,7 +93,9 @@ class XDSUIConfiguration(TimeStampedModel):
     course_img_fallback = models.ImageField(upload_to='images/',
                                             null=True,
                                             blank=True)
-    ui_logo = models.ImageField(upload_to='images/')
+    ui_logo = models.ImageField(upload_to='images/',
+                                null=True,
+                                blank=True)
 
     def get_absolute_url(self):
         """ URL for displaying individual model records."""
