@@ -67,7 +67,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'xds.middleware.HealthCheckSSLRedirectMiddleware',
+    'core.middleware.HealthCheckSSLRedirectMiddleware',
 ]
 
 ROOT_URLCONF = 'openlxp_xds_project.urls'
