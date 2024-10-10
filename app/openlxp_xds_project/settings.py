@@ -67,6 +67,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'xds.middleware.HealthCheckSSLRedirectMiddleware',
 ]
 
 ROOT_URLCONF = 'openlxp_xds_project.urls'
@@ -193,13 +194,6 @@ CSRF_COOKIE_DOMAIN = '.deloitteopenlxp.com'
 CSRF_TRUSTED_ORIGINS = ['https://dev-xds2-admin.deloitteopenlxp.com', 'https://dev-xds2.deloitteopenlxp.com', 'https://dev-xds-admin.deloitteopenlxp.com', 'https://dev-xds.deloitteopenlxp.com' 'https://*.deloitteopenlxp.com' ]
 # CSRF_COOKIE_DOMAIN = 'http://localhost'
 # CSRF_TRUSTED_ORIGINS = ['https://localhost', ]
-
-SECURE_SSL_REDIRECT= True
-
-SECURE_REDIRECT_EXEMPT= [
-    r'^health/$'
-]
-
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
