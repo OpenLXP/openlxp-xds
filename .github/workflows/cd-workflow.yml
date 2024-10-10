@@ -1,15 +1,13 @@
-name: Docker CD
+# name: Docker CD
 
 on:
   push:
-    branches: 
-      - dev
+    branches:
+      - health-checks
   pull_request:
     branches: 
-      - main
       - dev
-    types: [opened, synchronize, reopened]
-
+    types: [opened, synchronize]
 jobs:
   code-test:
     # Kicks off the workflow and prepares Github to run coverage test using a ubuntu-latest container.
@@ -85,7 +83,7 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ${{ secrets.ECR_REPO }}
-        IMAGE_TAG: xds
+        IMAGE_TAG: xds-healthcheck
       run: |
         echo "Starting docker build"
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
