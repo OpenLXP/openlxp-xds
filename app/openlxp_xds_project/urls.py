@@ -17,7 +17,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, re_path, path
-from django.urls import HttpResponse
+from django.http import HttpResponse
 
 def health_check(request):
     return HttpResponse("OK", status=200)
