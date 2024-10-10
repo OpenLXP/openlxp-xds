@@ -21,7 +21,9 @@ from django.http import HttpResponse
 
 
 def health_check(request):
-    return HttpResponse("OK", status=200)
+    response = HttpResponse("OK", status=200)
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return response
 
 
 urlpatterns = [
@@ -33,5 +35,5 @@ urlpatterns = [
     re_path('api-auth/', include(
         'rest_framework.urls',
         namespace='rest_framework')),
-    path('health/', health_check, name='health-check')
+    path('health/', health_check, name='health_check')
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
