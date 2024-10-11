@@ -6,6 +6,7 @@
         --primary-fg: #fff;
         --body-fg: #333;
         --body-bg: #fff;
+        --body-medium-color: #444;
         --body-quiet-color: #666;
         --body-loud-color: #000;
         --header-color: #ffc;
@@ -180,8 +181,10 @@
 
 .admin-interface .module h2,
 .admin-interface .module caption,
+.admin-interface .module.collapse details summary,
 .admin-interface .module.filtered h2 {
     background: var(--admin-interface-module-background-color);
+    border-color: var(--admin-interface-module-background-color);
     color: var(--admin-interface-module-text-color);
 }
 
@@ -251,6 +254,21 @@
 .admin-interface .selector a.selector-clearall:hover {
     color: var(--admin-interface-generic-link-hover-color);
 }
+
+/* fix #393  */
+.admin-interface .selector-chosen .list-footer-display {
+    background: var(--admin-interface-module-background-color);
+}
+.admin-interface .selector-chosen .list-footer-display {
+    color: var(--admin-interface-module-text-color);
+}
+.admin-interface .selector-chosen .list-footer-display__clear {
+    color: var(--admin-interface-module-link-color);
+}
+.admin-interface .selector-chosen .list-footer-display__clear:hover {
+    color: var(--admin-interface-module-link-hover-color);
+}
+/* endfix */
 
 .admin-interface a:link,
 .admin-interface a:visited {
@@ -460,6 +478,7 @@
 .admin-interface.dashboard .module caption,
 .admin-interface #nav-sidebar .module th,
 .admin-interface #nav-sidebar .module caption,
+.admin-interface .module.collapse details summary,
 .admin-interface .module.filtered h2 {
     border-radius: var(--admin-interface-module-border-radius);
 }

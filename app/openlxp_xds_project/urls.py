@@ -20,10 +20,10 @@ from django.urls import include, re_path, path
 from django.http import HttpResponse
 
 
-def health_check(request):
-    response = HttpResponse("OK", status=200)
-    response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    return response
+# def health_check(request):
+#     response = HttpResponse("OK", status=200)
+#     response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+#     return response
 
 
 urlpatterns = [
@@ -35,5 +35,6 @@ urlpatterns = [
     re_path('api-auth/', include(
         'rest_framework.urls',
         namespace='rest_framework')),
-    path('health/', health_check, name='health_check')
+    re_path('health/', include('health_check.urls'),
+            name='health_check')
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
