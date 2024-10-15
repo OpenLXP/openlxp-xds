@@ -169,6 +169,22 @@ class CourseInformationMapping(TimeStampedModel):
                                                      " the course found in the"
                                                      " elasticsearch")
 
+    course_type = models.CharField(max_length=200,
+                                   default="Course."
+                                   "CourseType",
+                                   help_text="Enter the mapping for "
+                                             "the Course type of"
+                                             " the course found in the"
+                                             " elasticsearch")
+    
+    course_time = models.CharField(max_length=200,
+                                   default="Course."
+                                   "EstimatedCompletionTime",
+                                   help_text="Enter the mapping for "
+                                             "the estimated completion time "
+                                             " for the course found in the"
+                                             " elasticsearch")
+
     course_thumbnail = models.CharField(max_length=200,
                                         default="Technical_Information."
                                                 "Thumbnail",
