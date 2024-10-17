@@ -189,7 +189,7 @@ LOGGING = {
 }
 
 SECURE_SSL_REDIRECT = True
-SECURE_REDIRECT_EXEMPT = ['http://localhost:8020/health/', 'http://dev-xds2-admin.deloitteopenlxp.com/health', 'http://dev-xds-admin.deloitteopenlxp.com/health']
+SECURE_REDIRECT_EXEMPT = ['http://localhost:8020/health/']
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
