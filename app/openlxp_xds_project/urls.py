@@ -16,7 +16,15 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, re_path
+from django.urls import include, re_path, path
+from django.http import HttpResponse
+
+
+# def health_check(request):
+#     response = HttpResponse("OK", status=200)
+#     response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+#     return response
+
 
 urlpatterns = [
     re_path('admin/', admin.site.urls),
@@ -27,4 +35,6 @@ urlpatterns = [
     re_path('api-auth/', include(
         'rest_framework.urls',
         namespace='rest_framework')),
+    re_path('health/', include('health_check.urls'),
+            name='health_check')
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

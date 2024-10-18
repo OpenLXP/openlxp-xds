@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'openlxp_notifications',
     'social_django',
+    'health_check', 
     'openlxp_authentication',
     'xds_api',
     'core',
@@ -187,13 +188,15 @@ LOGGING = {
     }
 }
 
+SECURE_SSL_REDIRECT = True
+SECURE_REDIRECT_EXEMPT = ['http://localhost:8020/health/']
+
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 CSRF_COOKIE_DOMAIN = '.deloitteopenlxp.com'
 CSRF_TRUSTED_ORIGINS = ['https://dev-xds2-admin.deloitteopenlxp.com', 'https://dev-xds2.deloitteopenlxp.com', 'https://dev-xds-admin.deloitteopenlxp.com', 'https://dev-xds.deloitteopenlxp.com', 'https://*.deloitteopenlxp.com' ]
 # CSRF_COOKIE_DOMAIN = 'http://localhost'
 # CSRF_TRUSTED_ORIGINS = ['https://localhost', ]
-
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

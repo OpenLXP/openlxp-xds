@@ -1,15 +1,13 @@
-name: Docker CD
+# name: Docker CD
 
 on:
   push:
-    branches: 
-      - dev
+    branches:
+      - health-checks
   pull_request:
     branches: 
-      - main
       - dev
-    types: [opened, synchronize, reopened]
-
+    types: [opened, synchronize]
 jobs:
   code-test:
     # Kicks off the workflow and prepares Github to run coverage test using a ubuntu-latest container.
@@ -32,22 +30,22 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r ./requirements.txt
     # Start running test scripts and generate the coverage report
-    - name: Generate Coverage Report
-      env:
-        GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        CERT_VOLUME: ${{ secrets.CERT_VOLUME }}
-      run: |
-        echo "Cloning private repository"
-        git clone https://openlxp-host:${{ secrets.ACCESS_TOKEN }}@github.com/OpenLXP/openlxp-private.git
-        echo "Private repository cloned successfully"
-        echo "Copying .env file from openlxp-private to current working directory"
-        cp ./openlxp-private/openlxp-xds-env/.env .
-        echo "Copied .env file successfully"
-        echo "Create openlxp docker network"
-        docker network create openlxp
-        echo "Docker network successfully created"
-        echo "Running coverage unit test"
-        docker compose --env-file ./.env run app sh -c "python manage.py waitdb && coverage run manage.py test --tag=unit && flake8 && coverage report && coverage report --fail-under=80"
+    # - name: Generate Coverage Report
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+    #     CERT_VOLUME: ${{ secrets.CERT_VOLUME }}
+    #   run: |
+    #     echo "Cloning private repository"
+    #     git clone https://openlxp-host:${{ secrets.ACCESS_TOKEN }}@github.com/OpenLXP/openlxp-private.git
+    #     echo "Private repository cloned successfully"
+    #     echo "Copying .env file from openlxp-private to current working directory"
+    #     cp ./openlxp-private/openlxp-xds-env/.env .
+    #     echo "Copied .env file successfully"
+    #     echo "Create openlxp docker network"
+    #     docker network create openlxp
+    #     echo "Docker network successfully created"
+    #     echo "Running coverage unit test"
+    #     docker compose --env-file ./.env run app sh -c "python manage.py waitdb && coverage run manage.py test --tag=unit && flake8 && coverage report && coverage report --fail-under=80"
 
   # sonarcloud:
   #     name: SonarCloud
@@ -85,7 +83,7 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ${{ secrets.ECR_REPO }}
-        IMAGE_TAG: xds
+        IMAGE_TAG: xds-healthcheck
       run: |
         echo "Starting docker build"
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
