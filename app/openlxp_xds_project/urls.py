@@ -27,4 +27,6 @@ urlpatterns = [
     re_path('api-auth/', include(
         'rest_framework.urls',
         namespace='rest_framework')),
+    re_path('health/', include('health_check.urls'),
+            name='health_check')
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

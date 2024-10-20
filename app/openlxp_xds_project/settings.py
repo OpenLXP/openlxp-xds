@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'health_check', 
     'rest_framework',
     'rest_framework.authtoken',
     'openlxp_notifications',
@@ -194,6 +195,7 @@ CSRF_TRUSTED_ORIGINS = ['https://dev-xds2-admin.deloitteopenlxp.com', 'https://d
 # CSRF_COOKIE_DOMAIN = 'http://localhost'
 # CSRF_TRUSTED_ORIGINS = ['https://localhost', ]
 
+SECURE_SSL_REDIRECT = False
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

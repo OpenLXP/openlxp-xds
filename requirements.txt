@@ -12,6 +12,8 @@ django-colorfield>=0.11.0
 
 django-cors-headers>=3.7.0,<3.8.0
 
+django-health-check>3.18.0, <3.19.0
+
 django-elasticsearch-dsl>=7.3.0,<7.4.0
 
 django-model-utils>=4.1.1,<4.2.0
