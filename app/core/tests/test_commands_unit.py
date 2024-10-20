@@ -1,8 +1,7 @@
+from core.models import Experience, InterestList
 from django.conf import settings
 from django.core.management import call_command
 from django.test import tag
-
-from core.models import Experience, InterestList
 from users.models import XDSUser
 
 from .test_setup import TestSetUp
