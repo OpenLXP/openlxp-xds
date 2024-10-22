@@ -189,7 +189,7 @@ LOGGING = {
 }
 
 SECURE_SSL_REDIRECT = True
-SECURE_REDIRECT_EXEMPT = ['http://localhost:8020/health/']
+SECURE_REDIRECT_EXEMPT = ['health/', 'api/health/']
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
