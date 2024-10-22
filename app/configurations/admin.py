@@ -29,12 +29,14 @@ class CourseInformationMappingAdmin(admin.ModelAdmin):
     list_display = ('course_title', 'course_description',
                     'course_url', 'course_code', 'course_startDate',
                     'course_endDate', 'course_provider',
+                    'course_type', 'course_time',
                     'course_instructor', 'course_deliveryMode',
                     'course_thumbnail', 'course_derived_from',
                     'xds_ui_configuration')
     fields = ['course_title', 'course_description',
               'course_url', 'course_code', 'course_startDate',
               'course_endDate', 'course_provider',
+              'course_type', 'course_time',
               'course_instructor', 'course_deliveryMode',
               'course_thumbnail', 'course_derived_from',
               'xds_ui_configuration']

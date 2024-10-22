@@ -68,6 +68,8 @@ class ModelTests(TestSetUp):
         # course mappings
         course_title = 'Course.TestTitle'
         course_description = 'Course.TestDescription'
+        course_type = 'Course.CourseType'
+        course_time = 'Course.EstimatedCompletionTime'
         course_url = 'Course.TestUrl'
         course_code = 'Course.TestCode'
         course_startDate = 'Course.TestStartDate'
@@ -80,6 +82,8 @@ class ModelTests(TestSetUp):
         courseInformation = CourseInformationMapping(
             xds_ui_configuration=uiConfig,
             course_title=course_title,
+            course_time=course_time,
+            course_type=course_type,
             course_description=course_description,
             course_url=course_url,
             course_code=course_code,
