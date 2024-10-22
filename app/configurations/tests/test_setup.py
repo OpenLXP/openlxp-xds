@@ -6,12 +6,18 @@ from openlxp_notifications.models import email
 from rest_framework.test import APITestCase
 from users.models import XDSUser
 
+from django.test import override_settings
+
 
 class TestSetUp(APITestCase):
     """Class with setup and teardown for tests in XDS"""
 
     def setUp(self):
         """Function to set up necessary data for testing"""
+
+        settings_manager = override_settings(SECURE_SSL_REDIRECT=False)
+        settings_manager.enable()
+        self.addCleanup(settings_manager.disable)
 
         # self.patcher = patch('users.models.email_verification')
         # self.mock_email_verification = self.patcher.start()
