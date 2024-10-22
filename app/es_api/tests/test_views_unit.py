@@ -7,9 +7,16 @@ from requests.exceptions import HTTPError
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from django.test import override_settings
+
 
 @tag('unit')
 class ViewTests(APITestCase):
+
+    def setUp(self):
+        settings_manager = override_settings(SECURE_SSL_REDIRECT=False)
+        settings_manager.enable()
+        self.addCleanup(settings_manager.disable)
 
     def test_search_index_no_keyword(self):
         """
@@ -156,6 +163,12 @@ class ViewTests(APITestCase):
 
 @tag('unit')
 class SearchDerivedTests(APITestCase):
+
+    def setUp(self):
+        settings_manager = override_settings(SECURE_SSL_REDIRECT=False)
+        settings_manager.enable()
+        self.addCleanup(settings_manager.disable)
+
     def test_search_derived_no_reference(self):
         """
         Test that the /es-api/ endpoint sends an HTTP error when no
