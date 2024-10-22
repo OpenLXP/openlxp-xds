@@ -108,7 +108,7 @@ class XDSUIConfiguration(TimeStampedModel):
 
 
 class CourseInformationMapping(TimeStampedModel):
-    """ Model to map course information"""
+    """ Model to map course information for UI"""
 
     course_title = models.CharField(max_length=200,
                                     default="Course.CourseTitle",
