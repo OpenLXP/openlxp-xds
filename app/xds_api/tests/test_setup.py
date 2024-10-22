@@ -8,6 +8,7 @@ from users.models import XDSUser
 
 from django.test import override_settings
 
+
 class TestSetUp(APITestCase):
     """Class with setup and teardown for tests in XDS"""
 
