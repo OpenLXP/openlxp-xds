@@ -176,7 +176,7 @@ class CourseInformationMapping(TimeStampedModel):
                                              "the Course type of"
                                              " the course found in the"
                                              " elasticsearch")
-    
+
     course_time = models.CharField(max_length=200,
                                    default="Course."
                                    "EstimatedCompletionTime",
