@@ -195,8 +195,7 @@ CSRF_TRUSTED_ORIGINS = ['https://dev-xds2-admin.deloitteopenlxp.com', 'https://d
 # CSRF_COOKIE_DOMAIN = 'http://localhost'
 # CSRF_TRUSTED_ORIGINS = ['https://localhost', ]
 
-SECURE_SSL_REDIRECT = True
-SECURE_REDIRECT_EXEMPT = ['health/', 'api/health/']
+SECURE_SSL_REDIRECT = False
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
