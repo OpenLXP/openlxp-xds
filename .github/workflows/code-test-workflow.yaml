@@ -1,10 +1,9 @@
 # name: EDLM Portal Backend Code CI/CD
 
 on:
-    pull_request:
-      branches: 
-        - main
-      types: [opened, synchronize]
+    push:
+        branches:
+        - health-checks
   
 jobs:
   pip-install:
