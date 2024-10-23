@@ -1,10 +1,9 @@
 import logging
 
-from rest_framework import serializers
-
 from configurations.models import CourseInformationMapping
 from core.models import (CourseDetailHighlight, Experience, InterestList,
                          SavedFilter, SearchSortOption)
+from rest_framework import serializers
 from users.serializers import XDSUserSerializer
 
 logger = logging.getLogger('dict_config_logger')

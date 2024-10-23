@@ -7,9 +7,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms import ValidationError
 from django.urls import reverse
-from model_utils.models import TimeStampedModel
-
 from es_api.utils.queries_base import BaseQueries
+from model_utils.models import TimeStampedModel
 from users.models import Organization, XDSUser
 
 logger = logging.getLogger('dict_config_logger')
@@ -109,7 +108,7 @@ class XDSUIConfiguration(TimeStampedModel):
 
 
 class CourseInformationMapping(TimeStampedModel):
-    """ Model to map course information"""
+    """ Model to map course information for UI"""
 
     course_title = models.CharField(max_length=200,
                                     default="Course.CourseTitle",
@@ -169,6 +168,22 @@ class CourseInformationMapping(TimeStampedModel):
                                                      "the delivery mode of"
                                                      " the course found in the"
                                                      " elasticsearch")
+
+    course_type = models.CharField(max_length=200,
+                                   default="Course."
+                                   "CourseType",
+                                   help_text="Enter the mapping for "
+                                             "the Course type of"
+                                             " the course found in the"
+                                             " elasticsearch")
+
+    course_time = models.CharField(max_length=200,
+                                   default="Course."
+                                   "EstimatedCompletionTime",
+                                   help_text="Enter the mapping for "
+                                             "the estimated completion time "
+                                             " for the course found in the"
+                                             " elasticsearch")
 
     course_thumbnail = models.CharField(max_length=200,
                                         default="Technical_Information."

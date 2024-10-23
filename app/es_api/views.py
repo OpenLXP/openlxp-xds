@@ -1,16 +1,15 @@
 import json
 import logging
 
+from configurations.models import CourseInformationMapping, XDSConfiguration
+from core.models import SearchFilter
 from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseServerError)
+from es_api.utils.queries import XSEQueries
 from requests.exceptions import HTTPError
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from configurations.models import CourseInformationMapping, XDSConfiguration
-from core.models import SearchFilter
-from es_api.utils.queries import XSEQueries
 
 logger = logging.getLogger('dict_config_logger')
 

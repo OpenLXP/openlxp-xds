@@ -1,13 +1,12 @@
 import json
 from unittest.mock import patch
 
+from configurations.models import (CourseInformationMapping, XDSConfiguration,
+                                   XDSUIConfiguration)
 from django.contrib.auth.models import Group
 from django.test import tag
 from django.urls import reverse
 from rest_framework import status
-
-from configurations.models import (CourseInformationMapping, XDSConfiguration,
-                                   XDSUIConfiguration)
 from users.models import Organization, XDSUser
 
 from .test_setup import TestSetUp
@@ -20,11 +19,12 @@ class ConfigurationTests(TestSetUp):
         """Test that making a GET request to the api gives us a JSON of the
             stored XDSUIConfiguration model"""
         url = reverse('configurations:xds-ui-configuration')
+        xds_ui_cfg = XDSUIConfiguration()
+        xds_ui_cfg.search_results_per_page = 10
+        xds_ui_cfg.xds_configuration = self.config
+        xds_ui_cfg.save()
         with patch('configurations.views.XDSUIConfiguration.objects') \
                 as xds_ui_Obj:
-            xds_config = XDSConfiguration(target_xis_metadata_api="test")
-            xds_ui_cfg = XDSUIConfiguration(search_results_per_page=10,
-                                            xds_configuration=xds_config)
             xds_ui_Obj.return_value = xds_ui_Obj
             xds_ui_Obj.first.return_value = xds_ui_cfg
 
@@ -68,6 +68,8 @@ class ModelTests(TestSetUp):
         # course mappings
         course_title = 'Course.TestTitle'
         course_description = 'Course.TestDescription'
+        course_type = 'Course.CourseType'
+        course_time = 'Course.EstimatedCompletionTime'
         course_url = 'Course.TestUrl'
         course_code = 'Course.TestCode'
         course_startDate = 'Course.TestStartDate'
@@ -80,6 +82,8 @@ class ModelTests(TestSetUp):
         courseInformation = CourseInformationMapping(
             xds_ui_configuration=uiConfig,
             course_title=course_title,
+            course_time=course_time,
+            course_type=course_type,
             course_description=course_description,
             course_url=course_url,
             course_code=course_code,
