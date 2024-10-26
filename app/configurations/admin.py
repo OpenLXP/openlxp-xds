@@ -21,7 +21,7 @@ class XDSUIConfigurationAdmin(admin.ModelAdmin):
     list_display = ('search_results_per_page', 'xds_configuration',
                     'created', 'modified',)
     fields = [('search_results_per_page', 'xds_configuration',
-               'course_img_fallback')]
+               'course_img_fallback', 'ui_logo')]
 
 
 @admin.register(CourseInformationMapping)
@@ -32,11 +32,11 @@ class CourseInformationMappingAdmin(admin.ModelAdmin):
                     'course_type', 'course_time',
                     'course_instructor', 'course_deliveryMode',
                     'course_thumbnail', 'course_derived_from',
-                    'xds_ui_configuration')
+                    'course_competency', 'xds_ui_configuration')
     fields = ['course_title', 'course_description',
               'course_url', 'course_code', 'course_startDate',
               'course_endDate', 'course_provider',
               'course_type', 'course_time',
               'course_instructor', 'course_deliveryMode',
               'course_thumbnail', 'course_derived_from',
-              'xds_ui_configuration']
+              'course_competency', 'xds_ui_configuration']

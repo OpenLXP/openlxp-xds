@@ -195,3 +195,33 @@ class SearchDerivedTests(APITestCase):
             response = self.client.get(url)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(json.loads(response.content), {'test': "value"})
+
+
+@tag('unit')
+class SearchCompetencyTests(APITestCase):
+    def test_search_competency_no_reference(self):
+        """
+        Test that the /es-api/ endpoint sends an HTTP error when no
+        reference is provided
+        """
+        url = reverse('es_api:search-competency')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_search_derived_with_reference(self):
+        """
+        Test that the /es-api/ endpoint succeeds when a valid
+        reference is provided
+        """
+        url = "%s?reference=hello&p=1" % (reverse('es_api:search-competency'))
+        with patch('es_api.views.XSEQueries') as query, \
+                patch('es_api.views.SearchFilter.objects') as sf1Obj, \
+                patch('es_api.views.XDSConfiguration.objects'):
+            sf1Obj.return_value = []
+            sf1Obj.filter.return_value = []
+            result_json = json.dumps({"test": "value"})
+            query.get_results.return_value = result_json
+            query.return_value = query
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(json.loads(response.content), {'test': "value"})
