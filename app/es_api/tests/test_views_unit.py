@@ -199,6 +199,12 @@ class SearchDerivedTests(APITestCase):
 
 @tag('unit')
 class SearchCompetencyTests(APITestCase):
+
+    def setUp(self):
+        settings_manager = override_settings(SECURE_SSL_REDIRECT=False)
+        settings_manager.enable()
+        self.addCleanup(settings_manager.disable)
+
     def test_search_competency_no_reference(self):
         """
         Test that the /es-api/ endpoint sends an HTTP error when no
