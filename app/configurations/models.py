@@ -178,11 +178,17 @@ class CourseInformationMapping(TimeStampedModel):
                                                   " elasticsearch")
 
     course_derived_from = models.CharField(max_length=200,
-                                           default="P2881_Core.DerivedFrom",
+                                           default="P2881-Core.DerivedFrom",
                                            help_text="Enter the mapping for "
                                            "the reference to the "
                                            "course derived from found in the"
                                            " elasticsearch")
+
+    course_competency = models.CharField(max_length=200,
+                                         default="p2881_course_profile.Competencies_Asserted",
+                                         help_text="Enter the mapping for the "
+                                         "reference to the competency the "
+                                         "course is aligned to")
 
     xds_ui_configuration = models \
         .OneToOneField(XDSUIConfiguration,

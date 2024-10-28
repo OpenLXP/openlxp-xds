@@ -85,6 +85,7 @@ class XSEQueries(BaseQueries):
             course_mapping.course_code, course_mapping.course_provider,
             course_mapping.course_instructor,
             course_mapping.course_deliveryMode,
+            course_mapping.course_competency,
             'Course.CourseTitle', 'Course.ShortDescription',
             'Course.CourseCode', 'Course.CourseProviderName'
         ]
