@@ -353,6 +353,31 @@ class UtilTests(TestCase):
             self.assertRaises(ValueError, query.search_for_derived, "test",
                               {"page": "hello"})
 
+    def test_search_by_competency(self):
+        """Test that calling search_for_derived with a invalid page # \
+        (e.g. string) value will throw an error"""
+        with patch('es_api.utils.queries.'
+                   'XDSConfiguration.objects') as xdsCfg, \
+                patch('elasticsearch_dsl.Search.execute') as es_execute, \
+                patch('es_api.utils.queries.SearchFilter.objects') as sfObj, \
+                patch('es_api.utils.queries.'
+                      'CourseInformationMapping.objects') as cimobj:
+            configObj = XDSConfiguration(target_xis_metadata_api="dsds")
+            uiConfigObj = XDSUIConfiguration(search_results_per_page=10,
+                                             xds_configuration=configObj)
+            cimobj.first().course_competency = "test"
+            xdsCfg.xdsuiconfiguration = uiConfigObj
+            xdsCfg.first.return_value = configObj
+            sfObj.return_value = []
+            sfObj.filter.return_value = []
+            es_execute.return_value = {
+                "test": "test"
+            }
+            query = XSEQueries('test', 'test')
+
+            self.assertRaises(ValueError, query.search_by_competency, "test",
+                              {"page": "hello"})
+
 
 class XDSUserTests(TestCase):
     def test_user_org_filter_blank(self):

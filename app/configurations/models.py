@@ -7,8 +7,9 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms import ValidationError
 from django.urls import reverse
-from es_api.utils.queries_base import BaseQueries
 from model_utils.models import TimeStampedModel
+
+from es_api.utils.queries_base import BaseQueries
 from users.models import Organization, XDSUser
 
 logger = logging.getLogger('dict_config_logger')
@@ -92,6 +93,9 @@ class XDSUIConfiguration(TimeStampedModel):
     course_img_fallback = models.ImageField(upload_to='images/',
                                             null=True,
                                             blank=True)
+    ui_logo = models.ImageField(upload_to='images/',
+                                null=True,
+                                blank=True)
 
     def get_absolute_url(self):
         """ URL for displaying individual model records."""
@@ -108,7 +112,7 @@ class XDSUIConfiguration(TimeStampedModel):
 
 
 class CourseInformationMapping(TimeStampedModel):
-    """ Model to map course information"""
+    """ Model to map course information for UI"""
 
     course_title = models.CharField(max_length=200,
                                     default="Course.CourseTitle",
@@ -169,6 +173,22 @@ class CourseInformationMapping(TimeStampedModel):
                                                      " the course found in the"
                                                      " elasticsearch")
 
+    course_type = models.CharField(max_length=200,
+                                   default="Course."
+                                   "CourseType",
+                                   help_text="Enter the mapping for "
+                                             "the Course type of"
+                                             " the course found in the"
+                                             " elasticsearch")
+
+    course_time = models.CharField(max_length=200,
+                                   default="Course."
+                                   "EstimatedCompletionTime",
+                                   help_text="Enter the mapping for "
+                                             "the estimated completion time "
+                                             " for the course found in the"
+                                             " elasticsearch")
+
     course_thumbnail = models.CharField(max_length=200,
                                         default="Technical_Information."
                                                 "Thumbnail",
@@ -185,10 +205,11 @@ class CourseInformationMapping(TimeStampedModel):
                                            " elasticsearch")
 
     course_competency = models.CharField(max_length=200,
-                                         default="p2881_course_profile.Competencies_Asserted",
-                                         help_text="Enter the mapping for the "
-                                         "reference to the competency the "
-                                         "course is aligned to")
+                                         default="Course."
+                                         "CourseLearningOutcome",
+                                         help_text="Enter the mapping for "
+                                         "the reference to the "
+                                         "competency taught")
 
     xds_ui_configuration = models \
         .OneToOneField(XDSUIConfiguration,
