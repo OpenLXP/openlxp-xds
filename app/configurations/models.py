@@ -198,7 +198,7 @@ class CourseInformationMapping(TimeStampedModel):
                                                   " elasticsearch")
 
     course_derived_from = models.CharField(max_length=200,
-                                           default="P2881_Core.DerivedFrom",
+                                           default="P2881-Core.DerivedFrom",
                                            help_text="Enter the mapping for "
                                            "the reference to the "
                                            "course derived from found in the"
