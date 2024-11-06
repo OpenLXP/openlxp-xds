@@ -13,7 +13,6 @@ from .queries_base import BaseQueries
 
 logger = logging.getLogger('dict_config_logger')
 
-
 class XSEQueries(BaseQueries):
 
     def get_page_start(self, page_number, page_size):
@@ -86,8 +85,9 @@ class XSEQueries(BaseQueries):
             course_mapping.course_instructor,
             course_mapping.course_deliveryMode,
             course_mapping.course_competency,
-            'Course.CourseTitle', 'Course.ShortDescription',
-            'Course.CourseCode', 'Course.CourseProviderName'
+            'Supplemental_Ledger.Frequency Offered',
+            'Supplemental_Ledger.Course Proficiency Level',
+            'p2881-core.Subject'
         ]
 
         q = Q("multi_match",
@@ -209,6 +209,45 @@ class XSEQueries(BaseQueries):
         self.search = self.search[0:6]
         response = self.search.execute()
         logger.info(response)
+
+        return response
+
+    def similar_courses(self, keyword=""):
+        """This method takes in a doc ID and queries the elasticsearch index for
+            courses with similar competencies or titles"""
+
+        course_mapping = CourseInformationMapping.objects.first()
+        fields = [
+            course_mapping.course_competency,
+            'p2881-core.Subject'
+        ]
+
+        # We're going to match based only on two fields
+        q = Q("multi_match",
+              query=keyword,
+              fields=fields)
+        
+        # setting up the search object
+        self.search = self.search.query(q)
+
+        self.user_organization_filtering()
+
+        # getting the page size for result pagination
+        configuration = XDSConfiguration.objects.first()
+        uiConfig = configuration.xdsuiconfiguration
+        search_filters = SearchFilter.objects.filter(
+            xds_ui_configuration=uiConfig, active=True)
+
+        # create aggregations for each filter
+        self.add_search_aggregations(filter_set=search_filters)
+
+        # Skipping first response found and getting next three
+        # if len(self.search > 3):
+        self.search = self.search[1:4]
+
+        # call to elasticsearch to execute the query
+        response = self.search.execute()
+        logger.info(self.search.to_dict())
 
         return response
 
