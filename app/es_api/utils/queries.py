@@ -3,7 +3,8 @@ import json
 import logging
 
 from configurations.models import CourseInformationMapping, XDSConfiguration
-from core.models import CourseSpotlight, SearchFilter, SearchSortOption, SearchField
+from core.models import CourseSpotlight, SearchFilter 
+from core.models import SearchSortOption, SearchField
 from django.core.exceptions import ObjectDoesNotExist
 from elasticsearch_dsl import A, Document, Q
 from elasticsearch_dsl.query import MoreLikeThis
@@ -12,6 +13,7 @@ from users.models import Organization
 from .queries_base import BaseQueries
 
 logger = logging.getLogger('dict_config_logger')
+
 
 class XSEQueries(BaseQueries):
 
@@ -85,7 +87,8 @@ class XSEQueries(BaseQueries):
             course_mapping.course_instructor,
             course_mapping.course_deliveryMode,
             course_mapping.course_competency,
-            *SearchField.objects.filter(active=True).values_list('field_name', flat=True)
+            *SearchField.objects.filter(
+                active=True).values_list('field_name', flat=True)
         ]
 
         q = Q("multi_match",
@@ -224,7 +227,7 @@ class XSEQueries(BaseQueries):
         q = Q("multi_match",
               query=keyword,
               fields=fields)
-        
+
         # setting up the search object
         self.search = self.search.query(q)
 

@@ -208,7 +208,7 @@ class SearchCompetencyView(APIView):
 
 class GetMoreLikeThisView(APIView):
     """This method defines an API for fetching results using the
-            more_like_this feature from elasticsearch for 
+            more_like_this feature from elasticsearch for
             more like this courses section of UI. """
 
     def get(self, request, doc_id):

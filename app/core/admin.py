@@ -11,12 +11,14 @@ class SearchFilterAdmin(admin.ModelAdmin):
     fields = [('display_name', 'field_name', 'xds_ui_configuration',
                'filter_type', 'active',)]
 
+
 @admin.register(SearchField)
 class SearchFieldAdmin(admin.ModelAdmin):
     list_display = ('display_name', 'field_name', 'xds_ui_configuration',
                     'active', 'created', 'modified',)
     fields = [('display_name', 'field_name', 'xds_ui_configuration',
-                'active',)]    
+               'active',)]
+
 
 @admin.register(SearchSortOption)
 class SearchSortOptionAdmin(admin.ModelAdmin):

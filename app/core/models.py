@@ -38,6 +38,7 @@ class SearchFilter(TimeStampedModel):
         """String for representing the Model object."""
         return f'{self.id}'
 
+
 class SearchField(TimeStampedModel):
     """Model to add aditional fields to search by"""
     display_name = models.CharField(
@@ -60,7 +61,8 @@ class SearchField(TimeStampedModel):
     def __str__(self):
         """String for representing the Model object."""
         return f'{self.id}'
-    
+
+
 class SearchSortOption(TimeStampedModel):
     """Model to contain options for sorting search results"""
 
