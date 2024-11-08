@@ -211,6 +211,11 @@ class CourseInformationMapping(TimeStampedModel):
                                          "the reference to the "
                                          "competency taught")
 
+    course_subject = models.CharField(max_length=200,
+                                      default="p2881-core.Subject",
+                                      help_text="Enter the mapping for "
+                                      "the course subject")
+
     xds_ui_configuration = models \
         .OneToOneField(XDSUIConfiguration,
                        on_delete=models.CASCADE,

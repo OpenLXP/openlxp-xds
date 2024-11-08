@@ -3,7 +3,7 @@ import json
 import logging
 
 from configurations.models import CourseInformationMapping, XDSConfiguration
-from core.models import CourseSpotlight, SearchFilter, SearchSortOption
+from core.models import CourseSpotlight, SearchFilter, SearchSortOption, SearchField
 from django.core.exceptions import ObjectDoesNotExist
 from elasticsearch_dsl import A, Document, Q
 from elasticsearch_dsl.query import MoreLikeThis
@@ -85,9 +85,7 @@ class XSEQueries(BaseQueries):
             course_mapping.course_instructor,
             course_mapping.course_deliveryMode,
             course_mapping.course_competency,
-            'Supplemental_Ledger.Frequency Offered',
-            'Supplemental_Ledger.Course Proficiency Level',
-            'p2881-core.Subject'
+            *SearchField.objects.filter(active=True).values_list('field_name', flat=True)
         ]
 
         q = Q("multi_match",
@@ -219,7 +217,7 @@ class XSEQueries(BaseQueries):
         course_mapping = CourseInformationMapping.objects.first()
         fields = [
             course_mapping.course_competency,
-            'p2881-core.Subject'
+            course_mapping.course_subject
         ]
 
         # We're going to match based only on two fields

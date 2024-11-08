@@ -38,7 +38,29 @@ class SearchFilter(TimeStampedModel):
         """String for representing the Model object."""
         return f'{self.id}'
 
+class SearchField(TimeStampedModel):
+    """Model to add aditional fields to search by"""
+    display_name = models.CharField(
+        max_length=200,
+        help_text='Enter the display name of the field to search by on')
+    field_name = models.CharField(
+        max_length=200,
+        help_text='Enter the metadata field name as displayed in Elasticsearch'
+                  ' e.g. course.title'
+    )
+    xds_ui_configuration = models.ForeignKey(XDSUIConfiguration,
+                                             on_delete=models.CASCADE)
 
+    active = models.BooleanField(default=True)
+
+    def get_absolute_url(self):
+        """ URL for displaying individual model records."""
+        return reverse('Configuration-detail', args=[str(self.id)])
+
+    def __str__(self):
+        """String for representing the Model object."""
+        return f'{self.id}'
+    
 class SearchSortOption(TimeStampedModel):
     """Model to contain options for sorting search results"""
 
