@@ -3,7 +3,7 @@ import json
 import logging
 
 from configurations.models import CourseInformationMapping, XDSConfiguration
-from core.models import CourseSpotlight, SearchFilter 
+from core.models import CourseSpotlight, SearchFilter
 from core.models import SearchSortOption, SearchField
 from django.core.exceptions import ObjectDoesNotExist
 from elasticsearch_dsl import A, Document, Q
