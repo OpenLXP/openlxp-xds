@@ -3,8 +3,8 @@ import json
 import logging
 
 from configurations.models import CourseInformationMapping, XDSConfiguration
-from core.models import CourseSpotlight, SearchFilter
-from core.models import SearchSortOption, SearchField
+from core.models import (CourseSpotlight, SearchFilter,
+                         SearchSortOption, SearchField)
 from django.core.exceptions import ObjectDoesNotExist
 from elasticsearch_dsl import A, Document, Q
 from elasticsearch_dsl.query import MoreLikeThis
@@ -214,8 +214,8 @@ class XSEQueries(BaseQueries):
         return response
 
     def similar_courses(self, keyword=""):
-        """This method takes in a doc ID and queries the elasticsearch index for
-            courses with similar competencies or titles"""
+        """This method takes in a keyword and queries the elasticsearch index 
+           for 3 courses with similar competnencies or subjects"""
 
         course_mapping = CourseInformationMapping.objects.first()
         fields = [
@@ -231,16 +231,16 @@ class XSEQueries(BaseQueries):
         # setting up the search object
         self.search = self.search.query(q)
 
-        self.user_organization_filtering()
+        # self.user_organization_filtering()
 
-        # getting the page size for result pagination
-        configuration = XDSConfiguration.objects.first()
-        uiConfig = configuration.xdsuiconfiguration
-        search_filters = SearchFilter.objects.filter(
-            xds_ui_configuration=uiConfig, active=True)
+        # # getting the page size for result pagination
+        # configuration = XDSConfiguration.objects.first()
+        # uiConfig = configuration.xdsuiconfiguration
+        # search_filters = SearchFilter.objects.filter(
+        #     xds_ui_configuration=uiConfig, active=True)
 
-        # create aggregations for each filter
-        self.add_search_aggregations(filter_set=search_filters)
+        # # create aggregations for each filter
+        # self.add_search_aggregations(filter_set=search_filters)
 
         # Skipping first response found and getting next three
         # if len(self.search > 3):
