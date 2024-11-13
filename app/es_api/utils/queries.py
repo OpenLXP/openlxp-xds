@@ -214,7 +214,7 @@ class XSEQueries(BaseQueries):
         return response
 
     def similar_courses(self, keyword=""):
-        """This method takes in a keyword and queries the elasticsearch index 
+        """This method takes in a keyword and queries the elasticsearch index
            for 3 courses with similar competnencies or subjects"""
 
         course_mapping = CourseInformationMapping.objects.first()
