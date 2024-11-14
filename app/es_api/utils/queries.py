@@ -215,7 +215,7 @@ class XSEQueries(BaseQueries):
 
     def similar_courses(self, keyword=""):
         """This method takes in a keyword and queries the elasticsearch index
-           for 3 courses with similar competnencies or subjects"""
+           for 4 courses with similar competencies or subjects"""
 
         course_mapping = CourseInformationMapping.objects.first()
         fields = [
@@ -231,20 +231,10 @@ class XSEQueries(BaseQueries):
         # setting up the search object
         self.search = self.search.query(q)
 
-        # self.user_organization_filtering()
+        self.user_organization_filtering()
 
-        # # getting the page size for result pagination
-        # configuration = XDSConfiguration.objects.first()
-        # uiConfig = configuration.xdsuiconfiguration
-        # search_filters = SearchFilter.objects.filter(
-        #     xds_ui_configuration=uiConfig, active=True)
-
-        # # create aggregations for each filter
-        # self.add_search_aggregations(filter_set=search_filters)
-
-        # Skipping first response found and getting next three
-        # if len(self.search > 3):
-        self.search = self.search[1:4]
+        # sending back 4 responses
+        self.search = self.search[0:4]
 
         # call to elasticsearch to execute the query
         response = self.search.execute()

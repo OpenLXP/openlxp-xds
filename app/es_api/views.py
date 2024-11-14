@@ -241,8 +241,8 @@ class GetMoreLikeThisView(APIView):
 
 
 class GetSimilarCoursesView(APIView):
-    """This method defines an API for fetching results using the
-            more_like_this feature from elasticsearch for similar courses. """
+    """This method defines an API for fetching results by sending key words
+            to elasticsearch and looking for similar courses. """
 
     def get(self, request, key):
         results = []
