@@ -15,4 +15,6 @@ urlpatterns = [
          name='search-derived'),
     path('teaches/', views.SearchCompetencyView.as_view(),
          name='search-competency'),
+    path('similar-courses/<str:key>/', views.GetSimilarCoursesView.
+         as_view(), name='get-similar-courses')
 ]

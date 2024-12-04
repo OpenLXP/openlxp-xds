@@ -1,6 +1,6 @@
 from core.models import (CourseDetailHighlight, CourseSpotlight, Experience,
                          InterestList, SavedFilter, SearchFilter,
-                         SearchSortOption)
+                         SearchSortOption, SearchField)
 from django.contrib import admin
 
 
@@ -10,6 +10,14 @@ class SearchFilterAdmin(admin.ModelAdmin):
                     'filter_type', 'active', 'created', 'modified',)
     fields = [('display_name', 'field_name', 'xds_ui_configuration',
                'filter_type', 'active',)]
+
+
+@admin.register(SearchField)
+class SearchFieldAdmin(admin.ModelAdmin):
+    list_display = ('display_name', 'field_name', 'xds_ui_configuration',
+                    'active', 'created', 'modified',)
+    fields = [('display_name', 'field_name', 'xds_ui_configuration',
+               'active',)]
 
 
 @admin.register(SearchSortOption)

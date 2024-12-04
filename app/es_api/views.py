@@ -208,7 +208,8 @@ class SearchCompetencyView(APIView):
 
 class GetMoreLikeThisView(APIView):
     """This method defines an API for fetching results using the
-            more_like_this feature from elasticsearch. """
+            more_like_this feature from elasticsearch for
+            more like this courses section of UI. """
 
     def get(self, request, doc_id):
         results = []
@@ -237,6 +238,49 @@ class GetMoreLikeThisView(APIView):
         else:
             logger.info(results)
             return HttpResponse(results, content_type="application/json")
+
+
+class GetSimilarCoursesView(APIView):
+    """This method defines an API for fetching results by sending key words
+            to elasticsearch and looking for similar courses. """
+
+    def get(self, request, key):
+        results = []
+
+        if key != '':
+            errorMsg = {
+                "message": "error executing ElasticSearch query; " +
+                "Please contact an administrator"
+            }
+            errorMsgJSON = json.dumps(errorMsg)
+
+            try:
+
+                queries = XSEQueries(
+                    XDSConfiguration.objects.first().target_xse_host,
+                    XDSConfiguration.objects.first().target_xse_index,
+                    user=request.user)
+                response = queries.similar_courses(
+                    keyword=key)
+                results = queries.get_results(response)
+            except HTTPError as http_err:
+                logger.error(http_err)
+                return HttpResponseServerError(errorMsgJSON,
+                                               content_type="application/json")
+            except Exception as err:
+                logger.error(err)
+                return HttpResponseServerError(errorMsgJSON,
+                                               content_type="application/json")
+            else:
+                logger.info(results)
+                return HttpResponse(results, content_type="application/json")
+        else:
+            error = {
+                "message": "Request is missing 'key' query paramater"
+            }
+            errorJson = json.dumps(error)
+            return HttpResponseBadRequest(errorJson,
+                                          content_type="application/json")
 
 
 class FiltersView(APIView):
