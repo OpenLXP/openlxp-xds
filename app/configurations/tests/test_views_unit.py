@@ -78,6 +78,9 @@ class ModelTests(TestSetUp):
         course_instructor = 'Course.TestInstructor'
         course_deliveryMode = 'Course.TestDeliveryMode'
         course_thumbnail = 'Course.TestThumbnail'
+        course_derived_from = 'Course.DerivedFrom'
+        course_competency = 'Course.Competency'
+        course_subject = 'Course.Subject'
 
         courseInformation = CourseInformationMapping(
             xds_ui_configuration=uiConfig,
@@ -92,7 +95,10 @@ class ModelTests(TestSetUp):
             course_provider=course_provider,
             course_instructor=course_instructor,
             course_deliveryMode=course_deliveryMode,
-            course_thumbnail=course_thumbnail)
+            course_thumbnail=course_thumbnail,
+            course_derived_from=course_derived_from,
+            course_competency=course_competency,
+            course_subject=course_subject)
 
         self.assertEqual(courseInformation.course_title, course_title)
         self.assertEqual(courseInformation.course_description,
@@ -102,6 +108,11 @@ class ModelTests(TestSetUp):
                          course_instructor)
         self.assertEqual(courseInformation.course_url, course_url)
         self.assertEqual(str(courseInformation), str(courseInformation.id))
+        self.assertEqual(courseInformation.course_subject, course_subject)
+        self.assertEqual(courseInformation.course_competency,
+                         course_competency)
+        self.assertEqual(courseInformation.course_derived_from,
+                         course_derived_from)
 
     def test_default_user_group(self):
         """Test that default_user_group is used when defined"""

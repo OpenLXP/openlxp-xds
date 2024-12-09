@@ -78,6 +78,20 @@ class ViewTests(APITestCase):
                              status.HTTP_500_INTERNAL_SERVER_ERROR)
             self.assertEqual(responseDict['message'], errorMsg)
 
+    def test_similar_courses(self):
+        """
+        Test that the /es-api/similar-courses/{key} endpoint returns code
+        200 when successful
+        """
+        key = 'test'
+        url = reverse('es_api:get-similar-courses', args=(key,))
+        with patch('es_api.views.XSEQueries') as query, \
+                patch('es_api.views.XDSConfiguration.objects'):
+            result_json = json.dumps({"test": "value"})
+            query.get_results.return_value = result_json
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
     def test_filters(self):
         """
         Test that the /es-api/filter-search? endpoint returns code
