@@ -157,7 +157,8 @@ class InterestListsTests(TestSetUp):
         # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
-        with patch('xds_api.views.get_request') as get_request, \
+        with patch('xds_api.utils.'
+                   'xds_utils.get_request') as get_request, \
                 patch('configurations.views.XDSConfiguration.objects') \
                 as conf_obj:
             # mock the configuration object
@@ -196,7 +197,8 @@ class InterestListsTests(TestSetUp):
         # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
-        with patch('xds_api.views.get_request') as get_request, \
+        with patch('xds_api.utils.'
+                   'xds_utils.get_request') as get_request, \
                 patch('configurations.views.XDSConfiguration.objects') \
                 as conf_obj:
             # mock the configuration object
@@ -303,7 +305,7 @@ class InterestListsTests(TestSetUp):
 
     def test_edit_interest_list_authenticated_invalid_change(self):
         """
-        Test that an authenticated user making an invlid change to a
+        Test that an authenticated user making an invalid change to a
         list returns a 400.
         """
         list_id = self.list_1.id
