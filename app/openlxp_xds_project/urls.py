@@ -32,5 +32,6 @@ urlpatterns = [
             name='health_check'),
     re_path('', include('openlxp_authentication.urls')),
     re_path('^inbox/notifications/',
-        include(notifications.urls, namespace='notifications')),
+            include(notifications.urls,
+                    namespace='notifications')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
