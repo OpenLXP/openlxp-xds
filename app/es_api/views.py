@@ -246,7 +246,6 @@ class GetSimilarCoursesView(APIView):
 
     def get(self, request, key):
         results = []
-
         if key != '':
             errorMsg = {
                 "message": "error executing ElasticSearch query; " +
@@ -255,7 +254,6 @@ class GetSimilarCoursesView(APIView):
             errorMsgJSON = json.dumps(errorMsg)
 
             try:
-
                 queries = XSEQueries(
                     XDSConfiguration.objects.first().target_xse_host,
                     XDSConfiguration.objects.first().target_xse_index,
@@ -276,7 +274,7 @@ class GetSimilarCoursesView(APIView):
                 return HttpResponse(results, content_type="application/json")
         else:
             error = {
-                "message": "Request is missing 'key' query paramater"
+                "message": "Request is missing 'key' query parameter"
             }
             errorJson = json.dumps(error)
             return HttpResponseBadRequest(errorJson,
