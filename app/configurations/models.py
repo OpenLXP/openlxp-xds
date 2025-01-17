@@ -38,6 +38,24 @@ class XDSConfiguration(TimeStampedModel):
         blank=True,
         null=True
     )
+    lrs_endpoint = models.CharField(
+        max_length=200,
+        help_text='Enter the xAPI LRS Endpoint to send data to',
+        blank=True,
+        null=True
+    )
+    lrs_username = models.CharField(
+        max_length=200,
+        help_text='Enter the xAPI LRS HTTP Basic Auth username',
+        blank=True,
+        null=True
+    )
+    lrs_password = models.CharField(
+        max_length=200,
+        help_text='Enter the xAPI LRS HTTP Basic Auth password',
+        blank=True,
+        null=True
+    )
 
     def get_absolute_url(self):
         """ URL for displaying individual model records."""

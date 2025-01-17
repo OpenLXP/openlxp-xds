@@ -13,7 +13,9 @@ class XDSConfigurationAdmin(admin.ModelAdmin):
     fieldsets = (
         ('XDS Settings', {'fields': ('default_user_group',)}),
         ('XIS Settings', {'fields': ('target_xis_metadata_api',)}),
-        ('XSE Settings', {'fields': ('target_xse_host', 'target_xse_index',)}))
+        ('XSE Settings', {'fields': ('target_xse_host', 'target_xse_index',)}),
+        ('LRS Settings', {'fields': ('lrs_endpoint', 'lrs_username', 'lrs_password')})
+    )
 
 
 @admin.register(XDSUIConfiguration)

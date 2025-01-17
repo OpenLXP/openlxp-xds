@@ -3,11 +3,12 @@ import logging
 from collections import OrderedDict
 
 import requests
+from requests.exceptions import ConnectionError
 from configurations.models import XDSConfiguration
 from core.management.utils.xds_internal import bleach_data_to_json
 from core.models import CourseSpotlight, Experience, InterestList, SavedFilter
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponse, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseServerError, JsonResponse
 from requests.exceptions import HTTPError
 from rest_framework import status
 from rest_framework.response import Response
@@ -16,6 +17,7 @@ from xds_api.serializers import InterestListSerializer, SavedFilterSerializer
 from xds_api.utils.xds_utils import (get_request,
                                      get_spotlight_courses_api_url,
                                      metadata_to_target, save_experiences)
+import os
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -638,3 +640,47 @@ class SavedFiltersView(APIView):
         serializer.save(owner=request.user)
         return Response(serializer.data,
                         status=status.HTTP_201_CREATED)
+
+class StatementForwardView(APIView):
+    """Handles xAPI Requests"""
+
+    def post(self, request):
+        """Forward statements to an LRS"""
+
+        config = XDSConfiguration.objects.first()
+        if not config:
+            return Response({'message': 'No XDS configuration found'},
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        lrs_endpoint = config.lrs_endpoint
+        lrs_username = config.lrs_username
+        lrs_password = config.lrs_password
+
+        if not (lrs_endpoint and lrs_username and lrs_password):
+            return Response({'message': 'LRS credentials not configured'},
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        headers = {
+            'Content-Type': 'application/json',
+            'X-Experience-API-Version': '1.0.3',
+        }
+
+        try:
+            resp = requests.post(
+                url=f"{lrs_endpoint}/statements",
+                json=request.data,
+                headers=headers,
+                auth=(lrs_username, lrs_password),
+            )
+        except ConnectionError:
+            return Response({'message': 'Could not connect to LRS'},
+                            status.HTTP_502_BAD_GATEWAY)
+
+        resp = requests.post(
+            url=f"{lrs_endpoint}/statements",
+            json=request.data,
+            headers=headers,
+            auth=(lrs_username, lrs_password)
+        )
+
+        return JsonResponse(resp.json(), status=resp.status_code, safe=False)
