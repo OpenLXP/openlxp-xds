@@ -109,7 +109,10 @@ class TestSetUp(APITestCase):
         self.list_1.experiences.add(self.course_1)
         self.list_2.experiences.add(self.course_1)
 
-        self.config = XDSConfiguration(target_xis_metadata_api="test").save()
+        self.config = XDSConfiguration(target_xis_metadata_api="test",
+                                       lrs_endpoint="http://lrs.example.com/xapi",
+                                       lrs_username="username",
+                                       lrs_password="testpass").save()
 
         return super().setUp()
 
