@@ -18,6 +18,7 @@ from xds_api.utils.xds_utils import (get_request,
                                      get_spotlight_courses_api_url,
                                      metadata_to_target, save_experiences)
 import os
+from xds_api.xapi import VERB_WHITELIST
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -649,7 +650,7 @@ class StatementForwardView(APIView):
 
         config = XDSConfiguration.objects.first()
         if not config:
-            return Response({'message': 'No XDS configuration found'},
+            return Response({'message': 'No XDS configuration found.'},
                             status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         lrs_endpoint = config.lrs_endpoint
@@ -657,8 +658,26 @@ class StatementForwardView(APIView):
         lrs_password = config.lrs_password
 
         if not (lrs_endpoint and lrs_username and lrs_password):
-            return Response({'message': 'LRS credentials not configured'},
+            return Response({'message': 'LRS credentials not configured.'},
                             status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        statements = request.data
+        if not isinstance(statements, list):
+            # xAPI POST can be single or array
+            statements = [statements]
+
+        # Filter out statements whose verb is not in our whitelist
+        allowed_statements = []
+        for st in statements:
+            verb_iri = st.get("verb", {}).get("id")
+            if verb_iri in VERB_WHITELIST:
+                allowed_statements.append(st)
+
+        if not allowed_statements:
+            return Response({'message': 'No statements had whitelisted verbs.'},
+                            status.HTTP_400_BAD_REQUEST)
+
+        # TODO: set actor identity
 
         headers = {
             'Content-Type': 'application/json',
@@ -668,7 +687,7 @@ class StatementForwardView(APIView):
         try:
             resp = requests.post(
                 url=f"{lrs_endpoint}/statements",
-                json=request.data,
+                json=allowed_statements,
                 headers=headers,
                 auth=(lrs_username, lrs_password),
             )
