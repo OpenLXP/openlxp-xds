@@ -695,11 +695,4 @@ class StatementForwardView(APIView):
             return Response({'message': 'Could not connect to LRS'},
                             status.HTTP_502_BAD_GATEWAY)
 
-        resp = requests.post(
-            url=f"{lrs_endpoint}/statements",
-            json=request.data,
-            headers=headers,
-            auth=(lrs_username, lrs_password)
-        )
-
         return JsonResponse(resp.json(), status=resp.status_code, safe=False)
