@@ -1,4 +1,5 @@
 import json
+import requests
 from unittest.mock import Mock, patch
 
 from configurations.models import XDSConfiguration
@@ -825,14 +826,36 @@ class ViewTests(TestSetUp):
             self.assertEqual(response.status_code,
                              status.HTTP_404_NOT_FOUND)
 
+VALID_STATEMENT = {
+    "actor": {
+        "name": "Test User",
+        "mbox": "mailto:test@test.com"
+    },
+    "verb": {
+        "id": "https://w3id.org/xapi/tla/verbs/socialized"
+    },
+    "object": {
+        "id": "http://example.com/activity/1234"
+    }
+}
+
+VALID_STATEMENT_NO_WHITELIST = {
+    "actor": {
+        "name": "Test User",
+        "mbox": "mailto:test@test.com"
+    },
+    "verb": {
+        "id": "http://example.com/verbs/not-in-whitelist"
+    },
+    "object": {
+        "id": "http://example.com/activity/1234"
+    }
+}
+
+LRS_SUCCESS_RESPONSE_BODY = ["93f55eca-7c3c-4bb7-a4cc-6991ffd1d282"]
+
 @tag('unit')
 class StatementForwardTests(TestSetUp):
-    def setUp(self):
-        super().setUp()
-
-        # login user
-        self.client.login(email=self.auth_email, password=self.auth_password)
-
     @patch('requests.post')
     def test_forwards_whitelisted_verb(self, mock_post):
         """
@@ -840,31 +863,19 @@ class StatementForwardTests(TestSetUp):
         """
         # Mock the LRS response
         mock_post.return_value.status_code = 200
-        mock_post.return_value.json.return_value = ["93f55eca-7c3c-4bb7-a4cc-6991ffd1d282"]
+        mock_post.return_value.json.return_value = LRS_SUCCESS_RESPONSE_BODY
 
-        # Send a statement with a whitelisted verb
-        statement = {
-            "actor": {
-                "name": "Test User",
-                "mbox": "mailto:test@test.com"
-            },
-            "verb": {
-                "id": "https://w3id.org/xapi/tla/verbs/socialized"
-            },
-            "object": {
-                "id": "http://example.com/activity/1234"
-            }
-        }
+        # login user
+        self.client.login(email=self.auth_email, password=self.auth_password)
 
         url = reverse('xds_api:forward_statements')
 
+        # Send a statement with a whitelisted verb
         response = self.client.post(
             url,
-            data=json.dumps([statement]),
+            data=json.dumps([VALID_STATEMENT]),
             content_type='application/json'
         )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Check that requests.post was actually called once
         mock_post.assert_called_once()
@@ -873,7 +884,35 @@ class StatementForwardTests(TestSetUp):
         self.assertIn('http://lrs.example.com/xapi/statements',
                       called_kwargs["url"])
         # correct JSON payload
-        self.assertEqual(called_kwargs['json'], [statement])
+        self.assertEqual(called_kwargs['json'], [VALID_STATEMENT])
+
+        # Check the response to the client
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json(), LRS_SUCCESS_RESPONSE_BODY)
+
+    @patch('requests.post')
+    def test_forwards_lrs_response(self, mock_post):
+        """
+        Ensure that the endpoint returns the LRS response without modification.
+        """
+        # Mock the LRS response
+        mock_post.return_value.status_code = 418
+        mock_post.return_value.json.return_value = {"I'm": "a teapot."}
+
+        # login user
+        self.client.login(email=self.auth_email, password=self.auth_password)
+
+        url = reverse('xds_api:forward_statements')
+
+        # Send a statement
+        response = self.client.post(
+            url,
+            data=json.dumps([VALID_STATEMENT]),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.status_code, 418)
+        self.assertEqual(response.json(), {"I'm": "a teapot."})
 
     @patch('requests.post')
     def test_rejects_non_whitelisted_verb(self, mock_post):
@@ -883,26 +922,17 @@ class StatementForwardTests(TestSetUp):
         # Not expecting a requests.post call at all in this scenario, since
         # no statement is whitelisted, but let's just ensure it never happens
         mock_post.return_value.status_code = 200
-        mock_post.return_value.json.return_value = ["93f55eca-7c3c-4bb7-a4cc-6991ffd1d282"]
+        mock_post.return_value.json.return_value = LRS_SUCCESS_RESPONSE_BODY
 
-        statement = {
-            "actor": {
-                "name": "Test User",
-                "mbox": "mailto:test@test.com"
-            },
-            "verb": {
-                "id": "http://example.com/verbs/not-in-whitelist"
-            },
-            "object": {
-                "id": "http://example.com/activity/1234"
-            }
-        }
+        # login user
+        self.client.login(email=self.auth_email, password=self.auth_password)
 
         url = reverse('xds_api:forward_statements')
 
+        # Send a statement with verb not in the whitelist
         response = self.client.post(
             url,
-            data=json.dumps([statement]),
+            data=json.dumps([VALID_STATEMENT_NO_WHITELIST]),
             content_type='application/json'
         )
 
@@ -911,3 +941,45 @@ class StatementForwardTests(TestSetUp):
 
         # LRS is not called
         mock_post.assert_not_called()
+
+    @patch('requests.post')
+    def test_rejects_no_auth(self, mock_post):
+        """
+        Ensure requests without authentication do not succeed.
+        """
+        # Again we mock to assert no deal.
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json.return_value = LRS_SUCCESS_RESPONSE_BODY
+
+        url = reverse('xds_api:forward_statements')
+
+        # Send a valid statement that will not be sent
+        response = self.client.post(
+            url,
+            data=json.dumps([VALID_STATEMENT]),
+            content_type='application/json'
+        )
+
+        # 400 if no match
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        # LRS is not called
+        mock_post.assert_not_called()
+
+    @patch('requests.post', side_effect=requests.exceptions.ConnectionError("No dice"))
+    def test_returns_502_when_connection_fails(self, mock_post_splode):
+        # login user
+        self.client.login(email=self.auth_email, password=self.auth_password)
+
+        url = reverse('xds_api:forward_statements')
+
+        # Attempt to send a valid statement when there is no LRS
+        response = self.client.post(
+            url,
+            data=json.dumps([VALID_STATEMENT]),
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_502_BAD_GATEWAY)
+        # Also verify that requests.post was indeed called
+        mock_post_splode.assert_called_once()
