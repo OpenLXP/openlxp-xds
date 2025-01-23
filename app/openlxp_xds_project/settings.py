@@ -44,11 +44,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
-    'health_check',
+    'health_check', 
     'rest_framework',
     'rest_framework.authtoken',
     'openlxp_notifications',
-    # 'p1_auth',
     'social_django',
     'openlxp_authentication',
     'xds_api',
@@ -66,7 +65,6 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    # 'p1_auth.middleware.AuthenticateSessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -192,13 +190,13 @@ LOGGING = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
-# CSRF_COOKIE_DOMAIN = '.deloitteopenlxp.com'
-# CSRF_TRUSTED_ORIGINS = ['https://dev-xds2-admin.deloitteopenlxp.com', 'https://dev-xds2.deloitteopenlxp.com', 'https://dev-xds-admin.deloitteopenlxp.com', 'https://dev-xds.deloitteopenlxp.com', 'https://*.deloitteopenlxp.com' ]
-CSRF_COOKIE_DOMAIN = 'http://localhost:8100'
-CSRF_TRUSTED_ORIGINS = ['http://localhost:8100', 'http://localhost:3000']
+CSRF_COOKIE_DOMAIN = '.deloitteopenlxp.com'
+CSRF_TRUSTED_ORIGINS = ['https://dev-xds2-admin.deloitteopenlxp.com', 'https://dev-xds2.deloitteopenlxp.com', 'https://dev-xds-admin.deloitteopenlxp.com', 'https://dev-xds.deloitteopenlxp.com', 'https://*.deloitteopenlxp.com' ]
+# CSRF_COOKIE_DOMAIN = 'http://localhost'
+# CSRF_TRUSTED_ORIGINS = ['https://localhost', ]
 
-# SECURE_SSL_REDIRECT = True
-# SECURE_REDIRECT_EXEMPT = ['health/', 'api/health/']
+SECURE_SSL_REDIRECT = True
+SECURE_REDIRECT_EXEMPT = ['health/', 'api/health/']
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -252,13 +250,11 @@ USER_ATTRIBUTES = [
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    # 'p1_auth.backends.PlatformOneAuthentication',
     'openlxp_authentication.models.SAMLDBAuth',
 )
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        #'p1_auth.backends.PlatformOneRestAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
