@@ -18,6 +18,8 @@ from xds_api.utils.xds_utils import (get_request,
                                      get_spotlight_courses_api_url,
                                      metadata_to_target, save_experiences)
 from xds_api.xapi import VERB_WHITELIST
+from django.conf import settings
+import jwt
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -678,7 +680,37 @@ class StatementForwardView(APIView):
                              'No statements had whitelisted verbs.'},
                             status.HTTP_400_BAD_REQUEST)
 
-        # TODO: set actor identity
+        # Overwrite statement actor identity
+        if settings.XAPI_USE_JWT:
+            encoded_auth_header = request.headers["Authorization"]
+            jwt_payload = jwt.decode(encoded_auth_header.split("Bearer ")[1],
+                                     options={"verify_signature": False})
+            fields = settings.XAPI_ACTOR_ACCOUNT_NAME_JWT_FIELDS
+            account_name = next(
+                (jwt_payload.get(f) for f in fields if jwt_payload.get(f)),
+                None
+            )
+            if account_name is None:
+                # Return a 400 if none matched
+                return Response(
+                    {"message": "No valid JWT field found."},
+                    status.HTTP_400_BAD_REQUEST
+                )
+            actor = {
+                "objectType": "Agent",
+                "account": {
+                    "homePage": settings.XAPI_ACTOR_ACCOUNT_HOMEPAGE,
+                    "name": account_name
+                }
+            }
+        else:
+            actor = {
+                "objectType": "Agent",
+                "mbox": f"mailto:{request.user.email}"
+            }
+
+        for statement in allowed_statements:
+            statement["actor"] = actor
 
         headers = {
             'Content-Type': 'application/json',

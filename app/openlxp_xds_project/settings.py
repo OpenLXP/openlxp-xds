@@ -291,3 +291,20 @@ DJANGO_NOTIFICATIONS_CONFIG = {
 NOTIFICATIONS_EXPIRE_AFTER = datetime.timedelta(days=30)
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
+
+# xAPI Statement Forwarding Settings
+# toggle setting actor from JWT
+if os.environ.get('XAPI_USE_JWT') is not None:
+    XAPI_USE_JWT = True
+else:
+    XAPI_USE_JWT = False
+
+# Set $.actor.account.homePage on statements.
+XAPI_ACTOR_ACCOUNT_HOMEPAGE = os.environ.get('XAPI_ACTOR_ACCOUNT_HOMEPAGE',
+                                             'https://example.com')
+# Define fields from JWT to use for $.actor.account.name on statements in
+# descending order of preference.
+XAPI_ACTOR_ACCOUNT_NAME_JWT_FIELDS = [
+    field.strip()
+    for field in os.environ.get('XAPI_ACTOR_ACCOUNT_NAME_JWT_FIELDS', 'activecac,preferred_username').split(',')
+]

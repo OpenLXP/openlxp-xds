@@ -829,8 +829,8 @@ class ViewTests(TestSetUp):
 
 VALID_STATEMENT = {
     "actor": {
-        "name": "Test User",
-        "mbox": "mailto:test@test.com"
+        "objectType": "Agent",
+        "mbox": "mailto:test_auth@test.com"
     },
     "verb": {
         "id": "https://w3id.org/xapi/tla/verbs/socialized"
@@ -842,8 +842,8 @@ VALID_STATEMENT = {
 
 VALID_STATEMENT_NO_WHITELIST = {
     "actor": {
-        "name": "Test User",
-        "mbox": "mailto:test@test.com"
+        "objectType": "Agent",
+        "mbox": "mailto:test_auth@test.com"
     },
     "verb": {
         "id": "http://example.com/verbs/not-in-whitelist"
@@ -891,6 +891,38 @@ class StatementForwardTests(TestSetUp):
         # Check the response to the client
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json(), LRS_SUCCESS_RESPONSE_BODY)
+
+    @patch('requests.post')
+    def test_overwrites_actor(self, mock_post):
+        """
+        Ensure statement actors are overwritten.
+        """
+        # Mock the LRS response
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json.return_value = LRS_SUCCESS_RESPONSE_BODY
+
+        # login user
+        self.client.login(email=self.auth_email, password=self.auth_password)
+
+        url = reverse('xds_api:forward_statements')
+
+        # Send a statement with a different actor
+        unknown_actor_statement = {
+            **VALID_STATEMENT,
+            "actor": {
+                "objectType": "Agent",
+                "mbox": "mailto:test_auth_other@test.com"
+            }
+        }
+        response = self.client.post(
+            url,
+            data=json.dumps([unknown_actor_statement]),
+            content_type='application/json'
+        )
+
+        # Check that it is overwritten by the backend
+        called_args, called_kwargs = mock_post.call_args
+        self.assertEqual(called_kwargs['json'], [VALID_STATEMENT])
 
     @patch('requests.post')
     def test_forwards_lrs_response(self, mock_post):
