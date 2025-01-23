@@ -14,7 +14,9 @@ class XDSConfigurationAdmin(admin.ModelAdmin):
         ('XDS Settings', {'fields': ('default_user_group',)}),
         ('XIS Settings', {'fields': ('target_xis_metadata_api',)}),
         ('XSE Settings', {'fields': ('target_xse_host', 'target_xse_index',)}),
-        ('LRS Settings', {'fields': ('lrs_endpoint', 'lrs_username', 'lrs_password')})
+        ('LRS Settings', {'fields': ('lrs_endpoint',
+                                     'lrs_username',
+                                     'lrs_password')})
     )
 
 

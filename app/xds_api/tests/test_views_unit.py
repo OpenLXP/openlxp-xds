@@ -826,6 +826,7 @@ class ViewTests(TestSetUp):
             self.assertEqual(response.status_code,
                              status.HTTP_404_NOT_FOUND)
 
+
 VALID_STATEMENT = {
     "actor": {
         "name": "Test User",
@@ -853,6 +854,7 @@ VALID_STATEMENT_NO_WHITELIST = {
 }
 
 LRS_SUCCESS_RESPONSE_BODY = ["93f55eca-7c3c-4bb7-a4cc-6991ffd1d282"]
+
 
 @tag('unit')
 class StatementForwardTests(TestSetUp):
@@ -966,7 +968,8 @@ class StatementForwardTests(TestSetUp):
         # LRS is not called
         mock_post.assert_not_called()
 
-    @patch('requests.post', side_effect=requests.exceptions.ConnectionError("No dice"))
+    @patch('requests.post',
+           side_effect=requests.exceptions.ConnectionError("No dice"))
     def test_returns_502_when_connection_fails(self, mock_post_splode):
         # login user
         self.client.login(email=self.auth_email, password=self.auth_password)

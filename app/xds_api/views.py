@@ -17,7 +17,6 @@ from xds_api.serializers import InterestListSerializer, SavedFilterSerializer
 from xds_api.utils.xds_utils import (get_request,
                                      get_spotlight_courses_api_url,
                                      metadata_to_target, save_experiences)
-import os
 from xds_api.xapi import VERB_WHITELIST
 
 logger = logging.getLogger('dict_config_logger')
@@ -642,6 +641,7 @@ class SavedFiltersView(APIView):
         return Response(serializer.data,
                         status=status.HTTP_201_CREATED)
 
+
 class StatementForwardView(APIView):
     """Handles xAPI Requests"""
 
@@ -674,7 +674,8 @@ class StatementForwardView(APIView):
                 allowed_statements.append(st)
 
         if not allowed_statements:
-            return Response({'message': 'No statements had whitelisted verbs.'},
+            return Response({'message':
+                             'No statements had whitelisted verbs.'},
                             status.HTTP_400_BAD_REQUEST)
 
         # TODO: set actor identity
