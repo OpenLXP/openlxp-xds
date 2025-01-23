@@ -923,6 +923,7 @@ class StatementForwardTests(TestSetUp):
         # Check that it is overwritten by the backend
         called_args, called_kwargs = mock_post.call_args
         self.assertEqual(called_kwargs['json'], [VALID_STATEMENT])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @patch('requests.post')
     def test_forwards_lrs_response(self, mock_post):
