@@ -855,11 +855,15 @@ VALID_STATEMENT_NO_WHITELIST = {
 
 LRS_SUCCESS_RESPONSE_BODY = ["93f55eca-7c3c-4bb7-a4cc-6991ffd1d282"]
 
+EXPECTED_REGISTRATION_UUID = "00000000-0000-4000-a000-000000000001"
+
 
 @tag('unit')
 class StatementForwardTests(TestSetUp):
     @patch('requests.post')
-    def test_forwards_whitelisted_verb(self, mock_post):
+    @patch('xds_api.views.get_or_set_registration_uuid',
+           return_value=EXPECTED_REGISTRATION_UUID)
+    def test_forwards_whitelisted_verb(self, mock_registration, mock_post):
         """
         Ensure statements with a whitelisted verb get forwarded to the LRS.
         """
@@ -885,15 +889,20 @@ class StatementForwardTests(TestSetUp):
         # To the right URL
         self.assertIn('http://lrs.example.com/xapi/statements',
                       called_kwargs["url"])
-        # correct JSON payload
-        self.assertEqual(called_kwargs['json'], [VALID_STATEMENT])
+        # correct JSON payload with reg added
+        self.assertEqual(called_kwargs['json'], [{
+            **VALID_STATEMENT,
+            "context": {"registration": EXPECTED_REGISTRATION_UUID}
+        }])
 
         # Check the response to the client
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json(), LRS_SUCCESS_RESPONSE_BODY)
 
     @patch('requests.post')
-    def test_overwrites_actor(self, mock_post):
+    @patch('xds_api.views.get_or_set_registration_uuid',
+           return_value=EXPECTED_REGISTRATION_UUID)
+    def test_overwrites_actor(self, mock_registration, mock_post):
         """
         Ensure statement actors are overwritten.
         """
@@ -922,7 +931,10 @@ class StatementForwardTests(TestSetUp):
 
         # Check that it is overwritten by the backend
         called_args, called_kwargs = mock_post.call_args
-        self.assertEqual(called_kwargs['json'], [VALID_STATEMENT])
+        self.assertEqual(called_kwargs['json'], [{
+            **VALID_STATEMENT,
+            "context": {"registration": EXPECTED_REGISTRATION_UUID}
+        }])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @patch('requests.post')

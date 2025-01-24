@@ -20,7 +20,8 @@ from xds_api.utils.xds_utils import (get_request,
 from xds_api.xapi import (filter_allowed_statements,
                           actor_with_mbox,
                           actor_with_account,
-                          jwt_account_name)
+                          jwt_account_name,
+                          get_or_set_registration_uuid)
 from django.conf import settings
 
 logger = logging.getLogger('dict_config_logger')
@@ -678,7 +679,7 @@ class StatementForwardView(APIView):
                              'No statements had whitelisted verbs.'},
                             status.HTTP_400_BAD_REQUEST)
 
-        # Overwrite statement actor identity
+        # Get statement actor identity
         if settings.XAPI_USE_JWT:
             account_name = jwt_account_name(
                 request,
@@ -695,8 +696,15 @@ class StatementForwardView(APIView):
         else:
             actor = actor_with_mbox(request.user.email)
 
+        # Get registration UUID
+        registration = get_or_set_registration_uuid(request)
+
+        # Set actor and context registration
         for statement in allowed_statements:
             statement["actor"] = actor
+            context = statement.get('context', {})
+            context['registration'] = registration
+            statement['context'] = context
 
         headers = {
             'Content-Type': 'application/json',

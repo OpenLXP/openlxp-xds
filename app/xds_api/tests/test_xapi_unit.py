@@ -10,8 +10,7 @@ from xds_api.xapi import (
     actor_with_mbox,
     actor_with_account,
     jwt_account_name,
-    get_or_set_registration_uuid,
-    overwrite_registration_in_statements
+    get_or_set_registration_uuid
 )
 
 
@@ -143,38 +142,6 @@ class XAPIHelpersTests(TestCase):
         self.assertEqual(reg_uuid, existing_uuid)
         # No new UUID should have been generated
         self.assertEqual(request.session['registration_uuid'], existing_uuid)
-
-    def test_overwrite_registration_in_statements(self):
-        """
-        overwrite_registration_in_statements should set .context.registration
-        on each statement to the provided registration_id.
-        """
-        statements = [
-            {
-                "actor": {"mbox:test_auth@test.com"},
-                "verb": {"id": "http://example.com/verb/1"},
-                "object": {"id": "https://example.com/activity/1"}
-            },
-            {
-                "actor": {"mbox:test_auth@test.com"},
-                "verb": {"id": "http://example.com/verb/2"},
-                "object": {"id": "https://example.com/activity/1"},
-                "context": {"platform": "ECC"}},
-        ]
-        my_reg = str(uuid.uuid4())
-
-        updated = overwrite_registration_in_statements(statements, my_reg)
-
-        # The function returns a list of the same length
-        self.assertEqual(len(updated), len(statements))
-
-        # Check each statement's context.registration
-        for st in updated:
-            self.assertIn("context", st)
-            self.assertEqual(st["context"]["registration"], my_reg)
-
-        # Also ensure existing keys in context weren't lost
-        self.assertEqual(updated[1]["context"]["platform"], "ECC")
 
     def _is_valid_uuid(self, val):
         """Utility to check if a string is a valid UUID4."""
