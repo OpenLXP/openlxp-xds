@@ -1,4 +1,5 @@
 import jwt
+import uuid
 
 
 VERB_WHITELIST = {
@@ -47,3 +48,19 @@ def jwt_account_name(request, fields):
         (jwt_payload.get(f) for f in fields if jwt_payload.get(f)),
         None
     )
+
+
+def get_or_set_registration_uuid(request):
+    if 'registration_uuid' not in request.session:
+        # Generate a new UUID and store it in the session
+        request.session['registration_uuid'] = str(uuid.uuid4())
+    return request.session['registration_uuid']
+
+
+def overwrite_registration_in_statements(statements, registration_id):
+    for st in statements:
+        context = st.get('context', {})
+        context['registration'] = registration_id
+        st['context'] = context
+
+    return statements

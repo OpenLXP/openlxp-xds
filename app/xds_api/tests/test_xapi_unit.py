@@ -1,4 +1,5 @@
 import jwt
+import uuid
 from unittest.mock import MagicMock
 
 from django.test import TestCase, tag
@@ -8,7 +9,9 @@ from xds_api.xapi import (
     filter_allowed_statements,
     actor_with_mbox,
     actor_with_account,
-    jwt_account_name
+    jwt_account_name,
+    get_or_set_registration_uuid,
+    overwrite_registration_in_statements
 )
 
 
@@ -21,18 +24,21 @@ class XAPIHelpersTests(TestCase):
         """
         statements = [
             {
+                "actor": {"mbox:test_auth@test.com"},
                 "verb": {"id": "https://w3id.org/xapi/tla/verbs/socialized"},
-                "object": {"id": "activity/1"}
+                "object": {"id": "https://example.com/activity/1"}
             },
             {
+                "actor": {"mbox:test_auth@test.com"},
                 "verb": {"id": "https://some.unknown.verb"},
-                "object": {"id": "activity/2"}
+                "object": {"id": "https://example.com/activity/2"}
             },
         ]
         result = filter_allowed_statements(statements)
 
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]["object"]["id"], "activity/1")
+        self.assertEqual(result[0]["object"]["id"],
+                         "https://example.com/activity/1")
         self.assertIn(result[0]["verb"]["id"], VERB_WHITELIST)
 
     def test_filter_allowed_statements_empty_if_none_whitelisted(self):
@@ -41,8 +47,16 @@ class XAPIHelpersTests(TestCase):
         if no verb IDs are in the whitelist.
         """
         statements = [
-            {"verb": {"id": "http://unlisted/verb/one"}},
-            {"verb": {"id": "http://unlisted/verb/two"}},
+            {
+                "actor": {"mbox:test_auth@test.com"},
+                "verb": {"id": "http://unlisted/verb/one"},
+                "object": {"id": "https://example.com/activity/1"}
+            },
+            {
+                "actor": {"mbox:test_auth@test.com"},
+                "verb": {"id": "http://unlisted/verb/two"},
+                "object": {"id": "https://example.com/activity/1"}
+            },
         ]
         result = filter_allowed_statements(statements)
         self.assertEqual(len(result), 0)
@@ -99,3 +113,73 @@ class XAPIHelpersTests(TestCase):
         name = jwt_account_name(mock_request, fields)
 
         self.assertIsNone(name)
+
+    def test_get_or_set_registration_uuid_creates_if_missing(self):
+        """
+        If there's no 'registration_uuid' in the session,
+        get_or_set_registration_uuid should generate a new one and store it.
+        """
+        request = MagicMock()
+        request.session = {}  # simulate an empty session
+
+        reg_uuid = get_or_set_registration_uuid(request)
+
+        self.assertIn('registration_uuid', request.session)
+        self.assertEqual(reg_uuid, request.session['registration_uuid'])
+        # Check that it's a valid UUID
+        self.assertTrue(self._is_valid_uuid(reg_uuid))
+
+    def test_get_or_set_registration_uuid_uses_existing(self):
+        """
+        If 'registration_uuid' is already in the session,
+        get_or_set_registration_uuid should return the existing one.
+        """
+        existing_uuid = str(uuid.uuid4())
+        request = MagicMock()
+        request.session = {'registration_uuid': existing_uuid}
+
+        reg_uuid = get_or_set_registration_uuid(request)
+
+        self.assertEqual(reg_uuid, existing_uuid)
+        # No new UUID should have been generated
+        self.assertEqual(request.session['registration_uuid'], existing_uuid)
+
+    def test_overwrite_registration_in_statements(self):
+        """
+        overwrite_registration_in_statements should set .context.registration
+        on each statement to the provided registration_id.
+        """
+        statements = [
+            {
+                "actor": {"mbox:test_auth@test.com"},
+                "verb": {"id": "http://example.com/verb/1"},
+                "object": {"id": "https://example.com/activity/1"}
+            },
+            {
+                "actor": {"mbox:test_auth@test.com"},
+                "verb": {"id": "http://example.com/verb/2"},
+                "object": {"id": "https://example.com/activity/1"},
+                "context": {"platform": "ECC"}},
+        ]
+        my_reg = str(uuid.uuid4())
+
+        updated = overwrite_registration_in_statements(statements, my_reg)
+
+        # The function returns a list of the same length
+        self.assertEqual(len(updated), len(statements))
+
+        # Check each statement's context.registration
+        for st in updated:
+            self.assertIn("context", st)
+            self.assertEqual(st["context"]["registration"], my_reg)
+
+        # Also ensure existing keys in context weren't lost
+        self.assertEqual(updated[1]["context"]["platform"], "ECC")
+
+    def _is_valid_uuid(self, val):
+        """Utility to check if a string is a valid UUID4."""
+        try:
+            uuid.UUID(val, version=4)
+        except ValueError:
+            return False
+        return True
