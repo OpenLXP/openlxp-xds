@@ -17,9 +17,11 @@ from xds_api.serializers import InterestListSerializer, SavedFilterSerializer
 from xds_api.utils.xds_utils import (get_request,
                                      get_spotlight_courses_api_url,
                                      metadata_to_target, save_experiences)
-from xds_api.xapi import VERB_WHITELIST
+from xds_api.xapi import (filter_allowed_statements,
+                          actor_with_mbox,
+                          actor_with_account,
+                          jwt_account_name)
 from django.conf import settings
-import jwt
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -669,11 +671,7 @@ class StatementForwardView(APIView):
             statements = [statements]
 
         # Filter out statements whose verb is not in our whitelist
-        allowed_statements = []
-        for st in statements:
-            verb_iri = st.get("verb", {}).get("id")
-            if verb_iri in VERB_WHITELIST:
-                allowed_statements.append(st)
+        allowed_statements = filter_allowed_statements(statements)
 
         if not allowed_statements:
             return Response({'message':
@@ -682,13 +680,9 @@ class StatementForwardView(APIView):
 
         # Overwrite statement actor identity
         if settings.XAPI_USE_JWT:
-            encoded_auth_header = request.headers["Authorization"]
-            jwt_payload = jwt.decode(encoded_auth_header.split("Bearer ")[1],
-                                     options={"verify_signature": False})
-            fields = settings.XAPI_ACTOR_ACCOUNT_NAME_JWT_FIELDS
-            account_name = next(
-                (jwt_payload.get(f) for f in fields if jwt_payload.get(f)),
-                None
+            account_name = jwt_account_name(
+                request,
+                settings.XAPI_ACTOR_ACCOUNT_NAME_JWT_FIELDS
             )
             if account_name is None:
                 # Return a 400 if none matched
@@ -696,18 +690,10 @@ class StatementForwardView(APIView):
                     {"message": "No valid JWT field found."},
                     status.HTTP_400_BAD_REQUEST
                 )
-            actor = {
-                "objectType": "Agent",
-                "account": {
-                    "homePage": settings.XAPI_ACTOR_ACCOUNT_HOMEPAGE,
-                    "name": account_name
-                }
-            }
+            actor = actor_with_account(settings.XAPI_ACTOR_ACCOUNT_HOMEPAGE,
+                                       account_name)
         else:
-            actor = {
-                "objectType": "Agent",
-                "mbox": f"mailto:{request.user.email}"
-            }
+            actor = actor_with_mbox(request.user.email)
 
         for statement in allowed_statements:
             statement["actor"] = actor
