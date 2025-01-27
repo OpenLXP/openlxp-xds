@@ -293,6 +293,13 @@ NOTIFICATIONS_EXPIRE_AFTER = datetime.timedelta(days=30)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
 
 # xAPI Statement Forwarding Settings
+
+# whether to allow anonymous xAPI statement forwarding
+XAPI_ALLOW_ANON = os.getenv('XAPI_ALLOW_ANON', 'true').lower() == 'true'
+
+# mbox email to use for the anonymous user
+XAPI_ANON_MBOX = os.getenv('XAPI_ANON_MBOX', 'anonymous@example.com')
+
 # toggle setting actor from JWT
 XAPI_USE_JWT = os.getenv('XAPI_USE_JWT', 'false').lower() == 'true'
 

@@ -10,7 +10,7 @@ from core.models import CourseSpotlight, Experience, InterestList, SavedFilter
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, HttpResponseServerError, JsonResponse
 from requests.exceptions import HTTPError
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from xds_api.serializers import InterestListSerializer, SavedFilterSerializer
@@ -650,6 +650,9 @@ class SavedFiltersView(APIView):
 class StatementForwardView(APIView):
     """Handles xAPI Requests"""
 
+    if settings.XAPI_ALLOW_ANON:
+        permission_classes = [permissions.AllowAny]
+
     def post(self, request):
         """Forward statements to an LRS"""
 
@@ -694,7 +697,13 @@ class StatementForwardView(APIView):
             actor = actor_with_account(settings.XAPI_ACTOR_ACCOUNT_HOMEPAGE,
                                        account_name)
         else:
-            actor = actor_with_mbox(request.user.email)
+            if request.user.is_authenticated:
+                user_email = request.user.email  # Safe to access
+            else:
+                # request.user is AnonymousUser
+                user_email = settings.XAPI_ANON_MBOX
+
+            actor = actor_with_mbox(user_email)
 
         # Get registration UUID
         registration = get_or_set_registration_uuid(request)

@@ -990,11 +990,11 @@ class StatementForwardTests(TestSetUp):
         mock_post.assert_not_called()
 
     @patch('requests.post')
-    def test_rejects_no_auth(self, mock_post):
+    def test_accepts_no_auth(self, mock_post):
         """
-        Ensure requests without authentication do not succeed.
+        Ensure requests without authentication succeed.
         """
-        # Again we mock to assert no deal.
+
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = LRS_SUCCESS_RESPONSE_BODY
 
@@ -1007,11 +1007,13 @@ class StatementForwardTests(TestSetUp):
             content_type='application/json'
         )
 
-        # 400 if no match
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        # 200, it's fine
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # LRS is not called
-        mock_post.assert_not_called()
+        # Overwrites actor with anonymous
+        called_args, called_kwargs = mock_post.call_args
+        self.assertEqual(called_kwargs['json'][0]['actor']['mbox'],
+                         'mailto:anonymous@example.com')
 
     @patch('requests.post',
            side_effect=requests.exceptions.ConnectionError("No dice"))
