@@ -48,6 +48,10 @@ When testing use root to allow the creation of a test database
 
 `CERT_VOLUME` - The path to the certificate (on the host machine) to use when connecting to AWS
 
+`XAPI_ALLOW_ANON` - If `true` (default) will allow forwarding of anonymous xAPI Statements.
+
+`XAPI_ANON_MBOX` - The mbox email value to use if `XAPI_ALLOW_ANON` is enabled. Defaults to `anonymous@example.com`.
+
 `XAPI_USE_JWT` - If this variable is set, attempt to use the value of a JWT auth token to derive the xAPI actor account. If not set the actor will be identified by mbox email.
 
 `XAPI_ACTOR_ACCOUNT_HOMEPAGE` - Set the `$.actor.account.homePage` field on xAPI Statements.
