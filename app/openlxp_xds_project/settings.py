@@ -294,10 +294,7 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
 
 # xAPI Statement Forwarding Settings
 # toggle setting actor from JWT
-if os.environ.get('XAPI_USE_JWT') is not None:
-    XAPI_USE_JWT = True
-else:
-    XAPI_USE_JWT = False
+XAPI_USE_JWT = os.getenv('XAPI_USE_JWT', 'false').lower() == 'true'
 
 # Set $.actor.account.homePage on statements.
 XAPI_ACTOR_ACCOUNT_HOMEPAGE = os.environ.get('XAPI_ACTOR_ACCOUNT_HOMEPAGE',
