@@ -23,12 +23,12 @@ class XAPIHelpersTests(TestCase):
         """
         statements = [
             {
-                "actor": {"mbox:test_auth@test.com"},
+                "actor": {"mbox": "mailto:test_auth@test.com"},
                 "verb": {"id": "https://w3id.org/xapi/tla/verbs/socialized"},
                 "object": {"id": "https://example.com/activity/1"}
             },
             {
-                "actor": {"mbox:test_auth@test.com"},
+                "actor": {"mbox": "mailto:test_auth@test.com"},
                 "verb": {"id": "https://some.unknown.verb"},
                 "object": {"id": "https://example.com/activity/2"}
             },
@@ -47,12 +47,12 @@ class XAPIHelpersTests(TestCase):
         """
         statements = [
             {
-                "actor": {"mbox:test_auth@test.com"},
+                "actor": {"mbox": "mailto:test_auth@test.com"},
                 "verb": {"id": "http://unlisted/verb/one"},
                 "object": {"id": "https://example.com/activity/1"}
             },
             {
-                "actor": {"mbox:test_auth@test.com"},
+                "actor": {"mbox": "mailto:test_auth@test.com"},
                 "verb": {"id": "http://unlisted/verb/two"},
                 "object": {"id": "https://example.com/activity/1"}
             },
