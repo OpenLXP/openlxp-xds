@@ -650,7 +650,7 @@ class SavedFiltersView(APIView):
 class StatementForwardView(APIView):
     """Handles xAPI Requests"""
 
-    if settings.XAPI_ALLOW_ANON:
+    if settings.XAPI_ALLOW_ANON and not settings.XAPI_USE_JWT:
         permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -699,10 +699,12 @@ class StatementForwardView(APIView):
         else:
             if request.user.is_authenticated:
                 user_email = request.user.email  # Safe to access
-            else:
+            elif settings.XAPI_ALLOW_ANON:
                 # request.user is AnonymousUser
                 user_email = settings.XAPI_ANON_MBOX
-
+            else:
+                return Response({'message': 'Could not form xAPI Actor.'},
+                                status.HTTP_500_INTERNAL_SERVER_ERROR)
             actor = actor_with_mbox(user_email)
 
         # Get registration UUID
