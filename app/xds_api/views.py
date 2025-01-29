@@ -650,9 +650,6 @@ class SavedFiltersView(APIView):
 class StatementForwardView(APIView):
     """Handles xAPI Requests"""
 
-    if settings.XAPI_ALLOW_ANON and not settings.XAPI_USE_JWT:
-        permission_classes = [permissions.AllowAny]
-
     def post(self, request):
         """Forward statements to an LRS"""
 

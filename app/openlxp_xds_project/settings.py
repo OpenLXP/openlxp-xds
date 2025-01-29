@@ -262,23 +262,6 @@ REST_FRAMEWORK = {
     ]
 }
 
-# Accepts regex arguments
-OPEN_ENDPOINTS = [
-    "/api/auth/register",
-    "/api/auth/login",
-    "/api/auth/logout",
-    "/api/auth/validate",
-    "/api/ui-configuration/",
-    "/es-api/filter-search/",
-    "/es-api/more-like-this/[a-zA-Z0-9]+/",
-    "/es-api/",
-    "/es-api/suggest/",
-    "/es-api/derived-from/",
-    "/es-api/teaches/",
-    "/api/experiences/[a-zA-Z0-9]+/",
-    "/api/spotlight-courses",
-]
-
 EMAIL_BACKEND = 'django_ses.SESBackend'
 
 
@@ -312,3 +295,24 @@ XAPI_ACTOR_ACCOUNT_NAME_JWT_FIELDS = [
     field.strip()
     for field in os.environ.get('XAPI_ACTOR_ACCOUNT_NAME_JWT_FIELDS', 'activecac,preferred_username').split(',')
 ]
+
+
+# Accepts regex arguments
+OPEN_ENDPOINTS = [
+    "/api/auth/register",
+    "/api/auth/login",
+    "/api/auth/logout",
+    "/api/auth/validate",
+    "/api/ui-configuration/",
+    "/es-api/filter-search/",
+    "/es-api/more-like-this/[a-zA-Z0-9]+/",
+    "/es-api/",
+    "/es-api/suggest/",
+    "/es-api/derived-from/",
+    "/es-api/teaches/",
+    "/api/experiences/[a-zA-Z0-9]+/",
+    "/api/spotlight-courses",
+]
+
+if XAPI_ALLOW_ANON and not XAPI_USE_JWT:
+    OPEN_ENDPOINTS.append("/api/statements")
