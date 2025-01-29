@@ -7,7 +7,7 @@ logger = logging.getLogger('dict_config_logger')
 
 GROUPS = ['System Operator', 'Experience Owner', 'Experience Manager',
           'Experience Facilitator', 'Experience Participant']
-MODELS = ['statement forward',]
+MODELS = ['statement forward', ]
 PERMISSIONS = ['view', 'add', 'change', 'delete']
 
 
