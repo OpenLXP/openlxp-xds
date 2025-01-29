@@ -3,26 +3,24 @@ import logging
 from collections import OrderedDict
 
 import requests
-from requests.exceptions import ConnectionError
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponse, HttpResponseServerError, JsonResponse
+from requests.exceptions import ConnectionError, HTTPError
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from configurations.models import XDSConfiguration
 from core.management.utils.xds_internal import bleach_data_to_json
 from core.models import CourseSpotlight, Experience, InterestList, SavedFilter
-from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponse, HttpResponseServerError, JsonResponse
-from requests.exceptions import HTTPError
-from rest_framework import status, permissions
-from rest_framework.response import Response
-from rest_framework.views import APIView
 from xds_api.serializers import InterestListSerializer, SavedFilterSerializer
 from xds_api.utils.xds_utils import (get_request,
                                      get_spotlight_courses_api_url,
                                      metadata_to_target, save_experiences)
-from xds_api.xapi import (filter_allowed_statements,
-                          actor_with_mbox,
-                          actor_with_account,
-                          jwt_account_name,
-                          get_or_set_registration_uuid)
-from django.conf import settings
+from xds_api.xapi import (actor_with_account, actor_with_mbox,
+                          filter_allowed_statements,
+                          get_or_set_registration_uuid, jwt_account_name)
 
 logger = logging.getLogger('dict_config_logger')
 
