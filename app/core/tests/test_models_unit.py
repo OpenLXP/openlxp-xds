@@ -1,7 +1,7 @@
 from configurations.models import XDSConfiguration
 from core.models import (CourseDetailHighlight, CourseSpotlight, Experience,
                          InterestList, SearchFilter, SearchSortOption,
-                         XDSUIConfiguration)
+                         XDSUIConfiguration, SearchField)
 from django.test import tag
 from users.models import XDSUser
 
@@ -31,6 +31,17 @@ class ModelTests(TestSetUp):
         self.assertEqual(field, sort_option.field_name)
         self.assertTrue(sort_option.active)
         self.assertEqual(str(sort_option), str(sort_option.id))
+
+    def test_create_search_field(self):
+        """Test that creating a search sort option works as expected"""
+        name = "test name"
+        field = "test.name"
+        search_field = SearchField(display_name=name,
+                                   field_name=field)
+        self.assertEqual(name, search_field.display_name)
+        self.assertEqual(field, search_field.field_name)
+        self.assertTrue(search_field.active)
+        self.assertEqual(str(search_field), str(search_field.id))
 
     def test_create_course_detail_highlight(self):
         """Test creating a course detail highlight object"""

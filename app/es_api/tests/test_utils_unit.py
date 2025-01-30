@@ -60,6 +60,23 @@ class UtilTests(TestCase):
             result = query.more_like_this(1)
             self.assertEqual(result, resultVal)
 
+    def test_similar_courses(self):
+        """"Test that calling similar_courses returns whatever response
+              elastic search returns"""
+        with patch('elasticsearch_dsl.Search.execute') as es_execute, \
+                patch('es_api.utils.queries.'
+                      'CourseInformationMapping.objects'):
+            resultVal = {
+                "test": "test"
+            }
+            es_execute.return_value = {
+                "test": "test"
+            }
+            query = XSEQueries('test', 'test')
+
+            result = query.similar_courses('test')
+            self.assertEqual(result, resultVal)
+
     def test_search_by_keyword_error(self):
         """Test that calling search_by_keyword with a invalid page # \
              (e.g. string) value will throw an error"""
