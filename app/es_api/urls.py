@@ -17,3 +17,4 @@ urlpatterns = [
          name='search-competency'),
     path('similar-courses/<str:key>/', views.
          GetSimilarCoursesView.as_view(), name='get-similar-courses')
+]
