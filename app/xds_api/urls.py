@@ -37,4 +37,7 @@ urlpatterns = [
     path('saved-filters',
          views.SavedFiltersView.as_view(),
          name='saved-filters'),
+    path('statements',
+         views.StatementForwardView.as_view(),
+         name='forward_statements'),
 ]

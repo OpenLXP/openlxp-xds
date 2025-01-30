@@ -262,6 +262,41 @@ REST_FRAMEWORK = {
     ]
 }
 
+EMAIL_BACKEND = 'django_ses.SESBackend'
+
+
+# Django-notifications package settings
+DJANGO_NOTIFICATIONS_CONFIG = {
+    'USE_JSONFIELD': True,
+}
+
+# when notifications should be automatically deleted, should be days or greater
+NOTIFICATIONS_EXPIRE_AFTER = datetime.timedelta(days=30)
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
+
+# xAPI Statement Forwarding Settings
+
+# whether to allow anonymous xAPI statement forwarding
+XAPI_ALLOW_ANON = os.getenv('XAPI_ALLOW_ANON', 'true').lower() == 'true'
+
+# mbox email to use for the anonymous user
+XAPI_ANON_MBOX = os.getenv('XAPI_ANON_MBOX', 'anonymous@example.com')
+
+# toggle setting actor from JWT
+XAPI_USE_JWT = os.getenv('XAPI_USE_JWT', 'false').lower() == 'true'
+
+# Set $.actor.account.homePage on statements.
+XAPI_ACTOR_ACCOUNT_HOMEPAGE = os.environ.get('XAPI_ACTOR_ACCOUNT_HOMEPAGE',
+                                             'https://example.com')
+# Define fields from JWT to use for $.actor.account.name on statements in
+# descending order of preference.
+XAPI_ACTOR_ACCOUNT_NAME_JWT_FIELDS = [
+    field.strip()
+    for field in os.environ.get('XAPI_ACTOR_ACCOUNT_NAME_JWT_FIELDS', 'activecac,preferred_username').split(',')
+]
+
+
 # Accepts regex arguments
 OPEN_ENDPOINTS = [
     "/api/auth/register",
@@ -280,15 +315,5 @@ OPEN_ENDPOINTS = [
     "/es-api/similar-courses/[a-zA-Z0-9]+/",
 ]
 
-EMAIL_BACKEND = 'django_ses.SESBackend'
-
-
-# Django-notifications package settings
-DJANGO_NOTIFICATIONS_CONFIG = {
-    'USE_JSONFIELD': True,
-}
-
-# when notifications should be automatically deleted, should be days or greater
-NOTIFICATIONS_EXPIRE_AFTER = datetime.timedelta(days=30)
-
-DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
+if XAPI_ALLOW_ANON and not XAPI_USE_JWT:
+    OPEN_ENDPOINTS.append("/api/statements")

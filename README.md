@@ -48,6 +48,16 @@ When testing use root to allow the creation of a test database
 
 `CERT_VOLUME` - The path to the certificate (on the host machine) to use when connecting to AWS
 
+`XAPI_ALLOW_ANON` - If `true` (default) will allow forwarding of anonymous xAPI Statements. Not compatible with `XAPI_USE_JWT`.
+
+`XAPI_ANON_MBOX` - The mbox email value to use for anonymous xAPI actors if `XAPI_ALLOW_ANON` is enabled. Defaults to `anonymous@example.com`.
+
+`XAPI_USE_JWT` - If this variable is set, attempt to use the value of a JWT auth token to derive the xAPI actor account. If not set the actor will be identified by mbox email. Not compatible with `XAPI_ALLOW_ANON`.
+
+`XAPI_ACTOR_ACCOUNT_HOMEPAGE` - Set the `$.actor.account.homePage` field on xAPI Statements. Only used when `XAPI_USE_JWT` is `true`.
+
+`XAPI_ACTOR_ACCOUNT_NAME_JWT_FIELDS` - A comma-separated list of fields to check in the JWT for the `$.actor.account.name` field on xAPI Statements. The first non-empty string found will be chosen. Defaults to `activecac,preferred_username`. Only used when `XAPI_USE_JWT` is `true`.
+
 
 # Installation
 
@@ -87,8 +97,14 @@ When testing use root to allow the creation of a test database
 
     `Target xse index`: Index of data to use on XSE instance.
 
+    `LRS Endpoint`: xAPI LRS Endpoint to send statements to if desired.
 
-3. `Add xdsui configuration`: Configure Experience Discovery Service - User Interface (XDS-UI): 
+    `LRS Username`: xAPI LRS Basic Auth username.
+
+    `LRS Password`: xAPI LRS Basic Auth password.
+
+
+3. `Add xdsui configuration`: Configure Experience Discovery Service - User Interface (XDS-UI):
 
     `Search results per page`: Number of results that should be displayed on a search page on the UI.
 

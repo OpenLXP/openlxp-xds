@@ -3,19 +3,24 @@ import logging
 from collections import OrderedDict
 
 import requests
-from configurations.models import XDSConfiguration
-from core.management.utils.xds_internal import bleach_data_to_json
-from core.models import CourseSpotlight, Experience, InterestList, SavedFilter
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponse, HttpResponseServerError
-from requests.exceptions import HTTPError
+from django.http import HttpResponse, HttpResponseServerError, JsonResponse
+from requests.exceptions import ConnectionError, HTTPError
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from configurations.models import XDSConfiguration
+from core.management.utils.xds_internal import bleach_data_to_json
+from core.models import CourseSpotlight, Experience, InterestList, SavedFilter
 from xds_api.serializers import InterestListSerializer, SavedFilterSerializer
 from xds_api.utils.xds_utils import (get_request,
                                      get_spotlight_courses_api_url,
                                      metadata_to_target, save_experiences)
+from xds_api.xapi import (actor_with_account, actor_with_mbox,
+                          filter_allowed_statements,
+                          get_or_set_registration_uuid, jwt_account_name)
 
 logger = logging.getLogger('dict_config_logger')
 
@@ -638,3 +643,89 @@ class SavedFiltersView(APIView):
         serializer.save(owner=request.user)
         return Response(serializer.data,
                         status=status.HTTP_201_CREATED)
+
+
+class StatementForwardView(APIView):
+    """Handles xAPI Requests"""
+
+    def post(self, request):
+        """Forward statements to an LRS"""
+
+        config = XDSConfiguration.objects.first()
+        if not config:
+            return Response({'message': 'No XDS configuration found.'},
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        lrs_endpoint = config.lrs_endpoint
+        lrs_username = config.lrs_username
+        lrs_password = config.lrs_password
+
+        if not (lrs_endpoint and lrs_username and lrs_password):
+            return Response({'message': 'LRS credentials not configured.'},
+                            status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        statements = request.data
+        if not isinstance(statements, list):
+            # xAPI POST can be single or array
+            statements = [statements]
+
+        # Filter out statements whose verb is not in our whitelist
+        allowed_statements = filter_allowed_statements(statements)
+
+        if not allowed_statements:
+            return Response({'message':
+                             'No statements had whitelisted verbs.'},
+                            status.HTTP_400_BAD_REQUEST)
+
+        # Get statement actor identity
+        if settings.XAPI_USE_JWT:
+            account_name = jwt_account_name(
+                request,
+                settings.XAPI_ACTOR_ACCOUNT_NAME_JWT_FIELDS
+            )
+            if account_name is None:
+                # Return a 400 if none matched
+                return Response(
+                    {"message": "No valid JWT field found."},
+                    status.HTTP_400_BAD_REQUEST
+                )
+            actor = actor_with_account(settings.XAPI_ACTOR_ACCOUNT_HOMEPAGE,
+                                       account_name)
+        else:
+            if request.user.is_authenticated:
+                user_email = request.user.email  # Safe to access
+            elif settings.XAPI_ALLOW_ANON:
+                # request.user is AnonymousUser
+                user_email = settings.XAPI_ANON_MBOX
+            else:
+                return Response({'message': 'Could not form xAPI Actor.'},
+                                status.HTTP_500_INTERNAL_SERVER_ERROR)
+            actor = actor_with_mbox(user_email)
+
+        # Get registration UUID
+        registration = get_or_set_registration_uuid(request)
+
+        # Set actor and context registration
+        for statement in allowed_statements:
+            statement["actor"] = actor
+            context = statement.get('context', {})
+            context['registration'] = registration
+            statement['context'] = context
+
+        headers = {
+            'Content-Type': 'application/json',
+            'X-Experience-API-Version': '1.0.3',
+        }
+
+        try:
+            resp = requests.post(
+                url=f"{lrs_endpoint}/statements",
+                json=allowed_statements,
+                headers=headers,
+                auth=(lrs_username, lrs_password),
+            )
+        except ConnectionError:
+            return Response({'message': 'Could not connect to LRS'},
+                            status.HTTP_502_BAD_GATEWAY)
+
+        return JsonResponse(resp.json(), status=resp.status_code, safe=False)
