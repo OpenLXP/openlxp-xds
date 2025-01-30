@@ -28,8 +28,6 @@ urlpatterns = [
     re_path('api-auth/', include(
         'rest_framework.urls',
         namespace='rest_framework')),
-    re_path('health/', include('health_check.urls'),
-            name='health_check'),
     re_path('', include('openlxp_authentication.urls')),
     re_path('^inbox/notifications/',
             include(notifications.urls,

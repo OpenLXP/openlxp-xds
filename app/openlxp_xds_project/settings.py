@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
-    'health_check', 
     'rest_framework',
     'rest_framework.authtoken',
     'openlxp_notifications',
