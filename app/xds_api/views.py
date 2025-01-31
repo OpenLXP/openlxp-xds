@@ -17,6 +17,8 @@ from core.models import CourseSpotlight, Experience, InterestList, SavedFilter
 from xds_api.serializers import InterestListSerializer, SavedFilterSerializer
 from xds_api.utils.xds_utils import (get_request,
                                      get_spotlight_courses_api_url,
+                                     interest_list_check,
+                                     interest_list_get_search_str,
                                      metadata_to_target, save_experiences)
 from xds_api.xapi import (actor_with_account, actor_with_mbox,
                           filter_allowed_statements,
@@ -208,29 +210,12 @@ class InterestListView(APIView):
             coursesDict = interestList['experiences']
 
             # for each hash key in the courses list, append them to the query
-            for idx, metadata_key_hash in enumerate(coursesDict):
-                if idx == len(coursesDict) - 1:
-                    courseQuery += metadata_key_hash
-                else:
-                    courseQuery += (metadata_key_hash + ",")
+            coursesDict, courseQuery = (
+                interest_list_check(coursesDict, courseQuery))
 
             if len(coursesDict) > 0:
-                # get search string
-                composite_api_url = XDSConfiguration.objects.first() \
-                    .target_xis_metadata_api
-                api_url = composite_api_url + courseQuery
-
-                # make API call
-                response = get_request(api_url)
-                responseJSON = []
-                while response.status_code//10 == 20:
-                    responseJSON += response.json()['results']
-
-                    if 'next' in response.json() and\
-                            response.json()['next'] is not None:
-                        response = get_request(response.json()['next'])
-                    else:
-                        break
+                response, responseJSON = (
+                    interest_list_get_search_str(courseQuery))
 
                 if response.status_code == 200:
                     formattedResponse = metadata_to_target(responseJSON)

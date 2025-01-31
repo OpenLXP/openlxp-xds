@@ -42,7 +42,7 @@ mysql-connector-python == 8.0.28
 
 openlxp-authentication >=1.1.2, <1.2
 
-openlxp-notification>=1.4.0, <1.5.0
+openlxp-notification>=1.4.6, <1.5.0
 
 Pillow>=10.3.0, <10.4.0
 
