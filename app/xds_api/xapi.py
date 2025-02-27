@@ -3,13 +3,6 @@ import uuid
 
 
 VERB_WHITELIST = {
-    # DEPRECATED verbs we still let through
-    "https://w3id.org/xapi/tla/verbs/socialized",
-    "https://w3id.org/xapi/acrossx/verbs/explored",
-    "https://w3id.org/xapi/acrossx/verbs/prioritized",
-    "https://w3id.org/xapi/tla/verbs/registered",
-    "https://w3id.org/xapi/dod-isd/verbs/curated",
-    # Expected XDS-UI Instrumentation
     "https://w3id.org/xapi/tla/verbs/explored",
     "https://w3id.org/xapi/acrossx/verbs/searched",
     "http://activitystrea.ms/save",
