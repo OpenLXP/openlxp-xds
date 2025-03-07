@@ -835,7 +835,7 @@ VALID_STATEMENT = {
         "mbox": "mailto:test_auth@test.com"
     },
     "verb": {
-        "id": "https://w3id.org/xapi/tla/verbs/socialized"
+        "id": "http://adlnet.gov/expapi/verbs/shared"
     },
     "object": {
         "id": "http://example.com/activity/1234"

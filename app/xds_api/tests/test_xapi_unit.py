@@ -24,7 +24,7 @@ class XAPIHelpersTests(TestCase):
         statements = [
             {
                 "actor": {"mbox": "mailto:test_auth@test.com"},
-                "verb": {"id": "https://w3id.org/xapi/tla/verbs/socialized"},
+                "verb": {"id": "http://adlnet.gov/expapi/verbs/shared"},
                 "object": {"id": "https://example.com/activity/1"}
             },
             {

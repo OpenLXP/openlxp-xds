@@ -3,14 +3,12 @@ import uuid
 
 
 VERB_WHITELIST = {
-    "https://w3id.org/xapi/tla/verbs/socialized",
     "https://w3id.org/xapi/tla/verbs/explored",
-    # TODO: there should only be one explored verb
-    "https://w3id.org/xapi/acrossx/verbs/explored",
-    "https://w3id.org/xapi/acrossx/verbs/prioritized",
-    "https://w3id.org/xapi/dod-isd/verbs/curated",
-    "https://w3id.org/xapi/tla/verbs/registered",
     "https://w3id.org/xapi/acrossx/verbs/searched",
+    "http://activitystrea.ms/save",
+    "https://xapi.edlm/profiles/edlm-ecc/concepts/verbs/curated",
+    "http://adlnet.gov/expapi/verbs/shared",
+    "http://id.tincanapi.com/verb/viewed"
 }
 
 
