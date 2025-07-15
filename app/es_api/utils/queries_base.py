@@ -1,7 +1,7 @@
 import logging
 
 from django.contrib.auth.models import AnonymousUser
-from elasticsearch_dsl import A, Search, connections
+from elasticsearch.dsl import A, Search, connections
 
 logger = logging.getLogger('dict_config_logger')
 

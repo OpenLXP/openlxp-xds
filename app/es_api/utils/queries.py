@@ -5,8 +5,8 @@ import logging
 from configurations.models import CourseInformationMapping, XDSConfiguration
 from core.models import CourseSpotlight, SearchFilter, SearchSortOption
 from django.core.exceptions import ObjectDoesNotExist
-from elasticsearch_dsl import A, Document, Q
-from elasticsearch_dsl.query import MoreLikeThis
+from elasticsearch.dsl import A, Document, Q
+from elasticsearch.dsl.query import MoreLikeThis
 from users.models import Organization
 
 from .queries_base import BaseQueries
