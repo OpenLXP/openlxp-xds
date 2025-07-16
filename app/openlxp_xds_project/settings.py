@@ -52,7 +52,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'openlxp_P1_notification',
-    'social_django',
     'openlxp_authentication',
     'xds_api',
     'core',
