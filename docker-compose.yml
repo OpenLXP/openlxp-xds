@@ -14,7 +14,8 @@ services:
 
   app:
     container_name: openlxp-xds
-    image: registry1.dso.mil/ironbank/adl-ousd/ecc-openlxp/ecc-openlxp-xds
+    # image: registry1.dso.mil/ironbank/adl-ousd/ecc-openlxp/ecc-openlxp-xds
+    image: xds-1.0.7-ibtest
     # build:
     #   context: .
     ports:

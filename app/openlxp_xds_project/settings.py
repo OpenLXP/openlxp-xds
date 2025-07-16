@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'openlxp_P1_notification',
-    'openlxp_authentication',
+    # 'openlxp_authentication',
     'xds_api',
     'core',
     'es_api',
