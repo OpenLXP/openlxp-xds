@@ -15,6 +15,7 @@ isort==5.11.5
 martor>=1.5.8,<1.6.0 
 mysql-connector-python>=9.3.0,<9.4.0 
 p1-auth>=0.1.6,<1.0.0 
+openlxp-authentication >=1.1.2, <1.2
 openlxp-P1-notification>=0.0.4,<2.0.0 
 Pillow>=10.3.0,<10.4.0 
 python-slugify>=8.0.1 
