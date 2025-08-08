@@ -1035,3 +1035,4 @@ class StatementForwardTests(TestSetUp):
         self.assertEqual(response.status_code, status.HTTP_502_BAD_GATEWAY)
         # Also verify that requests.post was indeed called
         mock_post_splode.assert_called_once()
+        
