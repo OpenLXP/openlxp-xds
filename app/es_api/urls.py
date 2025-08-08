@@ -1,6 +1,7 @@
 from django.urls import path
-from es_api import views
 from rest_framework.routers import DefaultRouter
+
+from es_api import views
 
 router = DefaultRouter()
 
@@ -15,6 +16,6 @@ urlpatterns = [
          name='search-derived'),
     path('teaches/', views.SearchCompetencyView.as_view(),
          name='search-competency'),
-    path('similar-courses/<str:key>/', views.
-         GetSimilarCoursesView.as_view(), name='get-similar-courses')
+    path('similar-courses/<str:key>/',
+         views.GetSimilarCoursesView.as_view(), name='get-similar-courses'),
 ]
