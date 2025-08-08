@@ -1,7 +1,9 @@
 import json
+import requests
 from unittest.mock import Mock, patch
 
-import requests
+from configurations.models import XDSConfiguration
+from core.models import CourseSpotlight, InterestList, SavedFilter
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
@@ -9,9 +11,6 @@ from django.test import tag
 from django.urls import reverse
 from requests.exceptions import HTTPError, RequestException
 from rest_framework import status
-
-from configurations.models import XDSConfiguration
-from core.models import CourseSpotlight, InterestList, SavedFilter
 
 from .test_setup import TestSetUp
 
@@ -27,7 +26,7 @@ class InterestListsTests(TestSetUp):
 
         response = self.client.get(url)
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_interest_lists_authenticated(self):
         """
@@ -35,6 +34,8 @@ class InterestListsTests(TestSetUp):
         when calling the /api/interest-lists api
         """
         url = reverse('xds_api:interest-lists')
+
+        # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         response = self.client.get(url)
@@ -49,6 +50,8 @@ class InterestListsTests(TestSetUp):
         """
 
         url = reverse('xds_api:interest-lists')
+
+        # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         with patch('xds_api.views.InterestListsView') as mock:
@@ -63,6 +66,7 @@ class InterestListsTests(TestSetUp):
         Test that an unauthenticated user can not create an interest list.
         """
         url = reverse('xds_api:interest-lists')
+
         # create interest list
         interest_list_data = {
             "name": "Test Interest List",
@@ -70,14 +74,17 @@ class InterestListsTests(TestSetUp):
         }
 
         response = self.client.post(url, interest_list_data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_interest_list_authenticated(self):
         """
         Test that an authenticated user can create an interest list.
         """
         url = reverse('xds_api:interest-lists')
+
+        # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
+
         # create interest list
         interest_list_data = {
             "name": "Test Interest List",
@@ -87,7 +94,7 @@ class InterestListsTests(TestSetUp):
 
         response = self.client.post(url, interest_list_data, format="json")
         response_dict = json.loads(response.content)
-
+        print(response_dict)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response_dict["name"], "Test Interest List")
 
@@ -95,11 +102,12 @@ class InterestListsTests(TestSetUp):
         """
         Test that an unauthenticated user can not get an interest list.
         """
+
         list_id = '1234'
         url = reverse('xds_api:interest-list', args=(list_id,))
 
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_interest_list_authenticated(self):
         """
@@ -107,6 +115,8 @@ class InterestListsTests(TestSetUp):
         """
         list_id = self.list_3.pk
         url = reverse('xds_api:interest-list', args=(list_id,))
+
+        # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         response = self.client.get(url)
@@ -128,6 +138,8 @@ class InterestListsTests(TestSetUp):
         list_4.save()
         list_id = list_4.pk
         url = reverse('xds_api:interest-list', args=(list_id,))
+
+        # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         response = self.client.get(url)
@@ -142,6 +154,8 @@ class InterestListsTests(TestSetUp):
 
         list_id = self.list_1.pk
         url = reverse('xds_api:interest-list', args=(list_id,))
+
+        # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         with patch('xds_api.utils.'
@@ -152,6 +166,7 @@ class InterestListsTests(TestSetUp):
             conf_obj.return_value = conf_obj
             conf_obj.first.return_value = \
                 XDSConfiguration(target_xis_metadata_api="www.test.com")
+
             # mock the get request
             mock_response = get_request.return_value
             mock_response.status_code = 200
@@ -161,6 +176,7 @@ class InterestListsTests(TestSetUp):
                         "test": "value",
                     }, ]
             }
+
             # re-assign the mock to the get request
             get_request.return_value = mock_response
 
@@ -178,6 +194,8 @@ class InterestListsTests(TestSetUp):
 
         list_id = self.list_1.pk
         url = reverse('xds_api:interest-list', args=(list_id,))
+
+        # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         with patch('xds_api.utils.'
@@ -188,12 +206,14 @@ class InterestListsTests(TestSetUp):
             conf_obj.return_value = conf_obj
             conf_obj.first.return_value = \
                 XDSConfiguration(target_xis_metadata_api="www.test.com")
+
             # mock the get request
             mock_response = get_request.return_value
             mock_response.status_code = 500
             mock_response.json.return_value = [{
                 "test": "value",
             }]
+
             # re-assign the mock to the get request
             get_request.return_value = mock_response
 
@@ -222,7 +242,7 @@ class InterestListsTests(TestSetUp):
         url = reverse('xds_api:interest-list', args=(list_id,))
 
         response = self.client.patch(url, {'name': 'new name'})
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_edit_interest_list_authenticated_not_owner(self):
         """
@@ -231,6 +251,8 @@ class InterestListsTests(TestSetUp):
         """
         list_id = self.list_2.pk
         url = reverse('xds_api:interest-list', args=(list_id,))
+
+        # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         response = self.client.patch(url, {'name': 'new name'})
@@ -243,6 +265,8 @@ class InterestListsTests(TestSetUp):
         """
         list_id = 99
         url = reverse('xds_api:interest-list', args=(list_id,))
+
+        # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         response = self.client.patch(url, {'name': 'new name'})
@@ -261,6 +285,7 @@ class InterestListsTests(TestSetUp):
         new_list = {"name": new_name,
                     "description": self.list_1.description,
                     "experiences": empty_list}
+
         cont_type = ContentType.objects.get(app_label='xds_api',
                                             model='interestlist')
         permission = Permission.objects. \
@@ -286,9 +311,11 @@ class InterestListsTests(TestSetUp):
         """
         list_id = self.list_1.id
         url = reverse('xds_api:interest-list', args=(list_id,))
+
         empty_list = []
         new_list = {"description": self.list_1.description,
                     "experiences": empty_list}
+
         cont_type = ContentType.objects.get(app_label='xds_api',
                                             model='interestlist')
         permission = Permission.objects. \
@@ -312,7 +339,7 @@ class InterestListsTests(TestSetUp):
         url = reverse('xds_api:interest-list', args=(list_id,))
 
         response = self.client.delete(url)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_delete_interest_list_authenticated_not_owner(self):
         """
@@ -321,6 +348,8 @@ class InterestListsTests(TestSetUp):
         """
         list_id = self.list_2.pk
         url = reverse('xds_api:interest-list', args=(list_id,))
+
+        # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         response = self.client.delete(url)
@@ -333,6 +362,8 @@ class InterestListsTests(TestSetUp):
         """
         list_id = 99
         url = reverse('xds_api:interest-list', args=(list_id,))
+
+        # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         response = self.client.delete(url)
@@ -345,6 +376,7 @@ class InterestListsTests(TestSetUp):
         """
         list_id = self.list_1.id
         url = reverse('xds_api:interest-list', args=(list_id,))
+
         cont_type = ContentType.objects.get(app_label='xds_api',
                                             model='interestlist')
         permission = Permission.objects. \
@@ -365,7 +397,7 @@ class InterestListsTests(TestSetUp):
 
         response = self.client.post(url, {'name': 'new name'})
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_add_course_multiple_lists_success(self):
         """
@@ -381,7 +413,9 @@ class InterestListsTests(TestSetUp):
         data = {
             "lists": [self.list_3.pk]
         }
-        response = self.client.post(url, data)
+        response = \
+            self.client.post(url,
+                             data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(self.list_3.experiences.all()), 1)
@@ -394,7 +428,8 @@ class InterestListsTests(TestSetUp):
             get(name='Can view interest lists owned')
         self.user_1.user_permissions.add(permission)
         self.client.force_authenticate(user=self.user_1)
-        response = self.client.get(url)
+        response = self.client \
+            .get(url)
         responseDict = json.loads(response.content)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -414,7 +449,8 @@ class InterestListsTests(TestSetUp):
         # subscribe user 1 to interest list 3
         self.list_3.subscribers.add(self.user_1)
         self.list_3.save()
-        response = self.client.get(url)
+        response = self.client \
+            .get(url)
         response_dict = json.loads(response.content)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -430,7 +466,8 @@ class InterestListsTests(TestSetUp):
             get(name='Can change interest list subscribe')
         self.user_1.user_permissions.add(permission)
         self.client.force_authenticate(user=self.user_1)
-        response = self.client.patch(url)
+        response = self.client \
+            .patch(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(self.list_2.subscribers.all()), 1)
@@ -447,7 +484,8 @@ class InterestListsTests(TestSetUp):
         # subscribe user 1 to interest list 3
         self.list_2.subscribers.add(self.user_1)
         self.list_2.save()
-        response = self.client.patch(url)
+        response = self.client \
+            .patch(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(self.list_2.subscribers.all()), 0)
@@ -463,7 +501,7 @@ class SavedFiltersTests(TestSetUp):
 
         response = self.client.get(url)
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_saved_filters_owned_authorized(self):
         """
@@ -509,7 +547,9 @@ class SavedFiltersTests(TestSetUp):
             get(name='Can add saved filters')
         self.user_1.user_permissions.add(permission)
         self.client.force_authenticate(user=self.user_1)
-        response = self.client.post(url, saved_filter)
+        response = \
+            self.client.post(url,
+                             saved_filter)
         response_dict = json.loads(response.content)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED),
@@ -528,7 +568,9 @@ class SavedFiltersTests(TestSetUp):
             get(name='Can add saved filters')
         self.user_1.user_permissions.add(permission)
         self.client.force_authenticate(user=self.user_1)
-        response = self.client.post(url, saved_filter)
+        response = \
+            self.client.post(url,
+                             saved_filter)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST),
 
@@ -542,7 +584,7 @@ class SavedFiltersTests(TestSetUp):
         }
 
         response = self.client.post(url, saved_filter)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_saved_filter_unauthorized(self):
         """Test that an unauthenticated user cannot get a saved filter
@@ -551,7 +593,7 @@ class SavedFiltersTests(TestSetUp):
 
         response = self.client.get(url)
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_saved_filter_authorized(self):
         """Test that trying to get saved filter through the
@@ -597,6 +639,7 @@ class SavedFiltersTests(TestSetUp):
 
     def test_edit_saved_filter_invalid_authorized(self):
         """Test that trying to edit a saved filter through the"""
+
         filter_id = self.filter_1.pk
         edit_filter = {
             "name": "Devops",
@@ -646,7 +689,8 @@ class SavedFiltersTests(TestSetUp):
         filter_id = self.filter_1.pk
         url = reverse('xds_api:saved-filter', args=(filter_id,))
         self.client.login(email=self.auth_email, password=self.auth_password)
-        response = self.client.delete(url)
+        response = \
+            self.client.delete(url)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -678,9 +722,11 @@ class SpotlightCoursesTests(TestSetUp):
         """test that calling the endpoint /api/spotlight-courses returns a
             list of documents for configured spotlight courses"""
         url = reverse('xds_api:spotlight-courses')
+
         permission = Permission.objects. \
             get(name='Can view get spotlight courses')
         self.auth_user.user_permissions.add(permission)
+
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         with patch('xds_api.views.get_request') as get_request, \
@@ -770,6 +816,8 @@ class ViewTests(TestSetUp):
         """
         doc_id = '123456'
         url = reverse('xds_api:get_courses', args=(doc_id,))
+
+        # login user and get token
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         with patch('xds_api.views.get_request') as get_request:
@@ -825,6 +873,7 @@ class StatementForwardTests(TestSetUp):
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = LRS_SUCCESS_RESPONSE_BODY
 
+        # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         url = reverse('xds_api:forward_statements')
@@ -863,6 +912,7 @@ class StatementForwardTests(TestSetUp):
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = LRS_SUCCESS_RESPONSE_BODY
 
+        # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         url = reverse('xds_api:forward_statements')
@@ -898,6 +948,7 @@ class StatementForwardTests(TestSetUp):
         mock_post.return_value.status_code = 418
         mock_post.return_value.json.return_value = {"I'm": "a teapot."}
 
+        # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         url = reverse('xds_api:forward_statements')
@@ -922,6 +973,7 @@ class StatementForwardTests(TestSetUp):
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = LRS_SUCCESS_RESPONSE_BODY
 
+        # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         url = reverse('xds_api:forward_statements')
@@ -968,6 +1020,7 @@ class StatementForwardTests(TestSetUp):
     @patch('requests.post',
            side_effect=requests.exceptions.ConnectionError("No dice"))
     def test_returns_502_when_connection_fails(self, mock_post_splode):
+        # login user
         self.client.login(email=self.auth_email, password=self.auth_password)
 
         url = reverse('xds_api:forward_statements')
