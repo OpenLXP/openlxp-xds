@@ -23,62 +23,6 @@ Or copy it into one of these folders to install it system-wide:
 ### Python
 `Python >=3.9` : Download and install it from here [Python](https://www.python.org/downloads/).
 
-# Installation
-
-1. Clone the Github repository:
-
-    https://github.com/OpenLXP/openlxp-xds.git
-
-2. Open terminal at the root directory of the project.
-    
-    example: ~/PycharmProjects/openlxp-xds 
-
-3. Run command to install all the requirements from requirements.txt 
-    
-    docker-compose build.
-
-4. Once the installation and build are done, run the below command to start the server.
-    
-    docker-compose up
-
-5. Once the server is up, go to the admin page:
-    
-    http://localhost:8100/admin (replace localhost with server IP)
-
-
-# Configuration
-
-1. On the Admin page, log in with the admin credentials 
-
-
-2. `Add xds configuration`: Configure Experience Discovery Service (XDS):
-    
-    `Default user group`: Select a group for new users to be assigned to automatically.
-
-    `Target xis metadata api`: Metadata API Endpoint to connect to on an XIS instance.
-
-    `Target xse host`: Hostname and port of XSE instance to use.
-
-    `Target xse index`: Index of data to use on XSE instance.
-
-    `LRS Endpoint`: xAPI LRS Endpoint to send statements to if desired.
-
-    `LRS Username`: xAPI LRS Basic Auth username.
-
-    `LRS Password`: xAPI LRS Basic Auth password.
-
-
-3. `Add xdsui configuration`: Configure Experience Discovery Service - User Interface (XDS-UI):
-
-    `Search results per page`: Number of results that should be displayed on a search page on the UI.
-
-    `Xds configuration`: Select the XDS Configuration to use.
-
-    `Course img fallback`: Image to use if no image is supplied in the experience
-
-
-4. `Add Saml configuration`: Configure Security Assertion Markup Language (SAML):
-=======
 ## 1. Clone the project
 Clone the Github repository
 ```
