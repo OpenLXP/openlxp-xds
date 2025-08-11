@@ -1,11 +1,10 @@
+from configurations.models import XDSUIConfiguration
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.forms import ValidationError
 from django.urls import reverse
 from model_utils.models import TimeStampedModel
-
-from configurations.models import XDSUIConfiguration
 
 
 class SearchFilter(TimeStampedModel):
@@ -28,6 +27,30 @@ class SearchFilter(TimeStampedModel):
         choices=FILTER_TYPE_CHOICES,
         default='terms',
     )
+
+    active = models.BooleanField(default=True)
+
+    def get_absolute_url(self):
+        """ URL for displaying individual model records."""
+        return reverse('Configuration-detail', args=[str(self.id)])
+
+    def __str__(self):
+        """String for representing the Model object."""
+        return f'{self.id}'
+
+
+class SearchField(TimeStampedModel):
+    """Model to add aditional fields to search by"""
+    display_name = models.CharField(
+        max_length=200,
+        help_text='Enter the display name of the field to search by on')
+    field_name = models.CharField(
+        max_length=200,
+        help_text='Enter the metadata field name as displayed in Elasticsearch'
+                  ' e.g. course.title'
+    )
+    xds_ui_configuration = models.ForeignKey(XDSUIConfiguration,
+                                             on_delete=models.CASCADE)
 
     active = models.BooleanField(default=True)
 

@@ -15,21 +15,22 @@ Including another URLconf
 """
 import notifications.urls
 from django.conf import settings
-from django.conf.urls import url
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, re_path
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/', include('xds_api.urls')),
-    path('api/', include('users.urls')),
-    path('api/', include('configurations.urls')),
-    path('es-api/', include('es_api.urls')),
-    # url('', include('social_django.urls', namespace='social')),
-    path('api-auth/', include('rest_framework.urls',
-                              namespace='rest_framework')),
-    url('', include('openlxp_authentication.urls')),
-    url('^inbox/notifications/',
-        include(notifications.urls, namespace='notifications')),
+    re_path('admin/', admin.site.urls),
+    re_path('api/', include('xds_api.urls')),
+    re_path('api/', include('users.urls')),
+    re_path('api/', include('configurations.urls')),
+    re_path('es-api/', include('es_api.urls')),
+    re_path('api-auth/', include(
+        'rest_framework.urls',
+        namespace='rest_framework')),
+    re_path('health/', include('health_check.urls')),
+    re_path('', include('openlxp_authentication.urls')),
+    re_path('^inbox/notifications/',
+            include(notifications.urls,
+                    namespace='notifications')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

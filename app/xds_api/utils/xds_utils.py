@@ -1,11 +1,10 @@
 import json
 
 import requests
-from rest_framework import status
-from rest_framework.response import Response
-
 from configurations.models import XDSConfiguration
 from core.models import CourseSpotlight, Experience
+from rest_framework import status
+from rest_framework.response import Response
 
 
 def get_request(request_url):
@@ -104,3 +103,33 @@ def handle_unauthenticated_user():
     """This method returns an HTTP response if user is not authenticated"""
     return Response({'Access Denied: Unauthenticated user.'},
                     status.HTTP_401_UNAUTHORIZED)
+
+
+def interest_list_check(coursesDict, courseQuery):
+    # for each hash key in the courses list, append them to the query
+    for idx, metadata_key_hash in enumerate(coursesDict):
+        if idx == len(coursesDict) - 1:
+            courseQuery += metadata_key_hash
+        else:
+            courseQuery += (metadata_key_hash + ",")
+    return coursesDict, courseQuery
+
+
+def interest_list_get_search_str(courseQuery):
+    # get search string
+    composite_api_url = XDSConfiguration.objects.first() \
+        .target_xis_metadata_api
+    api_url = composite_api_url + courseQuery
+
+    # make API call
+    response = get_request(api_url)
+    responseJSON = []
+    while response.status_code//10 == 20:
+        responseJSON += response.json()['results']
+
+        if 'next' in response.json() and\
+                response.json()['next'] is not None:
+            response = get_request(response.json()['next'])
+        else:
+            break
+    return response, responseJSON

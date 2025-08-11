@@ -57,8 +57,9 @@ def forwards_func(apps, schema_editor):
                                                    name=name,
                                                    content_type=content_type)
                 except Perm.DoesNotExist:
-                    logging.warning("Permission not found with name '{}'.".
-                                    format(name))
+#                    logging.warning("Permission not found with name '{}'.".
+#                                    format(name))
+                    logging.warning("Permission not found with %s", name)
                     continue
 
                 new_group.permissions.add(model_add_perm)
@@ -106,8 +107,9 @@ def reverse_func(apps, schema_editor):
                                                    name=name,
                                                    content_type=content_type)
                 except Perm.DoesNotExist:
-                    logging.warning("Permission not found with name '{}'.".
-                                    format(name))
+#                    logging.warning("Permission not found with name '{}'.".
+#                                    format(name))
+                    logging.warning("Permission not found with %s", name)
                     continue
 
                 new_group.permissions.add(model_add_perm)

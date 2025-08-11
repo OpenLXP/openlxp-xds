@@ -6,12 +6,17 @@ include /etc/nginx/mime.types;
 server {
     listen 8020;
     server_name example.org;
+    client_max_body_size 50M;
 
     location /static {
         root /opt/app/openlxp-xds;
     }
 
     location /media {
+        root /opt/app/openlxp-xds;
+    }
+
+    location /images {
         root /opt/app/openlxp-xds;
     }
 

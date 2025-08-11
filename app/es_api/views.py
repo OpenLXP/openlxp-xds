@@ -14,6 +14,8 @@ from es_api.utils.queries import XSEQueries
 
 logger = logging.getLogger('dict_config_logger')
 
+CONTACT_ADMIN = "Please contact an administrator"
+
 
 class SearchIndexView(APIView):
     """This method defines an API for sending keyword queries to ElasticSearch
@@ -45,7 +47,7 @@ class SearchIndexView(APIView):
         if keyword != '':
             errorMsg = {
                 "message": "error executing ElasticSearch query; " +
-                "Please contact an administrator"
+                CONTACT_ADMIN
             }
             errorMsgJSON = json.dumps(errorMsg)
 
@@ -114,7 +116,7 @@ class SearchDerivedView(APIView):
         if reference != '':
             errorMsg = {
                 "message": "error executing ElasticSearch query; " +
-                "Please contact an administrator"
+                CONTACT_ADMIN
             }
             errorMsgJSON = json.dumps(errorMsg)
 
@@ -147,9 +149,70 @@ class SearchDerivedView(APIView):
                                           content_type="application/json")
 
 
+class SearchCompetencyView(APIView):
+    """This method defines an API for querying to ElasticSearch
+            for competencies"""
+
+    def get_request_attributes(self, request):
+        """helper method to get attributes"""
+        reference = ''
+        filters = {
+            'page': '1'
+        }
+
+        if request.GET.get('reference'):
+            reference = request.GET['reference']
+
+        if (request.GET.get('p')) and (request.GET.get('p') != ''):
+            filters['page'] = request.GET['p']
+
+        return reference, filters
+
+    def get(self, request):
+        results = []
+
+        reference, filters = self.get_request_attributes(request)
+
+        if reference != '':
+            errorMsg = {
+                "message": "error executing ElasticSearch query; " +
+                CONTACT_ADMIN
+            }
+            errorMsgJSON = json.dumps(errorMsg)
+
+            try:
+                queries = XSEQueries(
+                    XDSConfiguration.objects.first().target_xse_host,
+                    XDSConfiguration.objects.first().target_xse_index,
+                    user=request.user)
+                response = queries.search_by_competency(
+                    comp_uuid=reference, filters=filters)
+                results = queries.get_results(response)
+            except HTTPError as http_err:
+                logger.error(http_err)
+                return HttpResponseServerError(errorMsgJSON,
+                                               content_type="application/json")
+            except Exception as err:
+                logger.error(err)
+                return HttpResponseServerError(errorMsgJSON,
+                                               content_type="application/json")
+            else:
+                logger.info(results)
+                return HttpResponse(results, content_type="application/json")
+        else:
+            error = {
+                "message": "Request is missing 'reference' query " +
+                "parameter"
+            }
+            errorJson = json.dumps(error)
+            return HttpResponseBadRequest(errorJson,
+                                          content_type="application/json")
+
+
 class GetMoreLikeThisView(APIView):
     """This method defines an API for fetching results using the
-            more_like_this feature from elasticsearch. """
+            more_like_this feature from elasticsearch for
+            more like this courses section of UI. """
 
     def get(self, request, doc_id):
         results = []
@@ -178,6 +241,47 @@ class GetMoreLikeThisView(APIView):
         else:
             logger.info(results)
             return HttpResponse(results, content_type="application/json")
+
+
+class GetSimilarCoursesView(APIView):
+    """This method defines an API for fetching results by sending key words
+            to elasticsearch and looking for similar courses. """
+
+    def get(self, request, key):
+        results = []
+        if key != '':
+            errorMsg = {
+                "message": "error executing ElasticSearch query; " +
+                CONTACT_ADMIN
+            }
+            errorMsgJSON = json.dumps(errorMsg)
+
+            try:
+                queries = XSEQueries(
+                    XDSConfiguration.objects.first().target_xse_host,
+                    XDSConfiguration.objects.first().target_xse_index,
+                    user=request.user)
+                response = queries.similar_courses(
+                    keyword=key)
+                results = queries.get_results(response)
+            except HTTPError as http_err:
+                logger.error(http_err)
+                return HttpResponseServerError(errorMsgJSON,
+                                               content_type="application/json")
+            except Exception as err:
+                logger.error(err)
+                return HttpResponseServerError(errorMsgJSON,
+                                               content_type="application/json")
+            else:
+                logger.info(results)
+                return HttpResponse(results, content_type="application/json")
+        else:
+            error = {
+                "message": "Request is missing 'key' query parameter"
+            }
+            errorJson = json.dumps(error)
+            return HttpResponseBadRequest(errorJson,
+                                          content_type="application/json")
 
 
 class FiltersView(APIView):
@@ -210,7 +314,7 @@ class FiltersView(APIView):
 
         errorMsg = {
             "message": "error executing ElasticSearch query; " +
-            "Please contact an administrator"
+            CONTACT_ADMIN
         }
         errorMsgJSON = json.dumps(errorMsg)
 

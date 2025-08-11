@@ -1,6 +1,5 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
-
 from xds_api import views
 
 router = DefaultRouter()
@@ -38,4 +37,7 @@ urlpatterns = [
     path('saved-filters',
          views.SavedFiltersView.as_view(),
          name='saved-filters'),
+    path('statements',
+         views.StatementForwardView.as_view(),
+         name='forward_statements'),
 ]

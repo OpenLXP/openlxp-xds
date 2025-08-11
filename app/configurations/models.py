@@ -38,6 +38,24 @@ class XDSConfiguration(TimeStampedModel):
         blank=True,
         null=True
     )
+    lrs_endpoint = models.CharField(
+        max_length=200,
+        help_text='Enter the xAPI LRS Endpoint to send data to',
+        blank=True,
+        null=True
+    )
+    lrs_username = models.CharField(
+        max_length=200,
+        help_text='Enter the xAPI LRS HTTP Basic Auth username',
+        blank=True,
+        null=True
+    )
+    lrs_password = models.CharField(
+        max_length=200,
+        help_text='Enter the xAPI LRS HTTP Basic Auth password',
+        blank=True,
+        null=True
+    )
 
     def get_absolute_url(self):
         """ URL for displaying individual model records."""
@@ -93,6 +111,9 @@ class XDSUIConfiguration(TimeStampedModel):
     course_img_fallback = models.ImageField(upload_to='images/',
                                             null=True,
                                             blank=True)
+    ui_logo = models.ImageField(upload_to='images/',
+                                null=True,
+                                blank=True)
 
     def get_absolute_url(self):
         """ URL for displaying individual model records."""
@@ -109,7 +130,7 @@ class XDSUIConfiguration(TimeStampedModel):
 
 
 class CourseInformationMapping(TimeStampedModel):
-    """ Model to map course information"""
+    """ Model to map course information for UI"""
 
     course_title = models.CharField(max_length=200,
                                     default="Course.CourseTitle",
@@ -170,6 +191,22 @@ class CourseInformationMapping(TimeStampedModel):
                                                      " the course found in the"
                                                      " elasticsearch")
 
+    course_type = models.CharField(max_length=200,
+                                   default="Course."
+                                   "CourseType",
+                                   help_text="Enter the mapping for "
+                                             "the Course type of"
+                                             " the course found in the"
+                                             " elasticsearch")
+
+    course_time = models.CharField(max_length=200,
+                                   default="Course."
+                                   "EstimatedCompletionTime",
+                                   help_text="Enter the mapping for "
+                                             "the estimated completion time "
+                                             " for the course found in the"
+                                             " elasticsearch")
+
     course_thumbnail = models.CharField(max_length=200,
                                         default="Technical_Information."
                                                 "Thumbnail",
@@ -179,11 +216,23 @@ class CourseInformationMapping(TimeStampedModel):
                                                   " elasticsearch")
 
     course_derived_from = models.CharField(max_length=200,
-                                           default="P2881_Core.DerivedFrom",
+                                           default="P2881-Core.DerivedFrom",
                                            help_text="Enter the mapping for "
                                            "the reference to the "
                                            "course derived from found in the"
                                            " elasticsearch")
+
+    course_competency = models.CharField(max_length=200,
+                                         default="Course."
+                                         "CourseLearningOutcome",
+                                         help_text="Enter the mapping for "
+                                         "the reference to the "
+                                         "competency taught")
+
+    course_subject = models.CharField(max_length=200,
+                                      default="p2881-core.Subject",
+                                      help_text="Enter the mapping for "
+                                      "the course subject")
 
     xds_ui_configuration = models \
         .OneToOneField(XDSUIConfiguration,

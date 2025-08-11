@@ -7,7 +7,8 @@ from elasticsearch_dsl import A, Document, Q
 from elasticsearch_dsl.query import MoreLikeThis
 
 from configurations.models import CourseInformationMapping, XDSConfiguration
-from core.models import CourseSpotlight, SearchFilter, SearchSortOption
+from core.models import (CourseSpotlight, SearchField, SearchFilter,
+                         SearchSortOption)
 from users.models import Organization
 
 from .queries_base import BaseQueries
@@ -86,8 +87,9 @@ class XSEQueries(BaseQueries):
             course_mapping.course_code, course_mapping.course_provider,
             course_mapping.course_instructor,
             course_mapping.course_deliveryMode,
-            'Course.CourseTitle', 'Course.ShortDescription',
-            'Course.CourseCode', 'Course.CourseProviderName'
+            course_mapping.course_competency,
+            *SearchField.objects.filter(
+                active=True).values_list('field_name', flat=True)
         ]
 
         q = Q("multi_match",
@@ -113,6 +115,34 @@ class XSEQueries(BaseQueries):
 
         # add filters to the search query
         self.add_search_filters(filters=filters)
+
+        page_size = uiConfig.search_results_per_page
+        start_index = self.get_page_start(int(filters['page']), page_size)
+        end_index = start_index + page_size
+        self.search = self.search[start_index:end_index]
+
+        # call to elasticsearch to execute the query
+        response = self.search.execute()
+        logger.info(self.search.to_dict())
+
+        return response
+
+    def search_by_competency(self, comp_uuid="", filters={}):
+        """This method takes in a competency ID string + a page number and
+        queries ElasticSearch for the term then returns the Response Object"""
+        course_mapping = CourseInformationMapping.objects.first()
+
+        q = Q("match",
+              **{course_mapping.course_competency: comp_uuid})
+
+        # setting up the search object
+        self.search = self.search.query(q)
+
+        self.user_organization_filtering()
+
+        # getting the page size for result pagination
+        configuration = XDSConfiguration.objects.first()
+        uiConfig = configuration.xdsuiconfiguration
 
         page_size = uiConfig.search_results_per_page
         start_index = self.get_page_start(int(filters['page']), page_size)
@@ -156,8 +186,8 @@ class XSEQueries(BaseQueries):
         return response
 
     def more_like_this(self, doc_id):
-        """This method takes in a doc ID and queries the elasticsearch index for
-            courses with similar title or description"""
+        """This method takes in a doc ID and queries the elasticsearch index
+            for courses with similar title or description"""
         likeObj = [
             {
                 "_index": self.index,
@@ -181,6 +211,35 @@ class XSEQueries(BaseQueries):
         self.search = self.search[0:6]
         response = self.search.execute()
         logger.info(response)
+
+        return response
+
+    def similar_courses(self, keyword=""):
+        """This method takes in a keyword and queries the elasticsearch index
+           for 4 courses with similar competencies or subjects"""
+
+        course_mapping = CourseInformationMapping.objects.first()
+        fields = [
+            course_mapping.course_competency,
+            course_mapping.course_subject
+        ]
+
+        # We're going to match based only on two fields
+        q = Q("multi_match",
+              query=keyword,
+              fields=fields)
+
+        # setting up the search object
+        self.search = self.search.query(q)
+
+        self.user_organization_filtering()
+
+        # sending back 4 responses
+        self.search = self.search[0:4]
+
+        # call to elasticsearch to execute the query
+        response = self.search.execute()
+        logger.info(self.search.to_dict())
 
         return response
 
@@ -213,8 +272,8 @@ class XSEQueries(BaseQueries):
         return result
 
     def search_by_filters(self, page_num, filters={}):
-        """This method takes in a page number + a dict of field names and values
-            and queries ElasticSearch for the term then returns the
+        """This method takes in a page number + a dict of field names and
+        values and queries ElasticSearch for the term then returns the
             Response Object"""
 
         # setting up the search object

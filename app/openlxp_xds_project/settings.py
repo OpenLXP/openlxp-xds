@@ -26,14 +26,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY_VAL')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 mimetypes.add_type("text/css", ".css", True)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [os.environ.get("HOSTS")]
+
+# Content Security Policy (CSP)
+SELF_VALUE = "'self'"  # defining a constant
+
+CSP_DEFAULT_SRC = (SELF_VALUE,)
+CSP_SCRIPT_SRC = (SELF_VALUE,)
+CSP_IMG_SRC = (SELF_VALUE,)
+CSP_STYLE_SRC = (SELF_VALUE)
+CSP_FRAME_SRC = (SELF_VALUE,)
+CSP_FONT_SRC = (SELF_VALUE,)
+
 
 # Application definition
-
 INSTALLED_APPS = [
     "admin_interface",
     "colorfield",
@@ -44,6 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'health_check',
     'rest_framework',
     'rest_framework.authtoken',
     'openlxp_notifications',
@@ -67,7 +78,16 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'csp.middleware.CSPMiddleware',
 ]
+
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+
+SESSION_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_BROWSER_XSS_FILTER = True
 
 ROOT_URLCONF = 'openlxp_xds_project.urls'
 
@@ -158,6 +178,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 LOG_PATH = os.environ.get('LOG_PATH')
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGGING = {
     'version': 1,
@@ -187,13 +209,16 @@ LOGGING = {
     }
 }
 
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOWED_ORIGINS = [
+    os.environ.get('CORS_ALLOWED_ORIGINS')
+]
 CORS_ALLOW_CREDENTIALS = True
-CSRF_COOKIE_DOMAIN = '.deloitteopenlxp.com'
-CSRF_TRUSTED_ORIGINS = ['.deloitteopenlxp.com', ]
+CSRF_COOKIE_DOMAIN = os.environ.get('CSRF_COOKIE_DOMAIN')
+CSRF_TRUSTED_ORIGINS = [os.environ.get('CSRF_TRUSTED_ORIGINS'), ]
+CSRF_COOKIE_HTTPONLY = True
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# SECURE_SSL_REDIRECT = True
+# SECURE_REDIRECT_EXEMPT = ['health/', 'api/health/']
 
 AUTH_USER_MODEL = 'users.XDSUser'
 
@@ -256,22 +281,6 @@ REST_FRAMEWORK = {
     ]
 }
 
-# Accepts regex arguments
-OPEN_ENDPOINTS = [
-    "/api/auth/register",
-    "/api/auth/login",
-    "/api/auth/logout",
-    "/api/auth/validate",
-    "/api/ui-configuration/",
-    "/es-api/filter-search/",
-    "/es-api/more-like-this/[a-zA-Z0-9]+/",
-    "/es-api/",
-    "/es-api/suggest/",
-    "/es-api/derived-from/",
-    "/api/experiences/[a-zA-Z0-9]+/",
-    "/api/spotlight-courses",
-]
-
 EMAIL_BACKEND = 'django_ses.SESBackend'
 
 
@@ -284,3 +293,46 @@ DJANGO_NOTIFICATIONS_CONFIG = {
 NOTIFICATIONS_EXPIRE_AFTER = datetime.timedelta(days=30)
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
+
+# xAPI Statement Forwarding Settings
+
+# whether to allow anonymous xAPI statement forwarding
+XAPI_ALLOW_ANON = os.getenv('XAPI_ALLOW_ANON', 'true').lower() == 'true'
+
+# mbox email to use for the anonymous user
+XAPI_ANON_MBOX = os.getenv('XAPI_ANON_MBOX', 'anonymous@example.com')
+
+# toggle setting actor from JWT
+XAPI_USE_JWT = os.getenv('XAPI_USE_JWT', 'false').lower() == 'true'
+
+# Set $.actor.account.homePage on statements.
+XAPI_ACTOR_ACCOUNT_HOMEPAGE = os.environ.get('XAPI_ACTOR_ACCOUNT_HOMEPAGE',
+                                             'https://example.com')
+# Define fields from JWT to use for $.actor.account.name on statements in
+# descending order of preference.
+XAPI_ACTOR_ACCOUNT_NAME_JWT_FIELDS = [
+    field.strip()
+    for field in os.environ.get('XAPI_ACTOR_ACCOUNT_NAME_JWT_FIELDS', 'activecac,preferred_username').split(',')
+]
+
+
+# Accepts regex arguments
+OPEN_ENDPOINTS = [
+    "/api/auth/register",
+    "/api/auth/login",
+    "/api/auth/logout",
+    "/api/auth/validate",
+    "/api/ui-configuration/",
+    "/es-api/filter-search/",
+    "/es-api/more-like-this/[a-zA-Z0-9]+/",
+    "/es-api/",
+    "/es-api/suggest/",
+    "/es-api/derived-from/",
+    "/es-api/teaches/",
+    "/api/experiences/[a-zA-Z0-9]+/",
+    "/api/spotlight-courses",
+    "/es-api/similar-courses/[a-zA-Z0-9]+/",
+]
+
+if XAPI_ALLOW_ANON and not XAPI_USE_JWT:
+    OPEN_ENDPOINTS.append("/api/statements")

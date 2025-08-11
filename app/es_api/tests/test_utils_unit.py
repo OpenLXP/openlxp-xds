@@ -1,11 +1,10 @@
 import json
 from unittest.mock import Mock, patch
 
-from django.test import TestCase, tag
-from elasticsearch_dsl import Q, Search
-
 from configurations.models import XDSConfiguration, XDSUIConfiguration
 from core.models import CourseSpotlight, SearchFilter, SearchSortOption
+from django.test import TestCase, tag
+from elasticsearch_dsl import Q, Search
 from es_api.utils.queries import XSEQueries
 from es_api.utils.queries_base import BaseQueries
 from users.models import Organization, XDSUser
@@ -59,6 +58,23 @@ class UtilTests(TestCase):
             query = XSEQueries('test', 'test')
 
             result = query.more_like_this(1)
+            self.assertEqual(result, resultVal)
+
+    def test_similar_courses(self):
+        """"Test that calling similar_courses returns whatever response
+              elastic search returns"""
+        with patch('elasticsearch_dsl.Search.execute') as es_execute, \
+                patch('es_api.utils.queries.'
+                      'CourseInformationMapping.objects'):
+            resultVal = {
+                "test": "test"
+            }
+            es_execute.return_value = {
+                "test": "test"
+            }
+            query = XSEQueries('test', 'test')
+
+            result = query.similar_courses('test')
             self.assertEqual(result, resultVal)
 
     def test_search_by_keyword_error(self):
@@ -352,6 +368,31 @@ class UtilTests(TestCase):
             query = XSEQueries('test', 'test')
 
             self.assertRaises(ValueError, query.search_for_derived, "test",
+                              {"page": "hello"})
+
+    def test_search_by_competency(self):
+        """Test that calling search_for_derived with a invalid page # \
+        (e.g. string) value will throw an error"""
+        with patch('es_api.utils.queries.'
+                   'XDSConfiguration.objects') as xdsCfg, \
+                patch('elasticsearch_dsl.Search.execute') as es_execute, \
+                patch('es_api.utils.queries.SearchFilter.objects') as sfObj, \
+                patch('es_api.utils.queries.'
+                      'CourseInformationMapping.objects') as cimobj:
+            configObj = XDSConfiguration(target_xis_metadata_api="dsds")
+            uiConfigObj = XDSUIConfiguration(search_results_per_page=10,
+                                             xds_configuration=configObj)
+            cimobj.first().course_competency = "test"
+            xdsCfg.xdsuiconfiguration = uiConfigObj
+            xdsCfg.first.return_value = configObj
+            sfObj.return_value = []
+            sfObj.filter.return_value = []
+            es_execute.return_value = {
+                "test": "test"
+            }
+            query = XSEQueries('test', 'test')
+
+            self.assertRaises(ValueError, query.search_by_competency, "test",
                               {"page": "hello"})
 
 

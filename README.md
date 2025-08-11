@@ -23,7 +23,62 @@ Or copy it into one of these folders to install it system-wide:
 ### Python
 `Python >=3.9` : Download and install it from here [Python](https://www.python.org/downloads/).
 
+# Installation
 
+1. Clone the Github repository:
+
+    https://github.com/OpenLXP/openlxp-xds.git
+
+2. Open terminal at the root directory of the project.
+    
+    example: ~/PycharmProjects/openlxp-xds 
+
+3. Run command to install all the requirements from requirements.txt 
+    
+    docker-compose build.
+
+4. Once the installation and build are done, run the below command to start the server.
+    
+    docker-compose up
+
+5. Once the server is up, go to the admin page:
+    
+    http://localhost:8100/admin (replace localhost with server IP)
+
+
+# Configuration
+
+1. On the Admin page, log in with the admin credentials 
+
+
+2. `Add xds configuration`: Configure Experience Discovery Service (XDS):
+    
+    `Default user group`: Select a group for new users to be assigned to automatically.
+
+    `Target xis metadata api`: Metadata API Endpoint to connect to on an XIS instance.
+
+    `Target xse host`: Hostname and port of XSE instance to use.
+
+    `Target xse index`: Index of data to use on XSE instance.
+
+    `LRS Endpoint`: xAPI LRS Endpoint to send statements to if desired.
+
+    `LRS Username`: xAPI LRS Basic Auth username.
+
+    `LRS Password`: xAPI LRS Basic Auth password.
+
+
+3. `Add xdsui configuration`: Configure Experience Discovery Service - User Interface (XDS-UI):
+
+    `Search results per page`: Number of results that should be displayed on a search page on the UI.
+
+    `Xds configuration`: Select the XDS Configuration to use.
+
+    `Course img fallback`: Image to use if no image is supplied in the experience
+
+
+4. `Add Saml configuration`: Configure Security Assertion Markup Language (SAML):
+=======
 ## 1. Clone the project
 Clone the Github repository
 ```
@@ -34,26 +89,32 @@ git clone https://github.com/OpenLXP/openlxp-xds.git
 - Create a `.env` file in the root directory
 - The following environment variables are required:
 
-| Environment Variable      | Description |
-| ------------------------- | ----------- |
-| AWS_ACCESS_KEY_ID         | The Access Key ID for AWS  |
-| AWS_SECRET_ACCESS_KEY     | The Secret Access Key for AWS  |
-| AWS_DEFAULT_REGION        | The region for AWS |
-| CSRF_COOKIE_DOMAIN            | The domain to be used when setting the CSRF cookie. This can be useful for easily allowing cross-subdomain requests to be excluded from the normal cross site request forgery protection. |
-| CSRF_TRUSTED_ORIGINS            | A list of trusted origins for unsafe requests |
-| DB_HOST                   | The host name, IP, or docker container name of the database |
-| DB_NAME                   | The name to give the database |
-| DB_PASSWORD               | The password for the user to access the database |
-| DB_ROOT_PASSWORD          | The password for the root user to access the database, should be the same as `DB_PASSWORD` if using the root user |
-| DB_USER                   | The name of the user to use when connecting to the database. When testing use root to allow the creation of a test database |
-| DJANGO_SUPERUSER_EMAIL    | The email of the superuser that will be created in the application |
-| DJANGO_SUPERUSER_PASSWORD | The password of the superuser that will be created in the application |
-| DJANGO_SUPERUSER_USERNAME | The username of the superuser that will be created in the application |
-| ENTITY_ID                 | The Entity ID used to identify this application to Identity Providers when using Single Sign On | 
-| LOG_PATH                  | The path to the log file to use |
-| SECRET_KEY_VAL            | The Secret Key for Django |
-| SP_PRIVATE_KEY            | The Private Key to use when this application communicates with Identity Providers to use Single Sign On |
-| SP_PUBLIC_CERT            | The Public Key to use when this application communicates with Identity Providers to use Single Sign On |
+| Environment Variable                | Description |
+| ------------------------------------| ----------- |
+| AWS_ACCESS_KEY_ID                   | The Access Key ID for AWS  |
+| AWS_SECRET_ACCESS_KEY               | The Secret Access Key for AWS  |
+| AWS_DEFAULT_REGION                  | The region for AWS |
+| CSRF_COOKIE_DOMAIN                  | The domain to be used when setting the CSRF cookie. This can be useful for easily allowing cross-subdomain requests to be excluded from the normal cross site request forgery protection. |
+| CSRF_TRUSTED_ORIGINS                | A list of trusted origins for unsafe requests |
+| DB_HOST                             | The host name, IP, or docker container name of the database |
+| DB_NAME                             | The name to give the database |
+| DB_PASSWORD                         | The password for the user to access the database |
+| DB_ROOT_PASSWORD                    | The password for the root user to access the database, should be the same as `DB_PASSWORD` if using the root user |
+| DB_USER                             | The name of the user to use when connecting to the database. When testing use root to allow the creation of a test database |
+| DJANGO_SUPERUSER_EMAIL              | The email of the superuser that will be created in the application |
+| DJANGO_SUPERUSER_PASSWORD           | The password of the superuser that will be created in the application |
+| DJANGO_SUPERUSER_USERNAME           | The username of the superuser that will be created in the application |
+| ENTITY_ID                           | The Entity ID used to identify this application to Identity Providers when using Single Sign On | 
+| LOG_PATH                            | The path to the log file to use |
+| SECRET_KEY_VAL                      | The Secret Key for Django |
+| SP_PRIVATE_KEY                      | The Private Key to use when this application communicates with Identity Providers to use Single Sign On |
+| SP_PUBLIC_CERT                      | The Public Key to use when this application communicates with Identity Providers to use Single Sign On |
+| XAPI_ALLOW_ANON                     | If `true` (default) will allow forwarding of anonymous xAPI Statements. Not compatible with `XAPI_USE_JWT`.
+| XAPI_ANON_MBOX                      | The mbox email value to use for anonymous xAPI actors if `XAPI_ALLOW_ANON` is enabled. Defaults to `anonymous@example.com`.
+| XAPI_USE_JWT                        | If this variable is set, attempt to use the value of a JWT auth token to derive the xAPI actor account. If not set the actor will be identified by mbox email. Not compatible with `XAPI_ALLOW_ANON`.`XAPI_ACTOR_ACCOUNT_HOMEPAGE` - Set the `$.actor.account.homePage` field on xAPI Statements. Only used when `XAPI_USE_JWT` is `true`.
+| XAPI_ACTOR_ACCOUNT_NAME_JWT_FIELDS  | A comma-separated list of fields to check in the JWT for the `$.actor.account.name` field on xAPI Statements. The first non-empty string found will be chosen. Defaults to `activecac,preferred_username`. Only used when `XAPI_USE_JWT` is `true`.
+
+
 
 
 ## 3. Deployment
@@ -175,13 +236,13 @@ git clone https://github.com/OpenLXP/openlxp-xds.git
 
                 - `Template`: Select a 'template' from the drop down options set up previously.
 
-## 5. Removing Deployment
+# 5. Removing Deployment
 To destroy the created resources, simply run the docker-compose command below in your terminal:
 ```
 docker-compose down
 ```
 
-## Troubleshooting
+##Troubleshooting
 - If the container builds but crashes or logs an error of unrecognized commands, the issue is usually incorrect line endings. Most IDEs/Text Editors allow changing the line endings, but the dos2unix utility can also be used to change the line endings of `start-app.sh` and `start-server.sh` to LF.
 
 
@@ -192,7 +253,7 @@ docker-compose down
 
     - The xmlsec package includes instructions for installing the libraries on common platforms in the [documentation](https://github.com/mehcode/python-xmlsec/blob/master/README.rst#install)
 
-## Testing
+# Testing
 
 To run the automated tests on the application run the command below
 
@@ -202,18 +263,18 @@ Test coverage information will be stored in an htmlcov directory
 docker-compose --env-file .env run app sh -c "coverage run manage.py test && coverage html && flake8"
 ```
 
-## Authentication
+# Authentication
 
 The environment variables `SP_PUBLIC_CERT`, `SP_PRIVATE_KEY` , and `SP_ENTITY_ID` must be defined (if using docker-compose the variables can be passed through).
 
 Information on the settings for the authentication module can be found on the [OpenLXP-Authentication repo](https://github.com/OpenLXP/openlxp-authentication).
 
 
-## Authorization
+# Authorization
 
 The setting `OPEN_ENDPOINTS` can be defined in the django settings file.
 It is a list of strings (regex notation may be used) for URLs that should not check for authentication or authorization.
 
-## License
+# License
 
  This project uses the [MIT](http://www.apache.org/licenses/LICENSE-2.0) license.
