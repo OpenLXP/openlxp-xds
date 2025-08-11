@@ -25,7 +25,7 @@ def forwards_func(apps, schema_editor):
         app_config.models_module = True
         create_contenttypes(app_config, verbosity=0)
         app_config.models_module = None
-    
+
     for custom in MODELS:
         ContentType.objects.get_or_create(
             app_label='es_api',
@@ -53,8 +53,8 @@ def forwards_func(apps, schema_editor):
                                                    content_type=
                                                    content_type)
                 except Perm.DoesNotExist:
-                    logging.warning("Permission not found with name '{}'.".
-                                    format(name))
+#                    logging.warning("Permission not found with name '{}'.".format(name))
+                    logging.warning("Permission not found with name %s", name)
                     continue
 
                 new_group.permissions.add(model_add_perm)

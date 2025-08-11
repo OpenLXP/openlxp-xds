@@ -2,12 +2,13 @@ import functools
 import json
 import logging
 
-from configurations.models import CourseInformationMapping, XDSConfiguration
-from core.models import (CourseSpotlight, SearchFilter,
-                         SearchSortOption, SearchField)
 from django.core.exceptions import ObjectDoesNotExist
 from elasticsearch_dsl import A, Document, Q
 from elasticsearch_dsl.query import MoreLikeThis
+
+from configurations.models import CourseInformationMapping, XDSConfiguration
+from core.models import (CourseSpotlight, SearchField, SearchFilter,
+                         SearchSortOption)
 from users.models import Organization
 
 from .queries_base import BaseQueries
@@ -127,8 +128,8 @@ class XSEQueries(BaseQueries):
         return response
 
     def search_by_competency(self, comp_uuid="", filters={}):
-        """This method takes in a competency ID string + a page number and queries
-            ElasticSearch for the term then returns the Response Object"""
+        """This method takes in a competency ID string + a page number and
+        queries ElasticSearch for the term then returns the Response Object"""
         course_mapping = CourseInformationMapping.objects.first()
 
         q = Q("match",
@@ -185,8 +186,8 @@ class XSEQueries(BaseQueries):
         return response
 
     def more_like_this(self, doc_id):
-        """This method takes in a doc ID and queries the elasticsearch index for
-            courses with similar title or description"""
+        """This method takes in a doc ID and queries the elasticsearch index
+            for courses with similar title or description"""
         likeObj = [
             {
                 "_index": self.index,
@@ -271,8 +272,8 @@ class XSEQueries(BaseQueries):
         return result
 
     def search_by_filters(self, page_num, filters={}):
-        """This method takes in a page number + a dict of field names and values
-            and queries ElasticSearch for the term then returns the
+        """This method takes in a page number + a dict of field names and
+        values and queries ElasticSearch for the term then returns the
             Response Object"""
 
         # setting up the search object
