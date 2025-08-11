@@ -1,15 +1,14 @@
 import json
 
+from configurations.models import (CourseInformationMapping, XDSConfiguration,
+                                   XDSUIConfiguration)
+from core.models import SearchSortOption
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase, tag
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-
-from configurations.models import (CourseInformationMapping, XDSConfiguration,
-                                   XDSUIConfiguration)
-from core.models import SearchSortOption
 
 
 @tag('integration')
@@ -87,6 +86,8 @@ class ModelTests(TestCase):
 
         # course mappings
         course_title = 'Course.TestTitle'
+        course_type = 'Course.CourseType'
+        course_time = 'Course.EstimatedCompletionTime'
         course_description = 'Course.TestDescription'
         course_url = 'Course.TestUrl'
         course_code = 'Course.TestCode'
@@ -103,6 +104,8 @@ class ModelTests(TestCase):
                     course_title=course_title,
                     course_description=course_description,
                     course_url=course_url,
+                    course_type=course_type,
+                    course_time=course_time,
                     course_code=course_code,
                     course_startDate=course_startDate,
                     course_endDate=course_endDate,
